@@ -122,8 +122,7 @@ namespace L1 {
   struct Cmp_rule:
     pegtl::sor<
       pegtl::seq<
-        pegtl::one<'<'>,
-        pegtl::one<'='>
+        pegtl::string<'<','='>
       >,
       pegtl::seq<
         pegtl::one<'<'>
@@ -136,41 +135,32 @@ namespace L1 {
   struct Sop_rule:
     pegtl::sor<
       pegtl::seq<
-        pegtl::one<'<'>,
-        pegtl::one<'<'>,
-        pegtl::one<'='>
+        pegtl::string<'<','<','='>
       >,
       pegtl::seq<
-        pegtl::one<'>'>,
-        pegtl::one<'>'>,
-        pegtl::one<'='>
+        pegtl::string<'>','>','='>
       >
     > { };
 
   struct Aop_rule:
     pegtl::sor<
       pegtl::seq<
-        pegtl::one<'+'>,
-        pegtl::one<'='>
+        pegtl::string<'+','='>
       >,
       pegtl::seq<
-        pegtl::one<'-'>,
-        pegtl::one<'='>
+        pegtl::string<'-','='>
       >,
       pegtl::seq<
-        pegtl::one<'*'>,
-        pegtl::one<'='>
+        pegtl::string<'*','='>
       >,
       pegtl::seq<
-        pegtl::one<'&'>,
-        pegtl::one<'='>
+        pegtl::string<'&','='>
       >
     > { };
 
   struct Assign_rule:
     pegtl::seq<
-      pegtl::one<'<'>,
-      pegtl::one<'-'>
+      pegtl::string<'<','-'>
     > { };
 
   struct Instruction_return_rule:
@@ -180,35 +170,25 @@ namespace L1 {
 
   struct Sx_rule:
     pegtl::seq<
-      pegtl::one<'r'>,
-      pegtl::one<'c'>,
-      pegtl::one<'x'>
+      pegtl::string<'r','c','x'>
     > {};
 
   struct A_other_rule:
     pegtl::sor<
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'d'>,
-        pegtl::one<'i'>
+        pegtl::string<'r','d','i'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'d'>,
-        pegtl::one<'x'>
+        pegtl::string<'r','d','x'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'8'>
+        pegtl::string<'r','8'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'9'>
+        pegtl::string<'r','9'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'s'>,
-        pegtl::one<'i'>
+        pegtl::string<'r','s','i'>
       >
     > {};
 
@@ -221,49 +201,31 @@ namespace L1 {
   struct W_other_rule:
     pegtl::sor<
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'b'>,
-        pegtl::one<'x'>
+        pegtl::string<'r','b','x'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'a'>,
-        pegtl::one<'x'>
+        pegtl::string<'r','a','x'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'b'>,
-        pegtl::one<'p'>
+        pegtl::string<'r','b','p'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'1'>,
-        pegtl::one<'0'>
+        pegtl::string<'r','1','0'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'1'>,
-        pegtl::one<'1'>
+        pegtl::string<'r','1','1'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'1'>,
-        pegtl::one<'2'>
+        pegtl::string<'r','1','2'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'1'>,
-        pegtl::one<'3'>
+        pegtl::string<'r','1','3'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'1'>,
-        pegtl::one<'4'>
+        pegtl::string<'r','1','4'>
       >,
       pegtl::seq<
-        pegtl::one<'r'>,
-        pegtl::one<'1'>,
-        pegtl::one<'5'>
+        pegtl::string<'r','1','5'>
       >
     > {};
 
@@ -275,9 +237,7 @@ namespace L1 {
 
   struct X_other_rule:
     pegtl::seq<
-      pegtl::one<'r'>,
-      pegtl::one<'s'>,
-      pegtl::one<'p'>
+      pegtl::string<'r','s','p'>
     > {};
 
   struct X_rule:
@@ -315,9 +275,7 @@ namespace L1 {
 
   struct Address_rule:
     pegtl::seq<
-      pegtl::one<'m'>,
-      pegtl::one<'e'>,
-      pegtl::one<'m'>,
+      pegtl::string<'m','e','m'>,
       seps,
       Address_x_rule,
       seps,
@@ -385,13 +343,7 @@ namespace L1 {
   // cjump t cmp t label label
   struct Cjump_rule:
     pegtl::seq<
-      pegtl::seq<
-        pegtl::one<'c'>,
-        pegtl::one<'j'>,
-        pegtl::one<'u'>,
-        pegtl::one<'m'>,
-        pegtl::one<'p'>
-      >,
+      pegtl::string<'c','j','u','m','p'>,
       seps,
       Comparison_rule,
       seps,
@@ -409,12 +361,7 @@ namespace L1 {
   // goto label
   struct Goto_rule:
     pegtl::seq<
-      pegtl::seq<
-        pegtl::one<'g'>,
-        pegtl::one<'o'>,
-        pegtl::one<'t'>,
-        pegtl::one<'o'>
-      >,
+      pegtl::string<'g','o','t','o'>,
       seps,
       Label_rule
     > { };
@@ -428,12 +375,7 @@ namespace L1 {
   // call u N
   struct Custom_func_call_rule:
     pegtl::seq<
-      pegtl::seq<
-        pegtl::one<'c'>,
-        pegtl::one<'a'>,
-        pegtl::one<'l'>,
-        pegtl::one<'l'>
-      >,
+      pegtl::string<'c','a','l','l'>,
       seps,
       U_rule,
       seps,
@@ -442,47 +384,15 @@ namespace L1 {
 
   struct System_func_rule:
     pegtl::sor<
-      pegtl::seq<
-        pegtl::one<'p'>,
-        pegtl::one<'r'>,
-        pegtl::one<'i'>,
-        pegtl::one<'n'>,
-        pegtl::one<'t'>
-      >,
-      pegtl::seq<
-        pegtl::one<'a'>,
-        pegtl::one<'l'>,
-        pegtl::one<'l'>,
-        pegtl::one<'o'>,
-        pegtl::one<'c'>,
-        pegtl::one<'a'>,
-        pegtl::one<'t'>,
-        pegtl::one<'e'>
-      >,
-      pegtl::seq<
-        pegtl::one<'a'>,
-        pegtl::one<'r'>,
-        pegtl::one<'r'>,
-        pegtl::one<'a'>,
-        pegtl::one<'y'>,
-        pegtl::one<'-'>,
-        pegtl::one<'e'>,
-        pegtl::one<'r'>,
-        pegtl::one<'r'>,
-        pegtl::one<'o'>,
-        pegtl::one<'r'>
-      >
+      pegtl::string<'p','r','i','n','t'>,
+      pegtl::string<'a','l','l','o','c','a','t','e'>,
+      pegtl::string<'a','r','r','a','y','-','e','r','r','o','r'>
     > { };
 
   // call print 1 | call allocate 2 | call array-error 2
   struct System_func_call_rule:
     pegtl::seq<
-      pegtl::seq<
-        pegtl::one<'c'>,
-        pegtl::one<'a'>,
-        pegtl::one<'l'>,
-        pegtl::one<'l'>
-      >,
+      pegtl::string<'c','a','l','l'>,
       seps,
       System_func_rule,
       seps,
@@ -492,14 +402,8 @@ namespace L1 {
   // ++, --
   struct Inc_or_dec_rule:
     pegtl::sor<
-      pegtl::seq<
-        pegtl::one<'+'>,
-        pegtl::one<'+'>
-      >,
-      pegtl::seq<
-        pegtl::one<'-'>,
-        pegtl::one<'-'>
-      >
+      pegtl::string<'+','+'>,
+      pegtl::string<'-','-'>
     > { };
 
   // w++, w--
