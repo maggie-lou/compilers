@@ -96,6 +96,15 @@ namespace L1 {
   };
 
   /*
+   * Cjump Fallthrough Instruction.
+   * cjump t cmp t label
+   */
+  struct Cjump_fallthrough : Instruction {
+    Comparison c;
+    std::string label;
+  };
+
+  /*
    * Label Instruction.
    * label
    */

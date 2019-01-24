@@ -326,6 +326,16 @@ namespace L1 {
       Label_rule
     > { };
 
+  // cjump t cmp t label
+  struct Cjump_fallthrough_rule:
+    pegtl::seq<
+      pegtl::string<'c','j','u','m','p'>,
+      seps,
+      Comparison_rule,
+      seps,
+      Label_rule
+    > { };
+
   // label
   struct Label_instruction_rule:
     pegtl::seq<
@@ -384,6 +394,7 @@ namespace L1 {
   struct Inc_or_dec_instruction_rule:
     pegtl::seq<
       W_rule,
+      seps,
       Inc_or_dec_rule
     > { };
 
@@ -406,9 +417,10 @@ namespace L1 {
       pegtl::seq< pegtl::at<Instruction_return_rule>            , Instruction_return_rule             >,
       pegtl::seq< pegtl::at<Assignment_cmp_rule>            , Assignment_cmp_rule             >,
       pegtl::seq< pegtl::at<Assignment_rule>            , Assignment_rule             >,
-      pegtl::seq< pegtl::at<Cjump_rule>            , Cjump_rule             >,
-      pegtl::seq< pegtl::at<Goto_rule>            , Goto_rule             >,
       pegtl::seq< pegtl::at<Label_instruction_rule>            , Label_instruction_rule             >,
+      pegtl::seq< pegtl::at<Cjump_rule>            , Cjump_rule             >,
+      pegtl::seq< pegtl::at<Cjump_fallthrough_rule>            , Cjump_fallthrough_rule             >,
+      pegtl::seq< pegtl::at<Goto_rule>            , Goto_rule             >,
       pegtl::seq< pegtl::at<Custom_func_call_rule>            , Custom_func_call_rule             >,
       pegtl::seq< pegtl::at<System_func_call_rule>            , System_func_call_rule             >,
       pegtl::seq< pegtl::at<Inc_or_dec_instruction_rule>            , Inc_or_dec_instruction_rule             >,
@@ -629,6 +641,20 @@ namespace L1 {
       cjump->c = c;
       cjump->label1 = label1.value;
       cjump->label2 = label2.value;
+      auto currentF = p.functions.back();
+      currentF->instructions.push_back(cjump);
+    }
+  };
+
+  template<> struct action < Cjump_fallthrough_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto cjump = new Cjump_fallthrough();
+      auto c = parsed_comparisons.back();
+      auto label = parsed_items.back();
+
+      cjump->c = c;
+      cjump->label = label.value;
       auto currentF = p.functions.back();
       currentF->instructions.push_back(cjump);
     }

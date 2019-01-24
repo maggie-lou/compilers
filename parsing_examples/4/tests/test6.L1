@@ -49,6 +49,7 @@
     cjump rax < 8 :label1 :label2
     cjump 7 < rsp :label1 :label2
     cjump 7 < rbx :label1 :label2
+    cjump 7 < rbx :label1
     //* cjump 7 < 8 :label1 :label2 :label3
 
     // label
