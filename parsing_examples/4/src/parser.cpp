@@ -685,32 +685,21 @@ namespace L1 {
   template<> struct action < Inc_or_dec_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      std::string op;
-      if (in.string() == "++") {
-        op = "+=";
-      } else {
-        op = "-=";
-      }
-      parsed_operations.push_back(op);
+      parsed_operations.push_back(in.string());
     }
   };
 
   template<> struct action < Inc_or_dec_instruction_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      auto a = new Assignment();
+      auto i = new Inc_or_dec();
       auto d = parsed_destinations.back();
       auto op = parsed_operations.back();
 
-      Item i;
-      i.value = "1";
-      i.is_address = false;
-
-      a->d = d;
-      a->op = op;
-      a->s = i;
+      i->reg = d.value;
+      i->op = op;
       auto currentF = p.functions.back();
-      currentF->instructions.push_back(a);
+      currentF->instructions.push_back(i);
     }
   };
 

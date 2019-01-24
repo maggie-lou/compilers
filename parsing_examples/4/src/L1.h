@@ -44,6 +44,19 @@ namespace L1 {
     std::string cmp_sign;
   };
 
+  /*
+   * ++,-- Instruction.
+   * w++ | w--
+   */
+  struct Inc_or_dec : Instruction {
+    std::string reg;
+    std::string op;
+  };
+
+  /*
+   * @ Instruction.
+   * w @ w w E
+   */
   struct At_arithmetic : Instruction {
     std::string dest;
     std::string r1;
