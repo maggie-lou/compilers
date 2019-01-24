@@ -60,6 +60,13 @@ namespace L1 {
     std::string cmp_sign;
   };
 
+  struct At_arithmetic : Instruction {
+    Register dest;
+    Register r1;
+    Register r2;
+    int64_t n;
+  };
+
   /*
    * Assignment Instruction.
    * w <- s | w <- mem x M | mem x M <- s

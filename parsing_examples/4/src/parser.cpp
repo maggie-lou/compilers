@@ -115,11 +115,8 @@ namespace L1 {
     number {};
 
   struct E_rule:
-    pegtl::sor<
-      pegtl::one<'0'>,
-      pegtl::one<'2'>,
-      pegtl::one<'4'>,
-      pegtl::one<'8'>
+    pegtl::seq<
+      Number_rule
     > { };
 
   struct Cmp_rule:
@@ -492,6 +489,40 @@ namespace L1 {
       Number_rule
     > { };
 
+  // ++, --
+  struct Inc_or_dec_rule:
+    pegtl::sor<
+      pegtl::seq<
+        pegtl::one<'+'>,
+        pegtl::one<'+'>
+      >,
+      pegtl::seq<
+        pegtl::one<'-'>,
+        pegtl::one<'-'>
+      >
+    > { };
+
+  // w++, w--
+  struct Inc_or_dec_instruction_rule:
+    pegtl::seq<
+      W_rule,
+      Inc_or_dec_rule
+    > { };
+
+  // w @ w w E
+  struct At_arithmetic_rule:
+    pegtl::seq<
+      W_rule,
+      seps,
+      pegtl::one<'@'>,
+      seps,
+      W_rule,
+      seps,
+      W_rule,
+      seps,
+      E_rule
+    > { };
+
   struct Instruction_rule:
     pegtl::sor<
       pegtl::seq< pegtl::at<Instruction_return_rule>            , Instruction_return_rule             >,
@@ -501,7 +532,9 @@ namespace L1 {
       pegtl::seq< pegtl::at<Goto_rule>            , Goto_rule             >,
       pegtl::seq< pegtl::at<Label_instruction_rule>            , Label_instruction_rule             >,
       pegtl::seq< pegtl::at<Custom_func_call_rule>            , Custom_func_call_rule             >,
-      pegtl::seq< pegtl::at<System_func_call_rule>            , System_func_call_rule             >
+      pegtl::seq< pegtl::at<System_func_call_rule>            , System_func_call_rule             >,
+      pegtl::seq< pegtl::at<Inc_or_dec_instruction_rule>            , Inc_or_dec_instruction_rule             >,
+      pegtl::seq< pegtl::at<At_arithmetic_rule>            , At_arithmetic_rule             >
     > { };
 
   struct Instructions_rule:
@@ -818,6 +851,53 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       parsed_system_funcs.push_back(in.string());
+    }
+  };
+
+  template<> struct action < Inc_or_dec_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      std::string op;
+      if (in.string() == "++") {
+        op = "+=";
+      } else {
+        op = "-=";
+      }
+      parsed_operations.push_back(op);
+    }
+  };
+
+  template<> struct action < Inc_or_dec_instruction_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto a = new Assignment();
+      auto d = parsed_destinations.back();
+      auto op = parsed_operations.back();
+
+      Item i;
+      i.n = 1;
+      i.type = 3;
+
+      a->d = d;
+      a->op = op;
+      a->s = i;
+      auto currentF = p.functions.back();
+      currentF->instructions.push_back(a);
+    }
+  };
+
+  template<> struct action < At_arithmetic_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto at_a = new At_arithmetic();
+      at_a->dest = (parsed_items.at(parsed_items.size() - 4)).r;
+
+      at_a->r1 = (parsed_items.at(parsed_items.size() - 3)).r;
+      at_a->r2 = (parsed_items.at(parsed_items.size() - 2)).r;
+      at_a->n = (parsed_items.back()).n;
+
+      auto currentF = p.functions.back();
+      currentF->instructions.push_back(at_a);
     }
   };
 

@@ -67,6 +67,13 @@
     call allocate 2
     call array-error 2
 
+    // w++ | w--
+    rax++
+    r10--
+
+    // w @ w w E
+    rax @ r10 rdi 8
+
     return
   )
 
