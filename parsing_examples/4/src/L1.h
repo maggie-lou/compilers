@@ -58,7 +58,7 @@ namespace L1 {
     Item left;
     Item right;
     std::string cmp_sign;
-  }
+  };
 
   /*
    * Assignment Instruction.
@@ -79,6 +79,50 @@ namespace L1 {
   struct AssignmentCmp : Instruction {
     Item d;
     Comparison s;
+  };
+
+  /*
+   * Cjump Instruction.
+   * cjump t cmp t label label
+   */
+  struct Cjump : Instruction {
+    Comparison c;
+    std::string label1;
+    std::string label2;
+  };
+
+  /*
+   * Label Instruction.
+   * label
+   */
+  struct Label_instruction : Instruction {
+    std::string label;
+  };
+
+  /*
+   * Goto Instruction.
+   * goto label
+   */
+  struct Goto : Instruction {
+    std::string label;
+  };
+
+  /*
+   * Custom function call Instruction.
+   * call u N
+   */
+  struct Custom_func_call : Instruction {
+    Item u;
+    int64_t n;
+  };
+
+  /*
+   * System function call Instruction.
+   * call u N
+   */
+  struct System_func_call : Instruction {
+    std::string system_func;
+    int64_t n;
   };
 
   /*

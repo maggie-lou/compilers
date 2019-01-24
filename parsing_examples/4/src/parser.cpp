@@ -39,6 +39,7 @@ namespace L1 {
   std::vector<Item> parsed_cmp_lefts;
   std::vector<Item> parsed_cmp_rights;
   std::vector<Comparison> parsed_comparisons;
+  std::vector<std::string> parsed_system_funcs;
 
   /*
    * Grammar rules from now on.
@@ -384,11 +385,123 @@ namespace L1 {
       Source_rule
     > { };
 
+  // cjump t cmp t label label
+  struct Cjump_rule:
+    pegtl::seq<
+      pegtl::seq<
+        pegtl::one<'c'>,
+        pegtl::one<'j'>,
+        pegtl::one<'u'>,
+        pegtl::one<'m'>,
+        pegtl::one<'p'>
+      >,
+      seps,
+      Comparison_rule,
+      seps,
+      Label_rule,
+      seps,
+      Label_rule
+    > { };
+
+  // label
+  struct Label_instruction_rule:
+    pegtl::seq<
+      Label_rule
+    > { };
+
+  // goto label
+  struct Goto_rule:
+    pegtl::seq<
+      pegtl::seq<
+        pegtl::one<'g'>,
+        pegtl::one<'o'>,
+        pegtl::one<'t'>,
+        pegtl::one<'o'>
+      >,
+      seps,
+      Label_rule
+    > { };
+
+  struct U_rule:
+    pegtl::sor<
+      W_rule,
+      Label_rule
+    > { };
+
+  // call u N
+  struct Custom_func_call_rule:
+    pegtl::seq<
+      pegtl::seq<
+        pegtl::one<'c'>,
+        pegtl::one<'a'>,
+        pegtl::one<'l'>,
+        pegtl::one<'l'>
+      >,
+      seps,
+      U_rule,
+      seps,
+      Number_rule
+    > { };
+
+  struct System_func_rule:
+    pegtl::sor<
+      pegtl::seq<
+        pegtl::one<'p'>,
+        pegtl::one<'r'>,
+        pegtl::one<'i'>,
+        pegtl::one<'n'>,
+        pegtl::one<'t'>
+      >,
+      pegtl::seq<
+        pegtl::one<'a'>,
+        pegtl::one<'l'>,
+        pegtl::one<'l'>,
+        pegtl::one<'o'>,
+        pegtl::one<'c'>,
+        pegtl::one<'a'>,
+        pegtl::one<'t'>,
+        pegtl::one<'e'>
+      >,
+      pegtl::seq<
+        pegtl::one<'a'>,
+        pegtl::one<'r'>,
+        pegtl::one<'r'>,
+        pegtl::one<'a'>,
+        pegtl::one<'y'>,
+        pegtl::one<'-'>,
+        pegtl::one<'e'>,
+        pegtl::one<'r'>,
+        pegtl::one<'r'>,
+        pegtl::one<'o'>,
+        pegtl::one<'r'>
+      >
+    > { };
+
+  // call print 1 | call allocate 2 | call array-error 2
+  struct System_func_call_rule:
+    pegtl::seq<
+      pegtl::seq<
+        pegtl::one<'c'>,
+        pegtl::one<'a'>,
+        pegtl::one<'l'>,
+        pegtl::one<'l'>
+      >,
+      seps,
+      System_func_rule,
+      seps,
+      Number_rule
+    > { };
+
   struct Instruction_rule:
     pegtl::sor<
       pegtl::seq< pegtl::at<Instruction_return_rule>            , Instruction_return_rule             >,
       pegtl::seq< pegtl::at<Assignment_cmp_rule>            , Assignment_cmp_rule             >,
-      pegtl::seq< pegtl::at<Assignment_rule>            , Assignment_rule             >
+      pegtl::seq< pegtl::at<Assignment_rule>            , Assignment_rule             >,
+      pegtl::seq< pegtl::at<Cjump_rule>            , Cjump_rule             >,
+      pegtl::seq< pegtl::at<Goto_rule>            , Goto_rule             >,
+      pegtl::seq< pegtl::at<Label_instruction_rule>            , Label_instruction_rule             >,
+      pegtl::seq< pegtl::at<Custom_func_call_rule>            , Custom_func_call_rule             >,
+      pegtl::seq< pegtl::at<System_func_call_rule>            , System_func_call_rule             >
     > { };
 
   struct Instructions_rule:
@@ -644,6 +757,81 @@ namespace L1 {
       a->s = s;
       auto currentF = p.functions.back();
       currentF->instructions.push_back(a);
+    }
+  };
+
+  template<> struct action < Cjump_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto cjump = new Cjump();
+      auto c = parsed_comparisons.back();
+      auto label1 = parsed_items.at(parsed_items.size()-2);
+      auto label2 = parsed_items.back();
+
+      cjump->c = c;
+      cjump->label1 = label1.labelName;
+      cjump->label2 = label2.labelName;
+      auto currentF = p.functions.back();
+      currentF->instructions.push_back(cjump);
+    }
+  };
+
+  template<> struct action < Goto_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto g = new Goto();
+      auto label = parsed_items.back();
+
+      g->label = label.labelName;
+      auto currentF = p.functions.back();
+      currentF->instructions.push_back(g);
+    }
+  };
+
+  template<> struct action < Custom_func_call_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto c = new Custom_func_call();
+      auto u = parsed_items.at(parsed_items.size()-2);
+      auto n = parsed_items.back();
+
+      c->u = u;
+      c->n = n.n;
+      auto currentF = p.functions.back();
+      currentF->instructions.push_back(c);
+    }
+  };
+
+  template<> struct action < Label_instruction_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto l = new Label_instruction();
+      auto label = parsed_items.back();
+
+      l->label = label.labelName;
+      auto currentF = p.functions.back();
+      currentF->instructions.push_back(l);
+    }
+  };
+
+  template<> struct action < System_func_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      parsed_system_funcs.push_back(in.string());
+    }
+  };
+
+  template<> struct action < System_func_call_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto s = new System_func_call();
+      auto system_func = parsed_system_funcs.back();
+      auto n = parsed_items.back();
+
+      s->system_func = system_func;
+      s->n = n.n;
+      auto currentF = p.functions.back();
+      currentF->instructions.push_back(s);
     }
   };
 
