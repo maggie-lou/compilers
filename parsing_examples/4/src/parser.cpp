@@ -33,13 +33,7 @@ namespace L1 {
   std::vector<std::string> parsed_operations;
   std::vector<Item> parsed_sources;
   std::vector<Item> parsed_items;
-  std::vector<std::string> parsed_address_xs;
-  std::vector<std::string> parsed_address_ms;
-  std::vector<std::string> parsed_cmp_signs;
-  std::vector<std::string> parsed_cmp_lefts;
-  std::vector<std::string> parsed_cmp_rights;
   std::vector<Comparison> parsed_comparisons;
-  std::vector<std::string> parsed_system_funcs;
 
   /*
    * Grammar rules from now on.
@@ -263,43 +257,23 @@ namespace L1 {
       Number_rule
     > { };
 
-  struct Address_x_rule:
-    pegtl::seq<
-      X_rule
-    > { };
-
-  struct Address_m_rule:
-    pegtl::seq<
-      M_rule
-    > { };
-
   struct Address_rule:
     pegtl::seq<
       pegtl::string<'m','e','m'>,
       seps,
-      Address_x_rule,
+      X_rule,
       seps,
-      Address_m_rule
-    > { };
-
-  struct Comparison_left_rule:
-    pegtl::seq<
-      T_rule
-    > { };
-
-  struct Comparison_right_rule:
-    pegtl::seq<
-      T_rule
+      M_rule
     > { };
 
   // t cmp t
   struct Comparison_rule:
     pegtl::seq<
-      Comparison_left_rule,
+      T_rule,
       seps,
       Cmp_rule,
       seps,
-      Comparison_right_rule
+      T_rule
     > { };
 
   struct Source_rule:
@@ -603,32 +577,14 @@ namespace L1 {
     }
   };
 
-  template<> struct action < Address_x_rule > {
-    template< typename Input >
-	static void apply( const Input & in, Program & p){
-      auto i = parsed_items.back();
-      auto x = i.value;
-      parsed_address_xs.push_back(x);
-    }
-  };
-
-  template<> struct action < Address_m_rule > {
-    template< typename Input >
-	static void apply( const Input & in, Program & p){
-    auto i = parsed_items.back();
-    auto m = i.value;
-    parsed_address_ms.push_back(m);
-    }
-  };
-
   template<> struct action < Address_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      auto x = parsed_address_xs.back();
-      auto m = parsed_address_ms.back();
+      auto x = parsed_items.at(parsed_items.size() - 2);
+      auto m = parsed_items.back();
       Address address;
-      address.offset = m;
-      address.r = x;
+      address.offset = m.value;
+      address.r = x.value;
 
       Item i;
       i.is_address = true;
@@ -637,29 +593,13 @@ namespace L1 {
     }
   };
 
-  template<> struct action < Comparison_left_rule > {
-    template< typename Input >
-	static void apply( const Input & in, Program & p){
-      auto comp_left = parsed_items.back();
-      parsed_cmp_lefts.push_back(comp_left.value);
-    }
-  };
-
-  template<> struct action < Comparison_right_rule > {
-    template< typename Input >
-	static void apply( const Input & in, Program & p){
-      auto comp_right = parsed_items.back();
-      parsed_cmp_rights.push_back(comp_right.value);
-    }
-  };
-
   template<> struct action < Comparison_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       Comparison comparison;
-      comparison.left = parsed_cmp_lefts.back();
-      comparison.right = parsed_cmp_rights.back();
-      comparison.cmp_sign = parsed_cmp_signs.back();
+      comparison.left = parsed_items.at(parsed_items.size() - 3).value;
+      comparison.cmp_sign = parsed_items.at(parsed_items.size() - 2).value;
+      comparison.right = parsed_items.back().value;
       parsed_comparisons.push_back(comparison);
     }
   };
@@ -735,7 +675,10 @@ namespace L1 {
   template<> struct action < System_func_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      parsed_system_funcs.push_back(in.string());
+      Item i;
+      i.is_address = false;
+      i.value = in.string();
+      parsed_items.push_back(i);
     }
   };
 
@@ -789,11 +732,12 @@ namespace L1 {
   template<> struct action < System_func_call_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
+
       auto s = new System_func_call();
-      auto system_func = parsed_system_funcs.back();
+      auto system_func = parsed_items.at(parsed_items.size()-2);
       auto n = parsed_items.back();
 
-      s->system_func = system_func;
+      s->system_func = system_func.value;
       s->n = n.value;
       auto currentF = p.functions.back();
       currentF->instructions.push_back(s);
@@ -856,7 +800,10 @@ namespace L1 {
   template<> struct action < Cmp_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      parsed_cmp_signs.push_back(in.string());
+      Item i;
+      i.is_address = false;
+      i.value = in.string();
+      parsed_items.push_back(i);
     }
   };
 
