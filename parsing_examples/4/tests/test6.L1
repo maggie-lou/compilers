@@ -1,0 +1,18 @@
+(:go
+  (:go
+    0 0
+
+    // This is my comment
+    rax <- :label
+     rax <- 8 
+     rax <- rsp 
+     rbx <- rdi 
+     rsp <- 5 
+    return 
+  )
+
+  (:testFunction
+    1 2
+    return 
+  )
+)
