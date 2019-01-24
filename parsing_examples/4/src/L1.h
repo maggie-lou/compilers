@@ -3,13 +3,6 @@
 #include <vector>
 
 namespace L1 {
-  /*
-   * Register.
-   */
-  struct Register{
-    std::string name;
-    int64_t value;
-  };
 
   /*
    * Instruction interface.
@@ -35,36 +28,27 @@ namespace L1 {
 
 
   struct Address{
-    Register r;
-    int64_t offset;
+    std::string r;
+    std::string offset;
   };
 
   struct Item {
-    std::string labelName;
-    Register r;
-    int64_t n;
+    std::string value;
     Address address;
-    std::string op;
-    std::string cmp_sign;
-
-    // 1: label
-    // 2: register
-    // 3: number
-    // 4: address
-    int64_t type;
+    bool is_address;
   };
 
   struct Comparison {
-    Item left;
-    Item right;
+    std::string left;
+    std::string right;
     std::string cmp_sign;
   };
 
   struct At_arithmetic : Instruction {
-    Register dest;
-    Register r1;
-    Register r2;
-    int64_t n;
+    std::string dest;
+    std::string r1;
+    std::string r2;
+    std::string n;
   };
 
   /*
@@ -119,8 +103,8 @@ namespace L1 {
    * call u N
    */
   struct Custom_func_call : Instruction {
-    Item u;
-    int64_t n;
+    std::string u;
+    std::string n;
   };
 
   /*
@@ -129,7 +113,7 @@ namespace L1 {
    */
   struct System_func_call : Instruction {
     std::string system_func;
-    int64_t n;
+    std::string n;
   };
 
   /*
@@ -138,6 +122,5 @@ namespace L1 {
   struct Program{
     std::string entryPointLabel;
     std::vector<Function *> functions;
-    std::vector<Register *> registers;
   };
 }

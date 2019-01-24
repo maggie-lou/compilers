@@ -33,11 +33,11 @@ namespace L1 {
   std::vector<std::string> parsed_operations;
   std::vector<Item> parsed_sources;
   std::vector<Item> parsed_items;
-  std::vector<Register> parsed_address_xs;
-  std::vector<int64_t> parsed_address_ms;
+  std::vector<std::string> parsed_address_xs;
+  std::vector<std::string> parsed_address_ms;
   std::vector<std::string> parsed_cmp_signs;
-  std::vector<Item> parsed_cmp_lefts;
-  std::vector<Item> parsed_cmp_rights;
+  std::vector<std::string> parsed_cmp_lefts;
+  std::vector<std::string> parsed_cmp_rights;
   std::vector<Comparison> parsed_comparisons;
   std::vector<std::string> parsed_system_funcs;
 
@@ -643,8 +643,8 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       Item i;
-      i.labelName = in.string();
-      i.type = 1;
+      i.value = in.string();
+      i.is_address = false;
       parsed_items.push_back(i);
     }
   };
@@ -653,8 +653,8 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       Item i;
-      i.type = 3;
-      i.labelName = std::stoll(in.string());
+      i.is_address = false;
+      i.value = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -662,13 +662,9 @@ namespace L1 {
   template<> struct action < Sx_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      Register newR;
-      newR.name = in.string();
-
       Item i;
-      i.type = 2;
-      i.r = newR;
-
+      i.is_address = false;
+      i.value = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -676,13 +672,9 @@ namespace L1 {
   template<> struct action < A_other_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      Register newR;
-      newR.name = in.string();
-
       Item i;
-      i.type = 2;
-      i.r = newR;
-
+      i.is_address = false;
+      i.value = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -690,13 +682,9 @@ namespace L1 {
   template<> struct action < W_other_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      Register newR;
-      newR.name = in.string();
-
       Item i;
-      i.type = 2;
-      i.r = newR;
-
+      i.is_address = false;
+      i.value = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -704,13 +692,9 @@ namespace L1 {
   template<> struct action < X_other_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      Register newR;
-      newR.name = in.string();
-
       Item i;
-      i.type = 2;
-      i.r = newR;
-
+      i.is_address = false;
+      i.value = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -719,7 +703,7 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto i = parsed_items.back();
-      auto x = i.r;
+      auto x = i.value;
       parsed_address_xs.push_back(x);
     }
   };
@@ -728,7 +712,7 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
     auto i = parsed_items.back();
-    auto m = i.n;
+    auto m = i.value;
     parsed_address_ms.push_back(m);
     }
   };
@@ -743,7 +727,7 @@ namespace L1 {
       address.r = x;
 
       Item i;
-      i.type = 4;
+      i.is_address = true;
       i.address = address;
       parsed_items.push_back(i);
     }
@@ -753,8 +737,7 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto comp_left = parsed_items.back();
-
-      parsed_cmp_lefts.push_back(comp_left);
+      parsed_cmp_lefts.push_back(comp_left.value);
     }
   };
 
@@ -762,8 +745,7 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto comp_right = parsed_items.back();
-
-      parsed_cmp_rights.push_back(comp_right);
+      parsed_cmp_rights.push_back(comp_right.value);
     }
   };
 
@@ -774,7 +756,6 @@ namespace L1 {
       comparison.left = parsed_cmp_lefts.back();
       comparison.right = parsed_cmp_rights.back();
       comparison.cmp_sign = parsed_cmp_signs.back();
-
       parsed_comparisons.push_back(comparison);
     }
   };
@@ -802,8 +783,8 @@ namespace L1 {
       auto label2 = parsed_items.back();
 
       cjump->c = c;
-      cjump->label1 = label1.labelName;
-      cjump->label2 = label2.labelName;
+      cjump->label1 = label1.value;
+      cjump->label2 = label2.value;
       auto currentF = p.functions.back();
       currentF->instructions.push_back(cjump);
     }
@@ -815,7 +796,7 @@ namespace L1 {
       auto g = new Goto();
       auto label = parsed_items.back();
 
-      g->label = label.labelName;
+      g->label = label.value;
       auto currentF = p.functions.back();
       currentF->instructions.push_back(g);
     }
@@ -828,8 +809,8 @@ namespace L1 {
       auto u = parsed_items.at(parsed_items.size()-2);
       auto n = parsed_items.back();
 
-      c->u = u;
-      c->n = n.n;
+      c->u = u.value;
+      c->n = n.value;
       auto currentF = p.functions.back();
       currentF->instructions.push_back(c);
     }
@@ -841,7 +822,7 @@ namespace L1 {
       auto l = new Label_instruction();
       auto label = parsed_items.back();
 
-      l->label = label.labelName;
+      l->label = label.value;
       auto currentF = p.functions.back();
       currentF->instructions.push_back(l);
     }
@@ -875,8 +856,8 @@ namespace L1 {
       auto op = parsed_operations.back();
 
       Item i;
-      i.n = 1;
-      i.type = 3;
+      i.value = "1";
+      i.is_address = false;
 
       a->d = d;
       a->op = op;
@@ -890,11 +871,11 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto at_a = new At_arithmetic();
-      at_a->dest = (parsed_items.at(parsed_items.size() - 4)).r;
+      at_a->dest = (parsed_items.at(parsed_items.size() - 4)).value;
 
-      at_a->r1 = (parsed_items.at(parsed_items.size() - 3)).r;
-      at_a->r2 = (parsed_items.at(parsed_items.size() - 2)).r;
-      at_a->n = (parsed_items.back()).n;
+      at_a->r1 = (parsed_items.at(parsed_items.size() - 3)).value;
+      at_a->r2 = (parsed_items.at(parsed_items.size() - 2)).value;
+      at_a->n = (parsed_items.back()).value;
 
       auto currentF = p.functions.back();
       currentF->instructions.push_back(at_a);
@@ -909,7 +890,7 @@ namespace L1 {
       auto n = parsed_items.back();
 
       s->system_func = system_func;
-      s->n = n.n;
+      s->n = n.value;
       auto currentF = p.functions.back();
       currentF->instructions.push_back(s);
     }
