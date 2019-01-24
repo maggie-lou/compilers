@@ -3,16 +3,51 @@
     0 0
 
     // This is my comment
+
+    // w <- s
     rax <- :label
-     rax <- 8 
-     rax <- rsp 
-     rbx <- rdi 
-     rsp <- 5 
-    return 
+    rax <- 8
+    rax <- rsp
+    rbx <- rdi
+    //* rsp <- 5
+
+    // w <- mem x M
+    r10 <- mem rsp 8
+    r11 <- mem rax 8
+    r15 <- mem rbx 8
+
+    // mem x M <- s
+    mem rsp 16 <- :label
+    mem rax 24 <- rbp
+    mem rbx 24 <- 7
+
+    // w aop t
+    rax += rsp
+    rax += 5
+    rax += rbx
+
+    // w sop sx
+    rax <<= rcx
+    rax >>= rcx
+    //* rax >> rcx
+
+    // w sop N
+    r14 <<= 333
+    r13 >>=  -1
+
+    // mem x M += t | mem x M -= t | w += mem x M | w -= mem x M
+    mem rsp 8 += 5
+    rax -= mem rdx 0
+
+    rax <- 30 < 8
+    rax <- 30 <= 8
+    rax <- 30 = 8
+
+    return
   )
 
   (:testFunction
     1 2
-    return 
+    return
   )
 )

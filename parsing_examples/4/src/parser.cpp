@@ -38,6 +38,7 @@ namespace L1 {
   std::vector<std::string> parsed_cmp_signs;
   std::vector<Item> parsed_cmp_lefts;
   std::vector<Item> parsed_cmp_rights;
+  std::vector<Comparison> parsed_comparisons;
 
   /*
    * Grammar rules from now on.
@@ -325,10 +326,31 @@ namespace L1 {
       Address_m_rule
     > { };
 
+  struct Comparison_left_rule:
+    pegtl::seq<
+      T_rule
+    > { };
+
+  struct Comparison_right_rule:
+    pegtl::seq<
+      T_rule
+    > { };
+
+  // t cmp t
+  struct Comparison_rule:
+    pegtl::seq<
+      Comparison_left_rule,
+      seps,
+      Cmp_rule,
+      seps,
+      Comparison_right_rule
+    > { };
+
   struct Source_rule:
     pegtl::sor<
       S_rule,
       Address_rule,
+      Comparison_rule
     > { };
 
   struct Destination_rule:
@@ -344,6 +366,15 @@ namespace L1 {
       Sop_rule
     > { };
 
+  struct Assignment_cmp_rule:
+    pegtl::seq<
+      Destination_rule,
+      seps,
+      Assign_rule,
+      seps,
+      Comparison_rule
+    > { };
+
   struct Assignment_rule:
     pegtl::seq<
       Destination_rule,
@@ -353,19 +384,10 @@ namespace L1 {
       Source_rule
     > { };
 
-  // t cmp t
-  struct Comparison_rule:
-    pegtl::seq<
-      Comparison_left_rule,
-      seps,
-      Cmp_rule,
-      seps,
-      Comparison_right_rule
-    > { };
-
   struct Instruction_rule:
     pegtl::sor<
       pegtl::seq< pegtl::at<Instruction_return_rule>            , Instruction_return_rule             >,
+      pegtl::seq< pegtl::at<Assignment_cmp_rule>            , Assignment_cmp_rule             >,
       pegtl::seq< pegtl::at<Assignment_rule>            , Assignment_rule             >
     > { };
 
@@ -581,6 +603,24 @@ namespace L1 {
     }
   };
 
+  template<> struct action < Comparison_left_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto comp_left = parsed_items.back();
+
+      parsed_cmp_lefts.push_back(comp_left);
+    }
+  };
+
+  template<> struct action < Comparison_right_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto comp_right = parsed_items.back();
+
+      parsed_cmp_rights.push_back(comp_right);
+    }
+  };
+
   template<> struct action < Comparison_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
@@ -589,10 +629,21 @@ namespace L1 {
       comparison.right = parsed_cmp_rights.back();
       comparison.cmp_sign = parsed_cmp_signs.back();
 
-      Item i;
-      i.type = 5;
-      i.comparison = comparison;
-      parsed_items.push_back(i);
+      parsed_comparisons.push_back(comparison);
+    }
+  };
+
+  template<> struct action < Assignment_cmp_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto a = new AssignmentCmp();
+      auto d = parsed_destinations.back();
+      auto s = parsed_comparisons.back();
+
+      a->d = d;
+      a->s = s;
+      auto currentF = p.functions.back();
+      currentF->instructions.push_back(a);
     }
   };
 

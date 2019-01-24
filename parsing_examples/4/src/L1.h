@@ -73,6 +73,15 @@ namespace L1 {
   };
 
   /*
+   * Assignment Instruction.
+   * w <- t cmp t
+   */
+  struct AssignmentCmp : Instruction {
+    Item d;
+    Comparison s;
+  };
+
+  /*
    * Program.
    */
   struct Program{
