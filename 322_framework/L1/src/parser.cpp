@@ -488,7 +488,7 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       if (p.entryPointLabel.empty()){
-        p.entryPointLabel = in.string();
+        p.entryPointLabel = "_" + in.string().substr(1);
       } else {
         abort();
       }
@@ -499,7 +499,7 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto newF = new Function();
-      newF->name = in.string();
+      newF->name = "_" + in.string().substr(1);
       p.functions.push_back(newF);
     }
   };
@@ -533,7 +533,7 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       Item i;
-      i.value = in.string();
+      i.value = "_" + in.string().substr(1);
       i.is_address = false;
       parsed_items.push_back(i);
     }
@@ -544,7 +544,7 @@ namespace L1 {
 	static void apply( const Input & in, Program & p){
       Item i;
       i.is_address = false;
-      i.value = in.string();
+      i.value = "$" + in.string();
       parsed_items.push_back(i);
     }
   };
@@ -554,7 +554,7 @@ namespace L1 {
 	static void apply( const Input & in, Program & p){
       Item i;
       i.is_address = false;
-      i.value = in.string();
+      i.value = "%" + in.string();
       parsed_items.push_back(i);
     }
   };
@@ -564,7 +564,7 @@ namespace L1 {
   static void apply( const Input & in, Program & p){
       Item i;
       i.is_address = false;
-      i.value = in.string();
+      i.value = "%" + in.string();
       parsed_items.push_back(i);
     }
   };
@@ -574,7 +574,7 @@ namespace L1 {
   static void apply( const Input & in, Program & p){
       Item i;
       i.is_address = false;
-      i.value = in.string();
+      i.value = "%" + in.string();
       parsed_items.push_back(i);
     }
   };
@@ -584,7 +584,7 @@ namespace L1 {
 	static void apply( const Input & in, Program & p){
       Item i;
       i.is_address = false;
-      i.value = in.string();
+      i.value = "%" + in.string();
       parsed_items.push_back(i);
     }
   };

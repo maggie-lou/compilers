@@ -1,6 +1,18 @@
 (:myGo
   (:myGo
     0 0
+    rax <- :label
+    rax <- 11
+    r10 <- rax
+    rbx <- 9
+    rax += 5
+    // rax <<= 2
+    // rax >>= 2
+    rax += rbx
+    return
+  )
+  (:anotherFunc
+    0 0
     return
   )
 )

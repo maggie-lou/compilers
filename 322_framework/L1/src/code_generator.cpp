@@ -33,7 +33,6 @@ namespace L1{
                << "\tpopq %rbx\n"
                << "\tretq\n";
 
-
     /*
      * Generate target code
      */
