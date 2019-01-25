@@ -8,12 +8,18 @@ namespace L1 {
    * Instruction interface.
    */
   struct Instruction{
+    std::string compile(){
+      return "";
+    };
   };
 
   /*
    * Instructions.
    */
   struct Instruction_ret : Instruction{
+    std::string compile(){
+      return "retq\n";
+    }
   };
 
   /*
