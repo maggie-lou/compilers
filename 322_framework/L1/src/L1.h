@@ -64,6 +64,9 @@ namespace L1 {
     std::map<std::string, std::string> m_sign = {
       {"<=", "setle"}, {"<", "setl"}, {">=", "setge"}, {">", "setg"}, {"=", "sete"}
     };
+    std::map<std::string, std::string> m_jmp = {
+      {"<=", "jle"}, {"<", "jl"}, {">=", "jge"}, {">", "jg"}, {"=", "je"}
+    };
 
     bool is_int(std::string str){
       if (str[0] == '$'){
@@ -96,13 +99,15 @@ namespace L1 {
       return -1;
     }
 
-    std::string comp_to_string(bool set){
-      if (is_int(right)){
+    std::string comp_to_string(bool isAssignment){
+      if (is_int(left)){
         reverse();
       }
       std::string str = "\tcmpq " + right + ", " + left + "\n";
-      if (set){
+      if (isAssignment){
         str += "\t" + m_sign[cmp_sign];
+      } else {
+        str += "\t" + m_jmp[cmp_sign];
       }
       return str;
     }
@@ -134,6 +139,10 @@ namespace L1 {
     std::string r1;
     std::string r2;
     std::string n;
+
+    virtual std::string compile(){
+      return "\tlea (" + r1+", "+r2+", "+n.substr(1)+"), "+dest+"\n";
+    }
   };
 
   /*
@@ -154,8 +163,13 @@ namespace L1 {
 
     virtual std::string compile(){
       switch (m[op]) {
-        case 1:
-          return "\tmovq "+s.item_to_string()+", "+d.item_to_string()+"\n";
+        case 1: {
+          auto source = s.item_to_string();
+          if (source.at(0) == '_' && d.is_address) {
+            source = "$" + source;
+          }
+          return "\tmovq "+source+", "+d.item_to_string()+"\n";
+                }
         case 2:
           return "\taddq "+s.item_to_string()+", "+d.item_to_string()+"\n";
         case 3:
@@ -208,6 +222,19 @@ namespace L1 {
     Comparison c;
     std::string label1;
     std::string label2;
+
+    virtual std::string compile(){
+      int check_result = c.check();
+      if (check_result == -1){
+        return c.comp_to_string(false) + " " + label1 + "\n" + "\tjmp " + label2 + "\n";
+      } else {
+        if (check_result == 0) {
+          return "\tjmp " + label2 + "\n";
+        } else {
+          return "\tjmp " + label1 + "\n";
+        }
+      }
+    }
   };
 
   /*
@@ -217,6 +244,19 @@ namespace L1 {
   struct Cjump_fallthrough : Instruction {
     Comparison c;
     std::string label;
+
+    virtual std::string compile(){
+      int check_result = c.check();
+      if (check_result == -1){
+        return c.comp_to_string(false) + " " + label + "\n";
+      } else {
+        if (check_result == 0) {
+          return "";
+        } else {
+          return "\tjmp " + label + "\n";
+        }
+      }
+    }
   };
 
   /*
@@ -225,6 +265,10 @@ namespace L1 {
    */
   struct Label_instruction : Instruction {
     std::string label;
+
+    virtual std::string compile(){
+      return "\t"+ label + ":\n";
+    }
   };
 
   /*
@@ -233,6 +277,10 @@ namespace L1 {
    */
   struct Goto : Instruction {
     std::string label;
+
+    virtual std::string compile(){
+      return "\tjmp " + label + "\n";
+    }
   };
 
   /*

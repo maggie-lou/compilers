@@ -16,6 +16,16 @@
     rdi <- rax < 10
     rdi <- rax = 10
     rsi <- 10 = rax
+    goto :label
+    :label
+    mem rsp -8 <- :myLabel
+    cjump rax <= rdi :yes :no
+    cjump 8 < rdi :yes :no
+    cjump 3 < 1 :true :false
+    cjump rax = rdi :yes
+    cjump 1 <= 3 :true
+    cjump 3 <= 1 :true
+    rax @ rdi rsi 4
     return
   )
   (:anotherFunc
