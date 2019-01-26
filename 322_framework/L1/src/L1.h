@@ -10,6 +10,12 @@ namespace L1 {
    * Instruction interface.
    */
   struct Instruction{
+    std::map<std::string, std::string> m_register = {
+      {"%r10", "%r10b"}, {"%r11", "%r11b"}, {"%r12", "%r12b"}, {"%r13", "%r13b"},
+      {"%r14", "%r14b"}, {"%r15", "%r15b"}, {"%r8", "%r8b"}, {"%r9", "%r9b"},
+      {"%rax", "%al"}, {"%rbp", "%bpl"}, {"%rbx", "%bl"}, {"%rcx", "%cl"},
+      {"%rdi", "%dil"}, {"%rdx", "%dl"}, {"%rsi", "%sil"}
+    };
     virtual std::string compile(){
       return "";
     };
@@ -19,8 +25,15 @@ namespace L1 {
    * Instructions.
    */
   struct Instruction_ret : Instruction{
+    int locals;
+    int arguments;
     virtual std::string compile(){
-      return "\tretq\n";
+      std::string str = "";
+      if (locals != 0 || arguments > 6){
+        int up = 8 * (locals + std::max(0, arguments - 6));
+        str += "\taddq $" + std::to_string(up) + ", %rsp\n";
+      }
+      return str + "\tret\n";
     }
   };
 
@@ -165,11 +178,11 @@ namespace L1 {
       switch (m[op]) {
         case 1: {
           auto source = s.item_to_string();
-          if (source.at(0) == '_' && d.is_address) {
+          if (source.at(0) == '_') {
             source = "$" + source;
           }
           return "\tmovq "+source+", "+d.item_to_string()+"\n";
-                }
+        }
         case 2:
           return "\taddq "+s.item_to_string()+", "+d.item_to_string()+"\n";
         case 3:
@@ -178,10 +191,20 @@ namespace L1 {
           return "\timulq "+s.item_to_string()+", "+d.item_to_string()+"\n";
         case 5:
           return "\tandq "+s.item_to_string()+", "+d.item_to_string()+"\n";
-        case 6:
-          return "\tsarq "+s.item_to_string()+", "+d.item_to_string()+"\n";
-        case 7:
-          return "\tsalq "+s.item_to_string()+", "+d.item_to_string()+"\n";
+        case 6: {
+          std::string source = s.item_to_string();
+          if (source[0] == '%'){
+            source = m_register[source];
+          }
+          return "\tsarq "+source+", "+d.item_to_string()+"\n";
+        }
+        case 7: {
+          std::string source = s.item_to_string();
+          if (source[0] == '%'){
+            source = m_register[source];
+          }
+          return "\tsalq "+source+", "+d.item_to_string()+"\n";
+        }
         default:
           return "";
       }
@@ -195,12 +218,6 @@ namespace L1 {
   struct AssignmentCmp : Instruction {
     Item d;
     Comparison s;
-    std::map<std::string, std::string> m_register = {
-      {"%r10", "%r10b"}, {"%r11", "%r11b"}, {"%r12", "%r12b"}, {"%r13", "%r13b"},
-      {"%r14", "%r14b"}, {"%r15", "%r15b"}, {"%r8", "%r8b"}, {"%r9", "%r9b"},
-      {"%rax", "%al"}, {"%rbp", "%bpl"}, {"%rbx", "%bl"}, {"%rcx", "%cl"},
-      {"%rdi", "%dil"}, {"%rdx", "%dl"}, {"%rsi", "%sil"}
-    };
 
     virtual std::string compile(){
       int check_result = s.check();
@@ -267,7 +284,7 @@ namespace L1 {
     std::string label;
 
     virtual std::string compile(){
-      return "\t"+ label + ":\n";
+      return label.substr(1) + ":\n";
     }
   };
 
@@ -290,6 +307,13 @@ namespace L1 {
   struct Custom_func_call : Instruction {
     std::string u;
     std::string n;
+    std::string compile(){
+      int down = std::max(0, std::stoi(n.substr(1)) - 6) * 8 + 8;
+      if (u[0] == '%'){
+        u = "*" + u;
+      }
+      return "\tsubq $" + std::to_string(down) +  ", %rsp\n\tjmp " + u +  "\n";
+    }
   };
 
   /*
@@ -298,7 +322,12 @@ namespace L1 {
    */
   struct System_func_call : Instruction {
     std::string system_func;
-    std::string n;
+    std::string compile(){
+      if (system_func == "array-error"){
+        system_func = "array_error";
+      }
+      return "\tcall " + system_func +  "\n";
+    }
   };
 
   /*

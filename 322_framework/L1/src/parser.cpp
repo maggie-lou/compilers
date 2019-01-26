@@ -374,7 +374,7 @@ namespace L1 {
       seps,
       System_func_rule,
       seps,
-      Number_rule
+      number
     > { };
 
   // ++, --
@@ -519,6 +519,8 @@ namespace L1 {
 	static void apply( const Input & in, Program & p){
       auto currentF = p.functions.back();
       auto i = new Instruction_ret();
+      i->locals = currentF->locals;
+      i->arguments = currentF->arguments;
       currentF->instructions.push_back(i);
     }
   };
@@ -741,13 +743,10 @@ namespace L1 {
   template<> struct action < System_func_call_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-
       auto s = new System_func_call();
-      auto system_func = parsed_items.at(parsed_items.size()-2);
-      auto n = parsed_items.back();
+      auto system_func = parsed_items.back();
 
       s->system_func = system_func.value;
-      s->n = n.value;
       auto currentF = p.functions.back();
       currentF->instructions.push_back(s);
     }

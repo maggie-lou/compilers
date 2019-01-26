@@ -38,6 +38,12 @@ namespace L1{
      */
     for (auto f : p.functions){
       outputFile << "_" << f->name.substr(1) << ":" << endl;
+      int local_number = f->locals;
+      int arg_number = f->arguments;
+      if (local_number != 0){
+        int down = 8  * local_number;
+        outputFile << "\tsubq $" << std::to_string(down) << ", %rsp\n";
+      }
       for (auto instruction : f->instructions){
         outputFile << instruction->compile();
       }
