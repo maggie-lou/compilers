@@ -91,9 +91,9 @@ namespace L1 {
     void reverse(){
       left.swap(right);
       if (cmp_sign == "<="){
-        cmp_sign = ">";
-      } else if (cmp_sign == "<"){
         cmp_sign = ">=";
+      } else if (cmp_sign == "<"){
+        cmp_sign = ">";
       }
     }
 
@@ -284,7 +284,7 @@ namespace L1 {
     std::string label;
 
     virtual std::string compile(){
-      return label.substr(1) + ":\n";
+      return label + ":\n";
     }
   };
 

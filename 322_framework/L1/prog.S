@@ -7,7 +7,7 @@ go:
 	pushq %r13
 	pushq %r14
 	pushq %r15
-	call _myGo
+	call _entry
 	popq %r15
 	popq %r14
 	popq %r13
@@ -15,5 +15,8 @@ go:
 	popq %rbp
 	popq %rbx
 	retq
-_myGo:
+_entry:
+_divisible_by_four:
+	retq
+_divisible_by_two:
 	retq

@@ -122,34 +122,20 @@ namespace L1 {
 
   struct Sop_rule:
     pegtl::sor<
-      pegtl::seq<
-        pegtl::string<'<','<','='>
-      >,
-      pegtl::seq<
-        pegtl::string<'>','>','='>
-      >
+      pegtl::string<'<','<','='>,
+      pegtl::string<'>','>','='>
     > { };
 
   struct Aop_rule:
     pegtl::sor<
-      pegtl::seq<
-        pegtl::string<'+','='>
-      >,
-      pegtl::seq<
-        pegtl::string<'-','='>
-      >,
-      pegtl::seq<
-        pegtl::string<'*','='>
-      >,
-      pegtl::seq<
-        pegtl::string<'&','='>
-      >
+      pegtl::string<'+','='>,
+      pegtl::string<'-','='>,
+      pegtl::string<'*','='>,
+      pegtl::string<'&','='>
     > { };
 
   struct Assign_rule:
-    pegtl::seq<
-      pegtl::string<'<','-'>
-    > { };
+    pegtl::string<'<','-'> { };
 
   struct Instruction_return_rule:
     pegtl::seq<
@@ -157,27 +143,15 @@ namespace L1 {
     > { };
 
   struct Sx_rule:
-    pegtl::seq<
-      pegtl::string<'r','c','x'>
-    > {};
+    pegtl::string<'r','c','x'> {};
 
   struct A_other_rule:
     pegtl::sor<
-      pegtl::seq<
-        pegtl::string<'r','d','i'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','d','x'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','8'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','9'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','s','i'>
-      >
+      pegtl::string<'r','d','i'>,
+      pegtl::string<'r','d','x'>,
+      pegtl::string<'r','8'>,
+      pegtl::string<'r','9'>,
+      pegtl::string<'r','s','i'>
     > {};
 
   struct A_rule:
@@ -188,33 +162,15 @@ namespace L1 {
 
   struct W_other_rule:
     pegtl::sor<
-      pegtl::seq<
-        pegtl::string<'r','b','x'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','a','x'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','b','p'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','1','0'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','1','1'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','1','2'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','1','3'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','1','4'>
-      >,
-      pegtl::seq<
-        pegtl::string<'r','1','5'>
-      >
+      pegtl::string<'r','b','x'>,
+      pegtl::string<'r','a','x'>,
+      pegtl::string<'r','b','p'>,
+      pegtl::string<'r','1','0'>,
+      pegtl::string<'r','1','1'>,
+      pegtl::string<'r','1','2'>,
+      pegtl::string<'r','1','3'>,
+      pegtl::string<'r','1','4'>,
+      pegtl::string<'r','1','5'>
     > {};
 
   struct W_rule:
@@ -224,9 +180,7 @@ namespace L1 {
     > {};
 
   struct X_other_rule:
-    pegtl::seq<
-      pegtl::string<'r','s','p'>
-    > {};
+    pegtl::string<'r','s','p'> {};
 
   struct X_rule:
     pegtl::sor<
@@ -715,7 +669,7 @@ namespace L1 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto i = new Inc_or_dec();
-      auto d = parsed_destinations.back();
+      auto d = parsed_items.back();
       auto op = parsed_operations.back();
 
       i->reg = d.value;
