@@ -5,10 +5,17 @@
     rax <- 11
     r10 <- rax
     rbx <- 9
-    rax += 5
-    // rax <<= 2
-    // rax >>= 2
-    rax += rbx
+    rax <<= 2
+    mem r10 16 <- 5
+    rbx <- mem r14 8
+    r11++
+    r12--
+    rdi <- 10 <= 11
+    rdi <- 10 < 9
+    rdi <- rax <= 10
+    rdi <- rax < 10
+    rdi <- rax = 10
+    rsi <- 10 = rax
     return
   )
   (:anotherFunc

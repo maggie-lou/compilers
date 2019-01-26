@@ -61,6 +61,51 @@ namespace L1 {
     std::string left;
     std::string right;
     std::string cmp_sign;
+    std::map<std::string, std::string> m_sign = {
+      {"<=", "setle"}, {"<", "setl"}, {">=", "setge"}, {">", "setg"}, {"=", "sete"}
+    };
+
+    bool is_int(std::string str){
+      if (str[0] == '$'){
+        return true;
+      }
+      return false;
+    }
+
+    void reverse(){
+      left.swap(right);
+      if (cmp_sign == "<="){
+        cmp_sign = ">";
+      } else if (cmp_sign == "<"){
+        cmp_sign = ">=";
+      }
+    }
+
+    int check(){
+      if (is_int(left) && is_int(right)){
+        int left_int = std::stoi(left.substr(1));
+        int right_int = std::stoi(right.substr(1));
+        if (cmp_sign  == "="){
+          return left_int == right_int;
+        } else if (cmp_sign == "<"){
+          return left_int < right_int;
+        } else {
+          return left_int <= right_int;
+        }
+      }
+      return -1;
+    }
+
+    std::string comp_to_string(bool set){
+      if (is_int(right)){
+        reverse();
+      }
+      std::string str = "\tcmpq " + right + ", " + left + "\n";
+      if (set){
+        str += "\t" + m_sign[cmp_sign];
+      }
+      return str;
+    }
   };
 
   /*
@@ -70,6 +115,14 @@ namespace L1 {
   struct Inc_or_dec : Instruction {
     std::string reg;
     std::string op;
+
+    virtual std::string compile(){
+      if (op == "++"){
+        return "\tinc " + reg + "\n";
+      } else  {
+        return "\tdec " + reg + "\n";
+      }
+    }
   };
 
   /*
@@ -128,6 +181,23 @@ namespace L1 {
   struct AssignmentCmp : Instruction {
     Item d;
     Comparison s;
+    std::map<std::string, std::string> m_register = {
+      {"%r10", "%r10b"}, {"%r11", "%r11b"}, {"%r12", "%r12b"}, {"%r13", "%r13b"},
+      {"%r14", "%r14b"}, {"%r15", "%r15b"}, {"%r8", "%r8b"}, {"%r9", "%r9b"},
+      {"%rax", "%al"}, {"%rbp", "%bpl"}, {"%rbx", "%bl"}, {"%rcx", "%cl"},
+      {"%rdi", "%dil"}, {"%rdx", "%dl"}, {"%rsi", "%sil"}
+    };
+
+    virtual std::string compile(){
+      int check_result = s.check();
+      if (check_result == -1){
+        std::string str = s.comp_to_string(true);
+        std::string short_reg = m_register[d.value];
+        return str + " " + short_reg + "\n\tmovzbq " + short_reg + ", " + d.value + "\n";
+      } else {
+        return "\tmovq $" + std::to_string(check_result) +  ", " + d.value + "\n";
+      }
+    }
   };
 
   /*

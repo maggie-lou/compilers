@@ -115,15 +115,9 @@ namespace L1 {
 
   struct Cmp_rule:
     pegtl::sor<
-      pegtl::seq<
-        pegtl::string<'<','='>
-      >,
-      pegtl::seq<
-        pegtl::one<'<'>
-      >,
-      pegtl::seq<
-        pegtl::one<'='>
-      >
+      pegtl::string<'<','='>,
+      pegtl::string<'<'>,
+      pegtl::string<'='>
     > { };
 
   struct Sop_rule:
