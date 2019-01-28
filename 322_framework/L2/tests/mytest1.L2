@@ -1,0 +1,10 @@
+(:go
+  (:go
+    0 0
+    r10 <- stack-arg 8
+    %a <- 8
+    goto %a
+    :label ++
+    return
+  )
+)
