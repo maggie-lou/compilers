@@ -737,7 +737,6 @@ namespace L2 {
   template<> struct action < Assignment_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      cout <<"HI"<<endl;
       auto a = new Assignment();
       auto d = parsed_destinations.back();
       auto op = parsed_operations.back();
@@ -820,6 +819,23 @@ namespace L2 {
     parse< grammar, action >(fileInput, p);
 
     return p;
+  }
+
+  Function parse_function (char *fileName){
+
+    /*
+     * Check the grammar for some possible issues.
+     */
+    pegtl::analyze< grammar >();
+
+    /*
+     * Parse.
+     */
+    file_input< > fileInput(fileName);
+    Function f;
+    parse< grammar, action >(fileInput, f);
+
+    return f;
   }
 
 }

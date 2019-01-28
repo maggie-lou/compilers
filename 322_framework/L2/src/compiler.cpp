@@ -94,7 +94,7 @@ int main(
     /*
      * Parse an L2 function.
      */
-     //TODO
+     auto f = L2::parse_function(argv[optind]);
 
   } else if (interference_only){
 
@@ -109,6 +109,7 @@ int main(
      * Parse the L2 program.
      */
     //TODO
+    auto p = L2::parse_file(argv[optind]);
   }
 
   /*
