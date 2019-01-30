@@ -1,12 +1,35 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <set>
+#include <algorithm>
+#include <iterator>
 
 #include <analysis.h>
 
 using namespace std;
 
 namespace L2{
+  vector<string> get_union(vector<string> v1, vector<string> v2)  {
+    set<string> set1(v1.begin(), v1.end());
+    set<string> set2(v2.begin(), v2.end());
+    set<string> union_set;
+    // set_union(set1.begin(), set1.end(), set2.begin(), set2.end(),
+    //           back_inserter(union_set));
+    // vector<string> union_vec(union_set.begin(), union_set.end());
+    return union_vec;
+  }
+
+  vector<string> get_difference(vector<string> v1, vector<string> v2)  {
+    set<string> set1(v1.begin(), v1.end());
+    set<string> set2(v2.begin(), v2.end());
+    set<string> diff_set;
+    // set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(),
+    //               inserter(diff_set, diff_set.begin()));
+    // vector<string> diff_vec(diff_set.begin(), diff_set.end());
+    return diff_vec;
+  }
+
   void generate_in_out_sets(Program p){
 
     // Print to standard out, not a file
@@ -16,24 +39,33 @@ namespace L2{
     /*
      * Generate target code
      */
-    auto i = (p.functions.front())->instructions;
-    vector<vector<std::string>> gen(instructions.size());
-    vector<vector<std::string>> kill(instructions.size());
-    vector<vector<std::string>> in(instructions.size());
-    vector<vector<std::string>> out(instructions.size());
+    auto instructions = (p.functions.front())->instructions;
+    vector<vector<string>> gen(instructions.size());
+    vector<vector<string>> kill(instructions.size());
+    vector<vector<string>> in(instructions.size());
+    vector<vector<string>> out(instructions.size());
     bool changes = false;
 
-    for (int j=0; j<i.size(); j++) {
-      auto current_i = i[j];
-      gen[j] = generate_gen(current_i);
-      kill[j] = generate_kill(current_i);
+    for (int j=0; j<instructions.size(); j++) {
+      auto current_i = instructions[j];
+      gen[j] = current_i->generate_gen();
+      kill[j] = current_i->generate_kill();
       in[j] = {};
       out[j] = {};
     }
+    for (int j=0; j<instructions.size(); j++) {
+      cout << to_string(j) << endl;
+      copy(gen[j].begin(), gen[j].end(), ostream_iterator<char>(cout, " "));
+      cout << "\n";
+      copy(kill[j].begin(), kill[j].end(), ostream_iterator<char>(cout, " "));
+      cout << "\n";
+    }
+
 
     do {
-      for (int j=i.size()-1; j>=0; j--) {
-        in[j] = union(gen[j], difference(out[j], kill[j]));
+      for (int j=instructions.size()-1; j>=0; j--) {
+        vector<string> diff = get_difference(out[j], kill[j]);
+        in[j] = get_union(gen[j], diff);
         // out[j] =
       }
     } while (changes);
@@ -57,18 +89,4 @@ namespace L2{
 
     return ;
   }
-
-  vector<std::string> generate_gen(Instruction* i) {
-
-  }
-  vector<std::string> generate_kill(Instruction* i) {
-
-  }
-  vector<std::string> union(vector<std::string> v1, vector<std::string> v2)  {
-
-  }
-  vector<std::string> difference(vector<std::string> v1, vector<std::string> v2)  {
-
-  }
 }
-

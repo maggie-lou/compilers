@@ -500,7 +500,7 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       Item i;
-      i.value = "_" + in.string().substr(1);
+      i.value = in.string();
       i.is_address = false;
       parsed_items.push_back(i);
     }

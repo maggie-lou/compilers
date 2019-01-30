@@ -19,6 +19,12 @@ namespace L2 {
     virtual std::string compile(){
       return "";
     };
+    virtual std::vector<std::string> generate_gen(){
+      return {};
+    }
+    virtual std::vector<std::string> generate_kill(){
+      return {};
+    }
   };
 
   /*
@@ -27,6 +33,7 @@ namespace L2 {
   struct Instruction_ret : Instruction{
     int locals;
     int arguments;
+
     virtual std::string compile(){
       std::string str = "";
       if (locals != 0 || arguments > 6){
@@ -34,6 +41,14 @@ namespace L2 {
         str += "\taddq $" + std::to_string(up) + ", %rsp\n";
       }
       return str + "\tret\n";
+    }
+
+    virtual std::vector<std::string> generate_gen(){
+      return {"rax", "r12", "r13", "r14", "r15", "rbp", "rbx"};
+    }
+
+    virtual std::vector<std::string> generate_kill(){
+      return {};
     }
   };
 
@@ -68,6 +83,17 @@ namespace L2 {
         return value;
       }
     }
+
+    std::vector<std::string> get_reg_var(){
+      if (is_address){
+        return {address.r};
+      } else {
+        if (value[0] != '$' && value[0] != ':'){
+          return {value};
+        }
+      }
+      return {};
+    }
   };
 
   struct Comparison {
@@ -80,6 +106,19 @@ namespace L2 {
     std::map<std::string, std::string> m_jmp = {
       {"<=", "jle"}, {"<", "jl"}, {">=", "jge"}, {">", "jg"}, {"=", "je"}
     };
+
+    std::vector<std::string> gen(){
+      if (left[0] != '$'){
+        if (right[0] != '$'){
+          return {left, right};
+        }
+        return {left};
+      }
+      if (right[0] != '$'){
+        return {right};
+      }
+      return {};
+    }
 
     bool is_int(std::string str){
       if (str[0] == '$'){
@@ -141,6 +180,14 @@ namespace L2 {
         return "\tdec " + reg + "\n";
       }
     }
+
+    virtual std::vector<std::string> generate_gen(){
+      return {reg};
+    }
+
+    virtual std::vector<std::string> generate_kill(){
+      return {reg};
+    }
   };
 
   /*
@@ -156,6 +203,14 @@ namespace L2 {
     virtual std::string compile(){
       return "\tlea (" + r1+", "+r2+", "+n.substr(1)+"), "+dest+"\n";
     }
+
+    virtual std::vector<std::string> generate_gen(){
+      return {r1, r2};
+    }
+
+    virtual std::vector<std::string> generate_kill(){
+      return {dest};
+    }
   };
 
   /*
@@ -163,6 +218,7 @@ namespace L2 {
    * w <- s | w <- mem x M | mem x M <- s
    * w aop t | w sop sx | w sop N |
    * mem x M += t | mem x M -= t | w += mem x M | w -= mem x M |
+   * w <- stack-arg M
    */
   struct Assignment : Instruction {
     Item d;
@@ -171,8 +227,21 @@ namespace L2 {
 
     std::map<std::string, int> m = {
       {"<-", 1}, {"+=", 2}, {"-=", 3}, {"*=", 4},
-      {"&=", 5}, {">>=", 6}, {"<<=", 7}
+      {"&=", 5}, {">>=", 6}, {"<<=", 7}, {"<- stack-arg", 8}
     };
+
+    virtual std::vector<std::string> generate_gen(){
+      std::vector<std::string> gen = s.get_reg_var();
+      if (op != "<-" && op != "<- stack-arg") {
+        std::vector<std::string> d_reg_var = d.get_reg_var();
+        gen.insert(gen.end(), d_reg_var.begin(), d_reg_var.end());
+      }
+      return gen;
+    }
+
+    virtual std::vector<std::string> generate_kill(){
+      return d.get_reg_var();
+    }
 
     virtual std::string compile(){
       switch (m[op]) {
@@ -219,6 +288,14 @@ namespace L2 {
     Item d;
     Comparison s;
 
+    virtual std::vector<std::string> generate_gen(){
+      return s.gen();
+    }
+
+    virtual std::vector<std::string> generate_kill(){
+      return d.get_reg_var();
+    }
+
     virtual std::string compile(){
       int check_result = s.check();
       if (check_result == -1){
@@ -239,6 +316,14 @@ namespace L2 {
     Comparison c;
     std::string label1;
     std::string label2;
+
+    virtual std::vector<std::string> generate_gen(){
+      return c.gen();
+    }
+
+    virtual std::vector<std::string> generate_kill(){
+      return {};
+    }
 
     virtual std::string compile(){
       int check_result = c.check();
@@ -262,6 +347,14 @@ namespace L2 {
     Comparison c;
     std::string label;
 
+    virtual std::vector<std::string> generate_gen(){
+      return c.gen();
+    }
+
+    virtual std::vector<std::string> generate_kill(){
+      return {};
+    }
+
     virtual std::string compile(){
       int check_result = c.check();
       if (check_result == -1){
@@ -283,6 +376,14 @@ namespace L2 {
   struct Label_instruction : Instruction {
     std::string label;
 
+    virtual std::vector<std::string> generate_gen(){
+      return {};
+    }
+
+    virtual std::vector<std::string> generate_kill(){
+      return {};
+    }
+
     virtual std::string compile(){
       return label + ":\n";
     }
@@ -294,6 +395,14 @@ namespace L2 {
    */
   struct Goto : Instruction {
     std::string label;
+
+    virtual std::vector<std::string> generate_gen(){
+      return {};
+    }
+
+    virtual std::vector<std::string> generate_kill(){
+      return {};
+    }
 
     virtual std::string compile(){
       return "\tjmp " + label + "\n";
@@ -307,6 +416,23 @@ namespace L2 {
   struct Custom_func_call : Instruction {
     std::string u;
     std::string n;
+
+    virtual std::vector<std::string> generate_gen(){
+      // u, args
+      std::vector<std::string> gen;
+      std::vector<std::string> arguments = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+      if (u[0] == '%'){
+        gen.push_back(u);
+      }
+      gen.insert(gen.end(), arguments.begin(),
+                arguments.begin()+std::max(std::stoi(n.substr(1)),6));
+      return gen;
+    }
+
+    virtual std::vector<std::string> generate_kill(){
+      return {"rax", "r8", "r9", "r10", "r11", "rcx", "rdi", "rsi", "rdx"};
+    }
+
     std::string compile(){
       int down = std::max(0, std::stoi(n.substr(1)) - 6) * 8 + 8;
       if (u[0] == '%'){
@@ -322,6 +448,19 @@ namespace L2 {
    */
   struct System_func_call : Instruction {
     std::string system_func;
+
+    virtual std::vector<std::string> generate_gen(){
+      std::vector<std::string> gen = {"rdi"};
+      if (system_func != "print"){
+        gen.push_back("rsi");
+      }
+      return gen;
+    }
+
+    virtual std::vector<std::string> generate_kill(){
+      return {"rax", "r8", "r9", "r10", "r11", "rcx", "rdi", "rsi", "rdx"};
+    }
+
     std::string compile(){
       if (system_func == "array-error"){
         system_func = "array_error";
