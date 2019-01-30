@@ -829,7 +829,7 @@ namespace L2 {
      * Check the grammar for some possible issues.
      * Check input starting from the function_rule.
      */
-    pegtl::analyze< Function_rule >();
+    pegtl::analyze< Functions_rule >();
 
     // Make empty program, to pass into existing action functions
     Program p;
@@ -837,7 +837,7 @@ namespace L2 {
     file_input< > fileInput(fileName);
 
     // Parse, starting from the function_rule
-    parse< Function_rule, action >(fileInput, p);
+    parse< Functions_rule, action >(fileInput, p);
 
     return p;
   }

@@ -421,11 +421,14 @@ namespace L2 {
       // u, args
       std::vector<std::string> gen;
       std::vector<std::string> arguments = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-      if (u[0] == '%'){
+      if (u[0] != ':'){
         gen.push_back(u);
       }
-      gen.insert(gen.end(), arguments.begin(),
-                arguments.begin()+std::max(std::stoi(n.substr(1)),6));
+
+      for (int i = 0; i < std::min(std::stoi(n.substr(1)), 6); i++) {
+        gen.push_back(arguments[i]);
+      }
+
       return gen;
     }
 

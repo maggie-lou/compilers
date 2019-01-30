@@ -28,21 +28,65 @@ namespace L2{
     return ans;
   }
 
+  int find_line_num_label(string label, vector<Instruction*> instructions) {
+    for (int i = 0; i<instructions.size(); i++) {
+      Label_instruction* label_instruction = dynamic_cast<Label_instruction*>(instructions.at(i));
+      if (label_instruction) {
+        if (label == label_instruction-> label) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
+  vector<string> generate_out_set(int current_instruction_index, vector<Instruction*> instructions, vector<vector<string>> in) {
+    vector<string> output;
+
+    Cjump* is_cjump = dynamic_cast<Cjump*>(instructions.at(current_instruction_index));
+    if (is_cjump) {
+      auto line_num_label1 = find_line_num_label(is_cjump->label1, instructions);
+      auto line_num_label2 = find_line_num_label(is_cjump->label2, instructions);
+
+      if (line_num_label1 < instructions.size() - 1) {
+        auto in_set = in[line_num_label1+1];
+        output.insert(output.end(), in_set.begin(), in_set.end());
+      }
+      if (line_num_label2 < instructions.size() - 1) {
+        auto in_set = in[line_num_label2+1];
+        output.insert(output.end(), in_set.begin(), in_set.end());
+      }
+    } else {
+      Cjump_fallthrough* is_cjump_fallthrough = dynamic_cast<Cjump_fallthrough*>(instructions.at(current_instruction_index));
+      if (is_cjump_fallthrough) {
+        auto line_num_label = find_line_num_label(is_cjump_fallthrough->label, instructions);
+
+        if (line_num_label < instructions.size() - 1) {
+          auto in_set = in[line_num_label+1];
+          output.insert(output.end(), in_set.begin(), in_set.end());
+        }
+      } else {
+        if (current_instruction_index < instructions.size() - 1) {
+          output = in[current_instruction_index+1];
+        }
+      }
+    }
+    return output;
+  }
+
+  void print_vector(vector<string> v) {
+    for (auto item: v) {
+      cout << item << " ";
+    }
+  }
+
   void generate_in_out_sets(Program p){
-
-    // Print to standard out, not a file
-    std::cout << ".text\n"
-               << "\tretq\n";
-
-    /*
-     * Generate target code
-     */
     auto instructions = (p.functions.front())->instructions;
     vector<vector<string>> gen(instructions.size());
     vector<vector<string>> kill(instructions.size());
     vector<vector<string>> in(instructions.size());
     vector<vector<string>> out(instructions.size());
-    bool changes = false;
+    bool changed = false;
 
     for (int j=0; j<instructions.size(); j++) {
       auto current_i = instructions[j];
@@ -71,29 +115,41 @@ namespace L2{
     //   }
 
     do {
+      changed = false;
+
       for (int j=instructions.size()-1; j>=0; j--) {
+        // cout << "Instruction: " << j << endl;
+        // cout << "Gen: ";
+        // print_vector(gen[j]);
+        // cout << endl;
+        vector<string> old_in = in[j];
+        vector<string> old_out = out[j];
+
         vector<string> diff = get_difference(out[j], kill[j]);
         in[j] = get_union(gen[j], diff);
-        // out[j] =
+
+        out[j] = generate_out_set(j, instructions, in);
+
+        vector<string> diff_in = get_difference(in[j], old_in);
+        vector<string> diff_out = get_difference(out[j], old_out);
+
+        changed = changed || !diff_in.empty() || !diff_out.empty();
       }
-    } while (changes);
+    } while (changed);
 
-    // for (auto f : p.functions){
-    //   outputFile << "_" << f->name.substr(1) << ":" << endl;
-    //   int local_number = f->locals;
-    //   int arg_number = f->arguments;
-    //   if (local_number != 0){
-    //     int down = 8  * local_number;
-    //     outputFile << "\tsubq $" << std::to_string(down) << ", %rsp\n";
-    //   }
-    //   for (auto instruction : f->instructions){
-    //     outputFile << instruction->compile();
-    //   }
-    // }
-
-    /*
-     * Close the output file.
-     */
+    cout << "(\n(in\n";
+    for (int i=0; i<instructions.size(); i++) {
+      cout << "(";
+      print_vector(in[i]);
+      cout << ")\n";
+    }
+    cout << ")\n\n(out\n";
+    for (int i=0; i<instructions.size(); i++) {
+      cout << "(";
+      print_vector(out[i]);
+      cout << ")\n";
+    }
+    cout << ")\n\n)";
 
     return ;
   }
