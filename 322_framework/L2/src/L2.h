@@ -86,9 +86,11 @@ namespace L2 {
 
     std::vector<std::string> get_reg_var(){
       if (is_address){
-        return {address.r};
+        if (address.r != "rsp"){
+          return {address.r};
+        }
       } else {
-        if (value[0] != '$' && value[0] != ':'){
+        if (value[0] != '$' && value[0] != ':' && value != "rsp"){
           return {value};
         }
       }
@@ -108,13 +110,13 @@ namespace L2 {
     };
 
     std::vector<std::string> gen(){
-      if (left[0] != '$'){
-        if (right[0] != '$'){
+      if (left[0] != '$' && left != "rsp"){
+        if (right[0] != '$' && right !=  "rsp"){
           return {left, right};
         }
         return {left};
       }
-      if (right[0] != '$'){
+      if (right[0] != '$' && right != "rsp"){
         return {right};
       }
       return {};

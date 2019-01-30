@@ -66,11 +66,20 @@ namespace L2{
           output.insert(output.end(), in_set.begin(), in_set.end());
         }
       } else {
-        if (current_instruction_index < instructions.size() - 1) {
-          output = in[current_instruction_index+1];
+        Goto* is_goto = dynamic_cast<Goto*>(instructions.at(current_instruction_index));
+        if (is_goto){
+          auto line_num_label = find_line_num_label(is_goto->label, instructions);
+          if (line_num_label < instructions.size() - 1) {
+            auto in_set = in[line_num_label+1];
+            output.insert(output.end(), in_set.begin(), in_set.end());
+          }
+        } else  {
+          if (current_instruction_index < instructions.size() - 1) {
+            output = in[current_instruction_index+1];
+          }
         }
       }
-    }
+    } 
     return output;
   }
 
