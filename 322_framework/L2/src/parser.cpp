@@ -147,9 +147,12 @@ namespace L2 {
       str_return
     > { };
 
+  struct Sx_other_rule:
+    pegtl::string<'r', 'c', 'x'> {};
+
   struct Sx_rule:
     pegtl::sor<
-      pegtl::string<'r','c','x'>,
+      Sx_other_rule,
       Var_rule
     > { };
 
@@ -526,12 +529,12 @@ namespace L2 {
     }
   };
 
-  template<> struct action < Sx_rule > {
+  template<> struct action < Sx_other_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       Item i;
       i.is_address = false;
-      i.value = "%" + in.string();
+      i.value = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -541,7 +544,7 @@ namespace L2 {
   static void apply( const Input & in, Program & p){
       Item i;
       i.is_address = false;
-      i.value = "%" + in.string();
+      i.value = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -551,7 +554,7 @@ namespace L2 {
   static void apply( const Input & in, Program & p){
       Item i;
       i.is_address = false;
-      i.value = "%" + in.string();
+      i.value = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -561,7 +564,7 @@ namespace L2 {
 	static void apply( const Input & in, Program & p){
       Item i;
       i.is_address = false;
-      i.value = "%" + in.string();
+      i.value = in.string();
       parsed_items.push_back(i);
     }
   };
