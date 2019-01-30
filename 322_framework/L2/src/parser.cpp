@@ -1,4 +1,3 @@
-
 #include <vector>
 #include <utility>
 #include <algorithm>
@@ -821,21 +820,23 @@ namespace L2 {
     return p;
   }
 
-  Function parse_function (char *fileName){
+  Program parse_function (char *fileName){
 
     /*
      * Check the grammar for some possible issues.
+     * Check input starting from the function_rule.
      */
-    pegtl::analyze< grammar >();
+    pegtl::analyze< Function_rule >();
 
-    /*
-     * Parse.
-     */
+    // Make empty program, to pass into existing action functions
+    Program p;
+    p.entryPointLabel = std::string("no_entry_point");
     file_input< > fileInput(fileName);
-    Function f;
-    parse< grammar, action >(fileInput, f);
 
-    return f;
+    // Parse, starting from the function_rule
+    parse< Function_rule, action >(fileInput, p);
+
+    return p;
   }
 
 }

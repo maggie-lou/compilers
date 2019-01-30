@@ -13,7 +13,7 @@
 #include <iostream>
 
 #include <parser.h>
-//#include <analysis.h>
+#include <analysis.h>
 //#include <transformer.h>
 #include <code_generator.h>
 //#include <spiller.h>
@@ -50,6 +50,7 @@ int main(
     switch (opt){
 
       case 'l':
+        // Passing in 1 = true, 2 = false
         liveness_only = strtoul(optarg, NULL, 0);
         break ;
 
@@ -94,7 +95,8 @@ int main(
     /*
      * Parse an L2 function.
      */
-     auto f = L2::parse_function(argv[optind]);
+     auto p = L2::parse_function(argv[optind]);
+     L2::generate_in_out_sets(p);
 
   } else if (interference_only){
 
