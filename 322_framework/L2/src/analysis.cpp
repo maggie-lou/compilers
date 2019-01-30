@@ -6,6 +6,7 @@
 #include <iterator>
 
 #include <analysis.h>
+#include <utils.h>
 
 using namespace std;
 
@@ -83,18 +84,9 @@ namespace L2{
     return output;
   }
 
-  void print_vector(vector<string> v) {
-    for (auto item: v) {
-      cout << item << " ";
-    }
-  }
-
-  void generate_in_out_sets(Program p){
+  void get_in_out_sets(Program p, vector<vector<string>> &in, vector<vector<string>> &out, vector<vector<string>> &kill){
     auto instructions = (p.functions.front())->instructions;
     vector<vector<string>> gen(instructions.size());
-    vector<vector<string>> kill(instructions.size());
-    vector<vector<string>> in(instructions.size());
-    vector<vector<string>> out(instructions.size());
     bool changed = false;
 
     for (int j=0; j<instructions.size(); j++) {
@@ -106,7 +98,6 @@ namespace L2{
     }
     do {
       changed = false;
-
       for (int j=instructions.size()-1; j>=0; j--) {
         vector<string> old_in = in[j];
         vector<string> old_out = out[j];
@@ -122,21 +113,29 @@ namespace L2{
         changed = changed || !diff_in.empty() || !diff_out.empty();
       }
     } while (changed);
+    return;
+  }
 
+  void generate_in_out_sets(Program p){
+    auto instructions = (p.functions.front())->instructions;
+    vector<vector<string>> kill(instructions.size());
+    vector<vector<string>> in(instructions.size());
+    vector<vector<string>> out(instructions.size());
+
+    get_in_out_sets(p, in, out, kill);
     cout << "(\n(in\n";
-    for (int i=0; i<instructions.size(); i++) {
+    for (int i=0; i<in.size(); i++) {
       cout << "(";
-      print_vector(in[i]);
+      L2::print_vector(in[i]);
       cout << ")\n";
     }
     cout << ")\n\n(out\n";
-    for (int i=0; i<instructions.size(); i++) {
+    for (int i=0; i<out.size(); i++) {
       cout << "(";
-      print_vector(out[i]);
+      L2::print_vector(out[i]);
       cout << ")\n";
     }
     cout << ")\n\n)";
-
     return ;
   }
 }

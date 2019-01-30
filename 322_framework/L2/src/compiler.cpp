@@ -14,7 +14,7 @@
 
 #include <parser.h>
 #include <analysis.h>
-//#include <transformer.h>
+#include <transformer.h>
 #include <code_generator.h>
 //#include <spiller.h>
 //#include <register_allocation.h>
@@ -103,7 +103,8 @@ int main(
     /*
      * Parse an L2 function.
      */
-     //TODO
+     auto p =  L2::parse_function(argv[optind]);
+     L2::generate_graph(p);
 
   } else {
 
@@ -152,4 +153,3 @@ int main(
 
   return 0;
 }
-
