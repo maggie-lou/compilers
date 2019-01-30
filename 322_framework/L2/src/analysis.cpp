@@ -79,7 +79,7 @@ namespace L2{
           }
         }
       }
-    } 
+    }
     return output;
   }
 
@@ -104,33 +104,10 @@ namespace L2{
       in[j] = {};
       out[j] = {};
     }
-    // cout << "gen\n";
-    // for (int i = 0; i < gen.size(); i++)
-    //   {
-    //       for (int j = 0; j < gen[i].size(); j++)
-    //       {
-    //           cout << gen[i][j] << " ";
-    //       }
-    //       cout << "\n";
-    //   }
-    // cout << "kill\n";
-    // for (int i = 0; i < kill.size(); i++)
-    //   {
-    //       for (int j = 0; j < kill[i].size(); j++)
-    //       {
-    //           cout << kill[i][j] << " ";
-    //       }
-    //       cout << "\n";
-    //   }
-
     do {
       changed = false;
 
       for (int j=instructions.size()-1; j>=0; j--) {
-        // cout << "Instruction: " << j << endl;
-        // cout << "Gen: ";
-        // print_vector(gen[j]);
-        // cout << endl;
         vector<string> old_in = in[j];
         vector<string> old_out = out[j];
 
