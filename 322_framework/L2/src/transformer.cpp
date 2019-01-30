@@ -23,6 +23,17 @@ namespace L2{
     }
   }
 
+  void clean_up_graph(vector<vector<string>> &graph, map<string, int> &name_index) {
+    for(map<string,int>::iterator iter = name_index.begin(); iter != name_index.end(); ++iter) {
+      cout << iter->first << " ";
+      L2::print_vector(graph[iter->second]);
+      cout << "\n";
+    }
+
+    for (vector<string> node_edges : graph) {
+    }
+  }
+
   void get_graph(Program p, vector<vector<string>> &graph, map<string, int> &name_index){
     auto instructions = (p.functions.front())->instructions;
     vector<vector<string>> kill(instructions.size());
@@ -55,6 +66,32 @@ namespace L2{
     }
 
     for (int i = 0; i < instructions.size(); i++){
+      // Add L1 Constraints
+       Assignment* assignment_instruction = dynamic_cast<Assignment*>(instructions.at(i));
+       if (assignment_instruction) {
+          if (assignment_instruction->op == "<<=" || assignment_instruction->op == ">>=") {
+            string source = (assignment_instruction->s).value;
+            if (source[0] != '$') {
+              int source_graph_index = name_index[source];
+              graph[source_graph_index].insert(graph[source_graph_index].end(), registers.begin(), registers.end());
+              graph[source_graph_index].erase(remove(graph[source_graph_index].begin(), graph[source_graph_index].end(), "rcx"), graph[source_graph_index].end());
+
+              int rcx_index = name_index["rcx"];
+              for (int reg = 0; reg < num_registers; reg++) {
+                if (reg == rcx_index) continue;
+                graph[reg].push_back(source);
+              }
+            }
+          } else if (assignment_instruction->op == "<-") {
+            // Don't add edges to variables and registers during assignment
+            string source = (assignment_instruction->s).value;
+            string dest = (assignment_instruction->d).value;
+            if (source != "" && dest != "" && source[0] != '$' && dest[0] != '&') {
+              continue;
+            }
+          }
+       }
+
       for (int j = 0;  j < kill[i].size(); j++){
         graph[name_index[kill[i][j]]].insert(graph[name_index[kill[i][j]]].end(),
                                             out[i].begin(), out[i].end());
@@ -63,6 +100,7 @@ namespace L2{
         graph[name_index[out[i][j]]].insert(graph[name_index[out[i][j]]].end(),
                                             kill[i].begin(), kill[i].end());
       }
+
     }
   }
 
@@ -76,8 +114,20 @@ namespace L2{
     };
     get_graph(p, graph, name_index);
     for(map<string,int>::iterator iter = name_index.begin(); iter != name_index.end(); ++iter) {
-      cout << iter->first << " ";
-      L2::print_vector(graph[iter->second]);
+      string key = iter-> first;
+      int graph_index = iter->second;
+
+      // Remove duplicates
+      vector<string> node_edges = graph[graph_index];
+      sort(node_edges.begin(), node_edges.end());
+      node_edges.erase( unique (node_edges.begin(), node_edges.end() ), node_edges.end());
+
+      // Remove itself from graph
+      node_edges.erase(remove(node_edges.begin(), node_edges.end(), key), node_edges.end());
+      graph[graph_index] = node_edges;
+
+      cout << key << " ";
+      L2::print_vector(graph[graph_index]);
       cout << "\n";
     }
     return;
