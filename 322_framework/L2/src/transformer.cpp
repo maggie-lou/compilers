@@ -15,22 +15,8 @@ using namespace std;
 namespace L2{
   void add_edges(vector<vector<string>> &graph, vector<string> nodes, map<string, int> &name_index){
     for (int i = 0; i < nodes.size(); i++){
-      for (int j = 0; j < nodes.size(); j++){
-        if (nodes[i] != nodes[j]){
-          graph[name_index[nodes[i]]].push_back(nodes[j]);
-        }
-      }
-    }
-  }
-
-  void clean_up_graph(vector<vector<string>> &graph, map<string, int> &name_index) {
-    for(map<string,int>::iterator iter = name_index.begin(); iter != name_index.end(); ++iter) {
-      cout << iter->first << " ";
-      L2::print_vector(graph[iter->second]);
-      cout << "\n";
-    }
-
-    for (vector<string> node_edges : graph) {
+      int index = name_index[nodes[i]];
+      graph[index].insert(graph[index].end(), nodes.begin(), nodes.end());
     }
   }
 
@@ -56,8 +42,10 @@ namespace L2{
       }
     }
 
+    // Connect a register to all other registers
     add_edges(graph, registers, name_index);
 
+    // Connect each pair of variables that belong to the same IN or OUT set
     for (vector<string> in_set : in){
       add_edges(graph, in_set, name_index);
     }
@@ -67,40 +55,40 @@ namespace L2{
 
     for (int i = 0; i < instructions.size(); i++){
       // Add L1 Constraints
-       Assignment* assignment_instruction = dynamic_cast<Assignment*>(instructions.at(i));
-       if (assignment_instruction) {
-          if (assignment_instruction->op == "<<=" || assignment_instruction->op == ">>=") {
-            string source = (assignment_instruction->s).value;
-            if (source[0] != '$') {
-              int source_graph_index = name_index[source];
-              graph[source_graph_index].insert(graph[source_graph_index].end(), registers.begin(), registers.end());
-              graph[source_graph_index].erase(remove(graph[source_graph_index].begin(), graph[source_graph_index].end(), "rcx"), graph[source_graph_index].end());
-
-              int rcx_index = name_index["rcx"];
-              for (int reg = 0; reg < num_registers; reg++) {
-                if (reg == rcx_index) continue;
-                graph[reg].push_back(source);
-              }
-            }
-          } else if (assignment_instruction->op == "<-") {
-            // Don't add edges to variables and registers during assignment
-            string source = (assignment_instruction->s).value;
-            string dest = (assignment_instruction->d).value;
-            if (source != "" && dest != "" && source[0] != '$' && dest[0] != '&') {
-              continue;
+      Assignment* assignment_instruction = dynamic_cast<Assignment*>(instructions.at(i));
+      if (assignment_instruction) {
+        // var in rhs of sop op can only be assigned to rcx
+        if (assignment_instruction->op == "<<=" || assignment_instruction->op == ">>=") {
+          string source = (assignment_instruction->s).value;
+          if (source[0] != '$') {
+            int source_graph_index = name_index[source];
+            graph[source_graph_index].insert(graph[source_graph_index].end(), registers.begin(), registers.end());
+            graph[source_graph_index].erase(remove(graph[source_graph_index].begin(), graph[source_graph_index].end(), "rcx"), graph[source_graph_index].end());
+            int rcx_index = name_index["rcx"];
+            for (int reg = 0; reg < num_registers; reg++) {
+              if (reg == rcx_index) continue;
+              graph[reg].push_back(source);
             }
           }
-       }
+        } else if (assignment_instruction->op == "<-") {
+          // Don't add edges to variables and registers during assignment op
+          string source = (assignment_instruction->s).value;
+          string dest = (assignment_instruction->d).value;
+          if (source != "" && dest != "" && source[0] != '$' && dest[0] != '&') {
+            continue;
+          }
+        }
+      }
 
+      // Connect variables in KILL[i] with those in OUT[i]
       for (int j = 0;  j < kill[i].size(); j++){
-        graph[name_index[kill[i][j]]].insert(graph[name_index[kill[i][j]]].end(),
-                                            out[i].begin(), out[i].end());
+        int index = name_index[kill[i][j]];
+        graph[index].insert(graph[index].end(), out[i].begin(), out[i].end());
       }
       for (int j = 0;  j < out[i].size(); j++){
-        graph[name_index[out[i][j]]].insert(graph[name_index[out[i][j]]].end(),
-                                            kill[i].begin(), kill[i].end());
+        int index = name_index[out[i][j]];
+        graph[index].insert(graph[index].end(), kill[i].begin(), kill[i].end());
       }
-
     }
   }
 
