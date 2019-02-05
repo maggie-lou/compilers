@@ -127,8 +127,11 @@ namespace L2{
       // Remove itself from graph
       node_edges.erase(remove(node_edges.begin(), node_edges.end(), key), node_edges.end());
       graph[graph_index] = node_edges;
-
-      cout << key << " ";
+      if (key[0] != '%'){
+        cout << key << " ";
+      } else {
+        cout << key.substr(1) << " ";
+      }
       L2::print_vector(graph[graph_index]);
       cout << "\n";
     }
