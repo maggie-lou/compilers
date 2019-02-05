@@ -59,8 +59,8 @@ namespace L2{
       if (assignment_instruction) {
         // var in rhs of sop op can only be assigned to rcx
         if (assignment_instruction->op == "<<=" || assignment_instruction->op == ">>=") {
-          string source = (assignment_instruction->s).value;
-          if (source[0] != '$') {
+          if (Var_item* var = dynamic_cast<Var_item*>(assignment_instruction->s)){
+            string source = var->var_name;
             int source_graph_index = name_index[source];
             graph[source_graph_index].insert(graph[source_graph_index].end(), registers.begin(), registers.end());
             graph[source_graph_index].erase(remove(graph[source_graph_index].begin(), graph[source_graph_index].end(), "rcx"), graph[source_graph_index].end());
@@ -72,10 +72,24 @@ namespace L2{
           }
         } else if (assignment_instruction->op == "<-") {
           // Don't add edges to variables and registers during assignment op
-          string source = (assignment_instruction->s).value;
-          string dest = (assignment_instruction->d).value;
-          if (source != "" && dest != "" && source[0] != '$' && dest[0] != '&') {
-            continue;
+          bool s_flag = false;
+          if (Var_item* var = dynamic_cast<Var_item*>(assignment_instruction->s)){
+            s_flag = true;
+          }
+          if (Register_item* reg = dynamic_cast<Register_item*>(assignment_instruction->s)){
+            s_flag = true;
+          }
+          if (s_flag){
+            bool d_flag = false;
+            if (Var_item* var = dynamic_cast<Var_item*>(assignment_instruction->d)){
+              d_flag = true;
+            }
+            if (Register_item* reg = dynamic_cast<Register_item*>(assignment_instruction->d)){
+              d_flag = true;
+            }
+            if (d_flag){
+              continue;
+            }
           }
         }
       }

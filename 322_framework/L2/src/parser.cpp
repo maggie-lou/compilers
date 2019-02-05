@@ -28,10 +28,10 @@ namespace L2 {
   /*
    * Data required to parse
    */
-  std::vector<Item> parsed_destinations;
+  std::vector<Item*> parsed_destinations;
   std::vector<std::string> parsed_operations;
-  std::vector<Item> parsed_sources;
-  std::vector<Item> parsed_items;
+  std::vector<Item*> parsed_sources;
+  std::vector<Item*> parsed_items;
   std::vector<Comparison> parsed_comparisons;
 
   /*
@@ -201,8 +201,8 @@ namespace L2 {
 
   struct T_rule :
     pegtl::sor<
-      Number_rule,
-      X_rule
+      X_rule,
+      Number_rule
     > {};
 
   struct S_rule :
@@ -237,16 +237,16 @@ namespace L2 {
 
   struct Source_rule:
     pegtl::sor<
-      S_rule,
       Address_rule,
       Comparison_rule,
+      S_rule,
       M_rule
     > { };
 
   struct Destination_rule:
     pegtl::sor<
-      W_rule,
-      Address_rule
+      Address_rule,
+      W_rule
     > { };
 
   struct Stack_arg_rule:
@@ -444,8 +444,6 @@ namespace L2 {
       entry_point_rule
     > {};
 
-
-
   /*
    * Actions attached to grammar rules.
    */
@@ -502,9 +500,8 @@ namespace L2 {
   template<> struct action < Label_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      Item i;
-      i.value = in.string();
-      i.is_address = false;
+      auto i = new Label_item();
+      i->label_name = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -512,9 +509,8 @@ namespace L2 {
   template<> struct action < Number_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      Item i;
-      i.is_address = false;
-      i.value = "$" + in.string();
+      auto i = new Num_item();
+      i->n = std::stoll(in.string());
       parsed_items.push_back(i);
     }
   };
@@ -522,9 +518,8 @@ namespace L2 {
   template<> struct action < Var_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      Item i;
-      i.value = in.string().substr(1);
-      i.is_address = false;
+      auto i = new Var_item();
+      i->var_name = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -532,9 +527,8 @@ namespace L2 {
   template<> struct action < Sx_other_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      Item i;
-      i.is_address = false;
-      i.value = in.string();
+      auto i = new Register_item();
+      i->register_name = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -542,9 +536,8 @@ namespace L2 {
   template<> struct action < A_other_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      Item i;
-      i.is_address = false;
-      i.value = in.string();
+      auto i = new Register_item();
+      i->register_name = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -552,9 +545,8 @@ namespace L2 {
   template<> struct action < W_other_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      Item i;
-      i.is_address = false;
-      i.value = in.string();
+      auto i = new Register_item();
+      i->register_name = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -562,9 +554,8 @@ namespace L2 {
   template<> struct action < X_other_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      Item i;
-      i.is_address = false;
-      i.value = in.string();
+      auto i = new Register_item();
+      i->register_name = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -572,15 +563,13 @@ namespace L2 {
   template<> struct action < Address_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      auto x = parsed_items.at(parsed_items.size() - 2);
-      auto m = parsed_items.back();
-      Address address;
-      address.offset = m.value;
-      address.r = x.value;
-
-      Item i;
-      i.is_address = true;
-      i.address = address;
+      auto i = new Address_item();
+      if (Register_item* register_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 2))){
+        i->r = register_i->register_name;
+      }
+      if (Num_item* num_i = dynamic_cast<Num_item*>(parsed_items.back())){
+        i->offset = num_i->n;
+      }
       parsed_items.push_back(i);
     }
   };
@@ -589,9 +578,9 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       Comparison comparison;
-      comparison.left = parsed_items.at(parsed_items.size() - 3).value;
-      comparison.cmp_sign = parsed_items.at(parsed_items.size() - 2).value;
-      comparison.right = parsed_items.back().value;
+      comparison.left = parsed_items.at(parsed_items.size() - 2);
+      comparison.right = parsed_items.back();
+      comparison.cmp_sign = parsed_operations.back();
       parsed_comparisons.push_back(comparison);
     }
   };
@@ -600,11 +589,8 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto a = new AssignmentCmp();
-      auto d = parsed_destinations.back();
-      auto s = parsed_comparisons.back();
-
-      a->d = d;
-      a->s = s;
+      a->d = parsed_destinations.back();
+      a->c = parsed_comparisons.back();
       auto currentF = p.functions.back();
       currentF->instructions.push_back(a);
     }
@@ -614,13 +600,13 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto cjump = new Cjump();
-      auto c = parsed_comparisons.back();
-      auto label1 = parsed_items.at(parsed_items.size()-2);
-      auto label2 = parsed_items.back();
-
-      cjump->c = c;
-      cjump->label1 = label1.value;
-      cjump->label2 = label2.value;
+      cjump->c = parsed_comparisons.back();
+      if (Label_item* label_i1 = dynamic_cast<Label_item*>(parsed_items.at(parsed_items.size() - 2))){
+        cjump->label1 = label_i1->label_name;
+      }
+      if (Label_item* label_i2 = dynamic_cast<Label_item*>(parsed_items.back())){
+        cjump->label2 = label_i2->label_name;
+      }
       auto currentF = p.functions.back();
       currentF->instructions.push_back(cjump);
     }
@@ -630,11 +616,10 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto cjump = new Cjump_fallthrough();
-      auto c = parsed_comparisons.back();
-      auto label = parsed_items.back();
-
-      cjump->c = c;
-      cjump->label = label.value;
+      cjump->c = parsed_comparisons.back();
+      if (Label_item* label_i = dynamic_cast<Label_item*>(parsed_items.back())){
+        cjump->label = label_i->label_name;
+      }
       auto currentF = p.functions.back();
       currentF->instructions.push_back(cjump);
     }
@@ -644,9 +629,9 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto g = new Goto();
-      auto label = parsed_items.back();
-
-      g->label = label.value;
+      if (Label_item* label_i = dynamic_cast<Label_item*>(parsed_items.back())){
+        g->label = label_i->label_name;
+      }
       auto currentF = p.functions.back();
       currentF->instructions.push_back(g);
     }
@@ -656,11 +641,10 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto c = new Custom_func_call();
-      auto u = parsed_items.at(parsed_items.size()-2);
-      auto n = parsed_items.back();
-
-      c->u = u.value;
-      c->n = n.value;
+      c->u = parsed_items.at(parsed_items.size()-2);
+      if (Num_item* num_i = dynamic_cast<Num_item*>(parsed_items.back())){
+        c->n = num_i->n;
+      }
       auto currentF = p.functions.back();
       currentF->instructions.push_back(c);
     }
@@ -670,9 +654,9 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto l = new Label_instruction();
-      auto label = parsed_items.back();
-
-      l->label = label.value;
+      if (Label_item* label_i = dynamic_cast<Label_item*>(parsed_items.back())){
+        l->label = label_i->label_name;
+      }
       auto currentF = p.functions.back();
       currentF->instructions.push_back(l);
     }
@@ -681,9 +665,8 @@ namespace L2 {
   template<> struct action < System_func_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-      Item i;
-      i.is_address = false;
-      i.value = in.string();
+      auto i = new Sys_func_item();
+      i->func_name = in.string();
       parsed_items.push_back(i);
     }
   };
@@ -699,11 +682,12 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto i = new Inc_or_dec();
-      auto d = parsed_items.back();
-      auto op = parsed_operations.back();
-
-      i->reg = d.value;
-      i->op = op;
+      if (Register_item* reg_i = dynamic_cast<Register_item*>(parsed_items.back())){
+        i->reg = reg_i->register_name;
+      } else if (Var_item* var_i = dynamic_cast<Var_item*>(parsed_items.back())){
+        i->reg = var_i->var_name;
+      }
+      i->op = parsed_operations.back();
       auto currentF = p.functions.back();
       currentF->instructions.push_back(i);
     }
@@ -713,12 +697,18 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto at_a = new At_arithmetic();
-      at_a->dest = (parsed_items.at(parsed_items.size() - 4)).value;
-
-      at_a->r1 = (parsed_items.at(parsed_items.size() - 3)).value;
-      at_a->r2 = (parsed_items.at(parsed_items.size() - 2)).value;
-      at_a->n = (parsed_items.back()).value;
-
+      if (Register_item* reg_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 4))){
+        at_a->dest = reg_i->register_name;
+      }
+      if (Register_item* reg_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 3))){
+        at_a->r1 = reg_i->register_name;
+      }
+      if (Register_item* reg_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 2))){
+        at_a->r2 = reg_i->register_name;
+      }
+      if (Num_item* num_i = dynamic_cast<Num_item*>(parsed_items.back())){
+        at_a->n = num_i->n;
+      }
       auto currentF = p.functions.back();
       currentF->instructions.push_back(at_a);
     }
@@ -728,9 +718,9 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto s = new System_func_call();
-      auto system_func = parsed_items.back();
-
-      s->system_func = system_func.value;
+      if (Sys_func_item* sys_i = dynamic_cast<Sys_func_item*>(parsed_items.back())){
+        s->system_func = sys_i->func_name;
+      }
       auto currentF = p.functions.back();
       currentF->instructions.push_back(s);
     }
@@ -740,13 +730,9 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto a = new Assignment();
-      auto d = parsed_destinations.back();
-      auto op = parsed_operations.back();
-      auto s = parsed_sources.back();
-
-      a->d = d;
-      a->op = op;
-      a->s = s;
+      a->d = parsed_destinations.back();
+      a->op = parsed_operations.back();
+      a->s = parsed_sources.back();
       auto currentF = p.functions.back();
       currentF->instructions.push_back(a);
     }
@@ -771,38 +757,35 @@ namespace L2 {
   template<> struct action < Sop_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-    parsed_operations.push_back(in.string());
+      parsed_operations.push_back(in.string());
     }
   };
 
   template<> struct action < Aop_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-    parsed_operations.push_back(in.string());
+      parsed_operations.push_back(in.string());
     }
   };
 
   template<> struct action < Stack_arg_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-    parsed_operations.push_back("<- stack-arg");
+      parsed_operations.push_back("<- stack-arg");
     }
   };
 
   template<> struct action < Assign_rule > {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
-    parsed_operations.push_back(in.string());
+      parsed_operations.push_back(in.string());
     }
   };
 
   template<> struct action < Cmp_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      Item i;
-      i.is_address = false;
-      i.value = in.string();
-      parsed_items.push_back(i);
+      parsed_operations.push_back(in.string());
     }
   };
 

@@ -11,6 +11,7 @@
 using namespace std;
 
 namespace L2{
+
   vector<string> get_union(vector<string> v1, vector<string> v2)  {
     vector<string> union_vec;
     set_union(v1.begin(), v1.end(), v2.begin(), v2.end(),
@@ -33,7 +34,7 @@ namespace L2{
     for (int i = 0; i<instructions.size(); i++) {
       Label_instruction* label_instruction = dynamic_cast<Label_instruction*>(instructions.at(i));
       if (label_instruction) {
-        if (label == label_instruction-> label) {
+        if (label == label_instruction->label) {
           return i;
         }
       }
