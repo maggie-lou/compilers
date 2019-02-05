@@ -566,7 +566,10 @@ namespace L2 {
       auto i = new Address_item();
       if (Register_item* register_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 2))){
         i->r = register_i->register_name;
+      } else if (Var_item* var_i = dynamic_cast<Var_item*>(parsed_items.at(parsed_items.size() - 2))){
+        i->r = var_i->var_name;
       }
+
       if (Num_item* num_i = dynamic_cast<Num_item*>(parsed_items.back())){
         i->offset = num_i->n;
       }
@@ -699,13 +702,22 @@ namespace L2 {
       auto at_a = new At_arithmetic();
       if (Register_item* reg_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 4))){
         at_a->dest = reg_i->register_name;
+      } else if (Var_item* var_i = dynamic_cast<Var_item*>(parsed_items.at(parsed_items.size() - 4))){
+        at_a->dest = var_i->var_name;
       }
+
       if (Register_item* reg_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 3))){
         at_a->r1 = reg_i->register_name;
+      } else if (Var_item* var_i = dynamic_cast<Var_item*>(parsed_items.at(parsed_items.size() - 3))){
+        at_a->r1 = var_i->var_name;
       }
+
       if (Register_item* reg_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 2))){
         at_a->r2 = reg_i->register_name;
+      } else if (Var_item* var_i = dynamic_cast<Var_item*>(parsed_items.at(parsed_items.size() - 2))){
+        at_a->r2 = var_i->var_name;
       }
+
       if (Num_item* num_i = dynamic_cast<Num_item*>(parsed_items.back())){
         at_a->n = num_i->n;
       }

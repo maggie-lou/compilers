@@ -45,8 +45,7 @@ namespace L2{
   vector<string> generate_out_set(int current_instruction_index, vector<Instruction*> instructions, vector<vector<string>> in) {
     vector<string> output;
 
-    Cjump* is_cjump = dynamic_cast<Cjump*>(instructions.at(current_instruction_index));
-    if (is_cjump) {
+    if (auto is_cjump = dynamic_cast<Cjump*>(instructions.at(current_instruction_index))) {
       auto line_num_label1 = find_line_num_label(is_cjump->label1, instructions);
       auto line_num_label2 = find_line_num_label(is_cjump->label2, instructions);
 
@@ -58,28 +57,30 @@ namespace L2{
         auto in_set = in[line_num_label2+1];
         output.insert(output.end(), in_set.begin(), in_set.end());
       }
-    } else {
-      Cjump_fallthrough* is_cjump_fallthrough = dynamic_cast<Cjump_fallthrough*>(instructions.at(current_instruction_index));
-      if (is_cjump_fallthrough) {
-        auto line_num_label = find_line_num_label(is_cjump_fallthrough->label, instructions);
+    } else if (auto is_cjump_fallthrough = dynamic_cast<Cjump_fallthrough*>(instructions.at(current_instruction_index))) {
+      auto line_num_label = find_line_num_label(is_cjump_fallthrough->label, instructions);
 
-        if (line_num_label < instructions.size() - 1) {
-          auto in_set = in[line_num_label+1];
-          output.insert(output.end(), in_set.begin(), in_set.end());
-        }
-      } else {
-        Goto* is_goto = dynamic_cast<Goto*>(instructions.at(current_instruction_index));
-        if (is_goto){
-          auto line_num_label = find_line_num_label(is_goto->label, instructions);
-          if (line_num_label < instructions.size() - 1) {
-            auto in_set = in[line_num_label+1];
-            output.insert(output.end(), in_set.begin(), in_set.end());
-          }
-        } else  {
-          if (current_instruction_index < instructions.size() - 1) {
-            output = in[current_instruction_index+1];
-          }
-        }
+      if (line_num_label < instructions.size() - 1) {
+        auto in_set = in[line_num_label+1];
+        output.insert(output.end(), in_set.begin(), in_set.end());
+      }
+
+      // Fallthrough
+      if (current_instruction_index < instructions.size() - 1) {
+        auto in_set = in[current_instruction_index+1];
+        output.insert(output.end(), in_set.begin(), in_set.end());
+      }
+    } else if (auto is_goto = dynamic_cast<Goto*>(instructions.at(current_instruction_index))) {
+      auto line_num_label = find_line_num_label(is_goto->label, instructions);
+      if (line_num_label < instructions.size() - 1) {
+        auto in_set = in[line_num_label+1];
+        output.insert(output.end(), in_set.begin(), in_set.end());
+      }
+    } else if (auto is_return = dynamic_cast<Instruction_ret*>(instructions.at(current_instruction_index))) {
+      // Do nothing - return instructions have no out set
+    } else  {
+      if (current_instruction_index < instructions.size() - 1) {
+        output = in[current_instruction_index+1];
       }
     }
     return output;
