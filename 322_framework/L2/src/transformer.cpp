@@ -62,8 +62,12 @@ namespace L2{
           if (Var_item* var = dynamic_cast<Var_item*>(assignment_instruction->s)){
             string source = var->var_name;
             int source_graph_index = name_index[source];
-            graph[source_graph_index].insert(graph[source_graph_index].end(), registers.begin(), registers.end());
-            graph[source_graph_index].erase(remove(graph[source_graph_index].begin(), graph[source_graph_index].end(), "rcx"), graph[source_graph_index].end());
+            graph[source_graph_index].insert(graph[source_graph_index].end(),
+                                             registers.begin(), registers.end());
+            graph[source_graph_index].erase(remove(graph[source_graph_index].begin(),
+                                                   graph[source_graph_index].end(),
+                                                   "rcx"), 
+                                            graph[source_graph_index].end());
             int rcx_index = name_index["rcx"];
             for (int reg = 0; reg < num_registers; reg++) {
               if (reg == rcx_index) continue;
@@ -72,24 +76,15 @@ namespace L2{
           }
         } else if (assignment_instruction->op == "<-") {
           // Don't add edges to variables and registers during assignment op
-          bool s_flag = false;
-          if (Var_item* var = dynamic_cast<Var_item*>(assignment_instruction->s)){
-            s_flag = true;
-          }
-          if (Register_item* reg = dynamic_cast<Register_item*>(assignment_instruction->s)){
-            s_flag = true;
-          }
-          if (s_flag){
-            bool d_flag = false;
-            if (Var_item* var = dynamic_cast<Var_item*>(assignment_instruction->d)){
-              d_flag = true;
-            }
-            if (Register_item* reg = dynamic_cast<Register_item*>(assignment_instruction->d)){
-              d_flag = true;
-            }
-            if (d_flag){
-              continue;
-            }
+          Var_item* var_s = NULL;
+          Register_item* reg_s = NULL;
+          Var_item* var_d = NULL;
+          Register_item* reg_d = NULL;
+          if (((var_s = dynamic_cast<Var_item*>(assignment_instruction->s))||
+               (reg_s = dynamic_cast<Register_item*>(assignment_instruction->s)))&&
+              ((var_d = dynamic_cast<Var_item*>(assignment_instruction->d))||
+               (reg_d = dynamic_cast<Register_item*>(assignment_instruction->d)))){
+            continue;
           }
         }
       }
