@@ -29,7 +29,6 @@ namespace L2{
   Function* get_spilled(Function* f, string var_name, string prefix){
     Function* new_f = new Function();
     int64_t locals = f->locals;
-    new_f->locals = locals + 1;
     new_f->name = f->name;
     Address_item* stack_address = new Address_item();
     stack_address->r = "rsp";
@@ -67,7 +66,7 @@ namespace L2{
           }
           new_f->instructions.push_back(create_assignment(new_var, stack_address, "<-"));
           has_var = true;
-        } else {
+        } else if (has_var){
           new_f->instructions.push_back(create_assignment(new_var, d, op));
         }
         if (has_var){
@@ -257,7 +256,7 @@ namespace L2{
         }
       } else if (Custom_func_call* cus_func = dynamic_cast<Custom_func_call*>(i)){
         Custom_func_call* new_cus_func = new Custom_func_call();
-        if (Var_rule* var = dynamic_cast<Var_item*>(cus_func->u)){
+        if (Var_item* var = dynamic_cast<Var_item*>(cus_func->u)){
           Var_item* new_var = create_var(prefix, counter);
           // Generate read
           new_f->instructions.push_back(create_assignment(stack_address, new_var, "<-"));
@@ -270,6 +269,12 @@ namespace L2{
       } else {
         new_f->instructions.push_back(i);
       }
+    }
+
+    if (counter==0) {
+      new_f->locals = locals;
+    } else {
+      new_f->locals = locals + 1;
     }
     return new_f;
   }

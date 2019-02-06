@@ -35,15 +35,15 @@ namespace L2{
       } else if (Inc_or_dec* inc_or_dec = dynamic_cast<Inc_or_dec*>(i)) {
         cout << "\t" << inc_or_dec->w->item_to_string() << inc_or_dec->op << "\n";
       } else if (At_arithmetic* at = dynamic_cast<At_arithmetic*>(i)) {
-        cout << "\t" << at->dest->item_to_string() << " @ " << at->w1->item_to_string() << " " << at->w2->item_to_string() << " " << at->n->item_to_string() << "\n";
+        cout << "\t" << at->dest->item_to_string() << " @ " << at->w1->item_to_string() << " " << at->w2->item_to_string() << " " << to_string(at->n) << "\n";
       } else if (Label_instruction* label = dynamic_cast<Label_instruction*>(i)) {
         cout << "\t" << label->label << "\n";
       } else if (Goto* go = dynamic_cast<Goto*>(i)) {
         cout << "\tgoto " << go->label << "\n";
       } else if (Instruction_ret* ret = dynamic_cast<Instruction_ret*>(i)) {
-        cout << "\treturn";
+        cout << "\treturn\n";
       } else if (Custom_func_call* cus_func = dynamic_cast<Custom_func_call*>(i)) {
-        cout << "\tcall " << cus_func->u->item_to_string() << " " << cus_func->n->item_to_string() << "\n";
+        cout << "\tcall " << cus_func->u->item_to_string() << " " << to_string(cus_func->n) << "\n";
       } else if (System_func_call* sys_func = dynamic_cast<System_func_call*>(i)) {
         if (sys_func->system_func == "print"){
           cout << "\tcall print 1\n";
