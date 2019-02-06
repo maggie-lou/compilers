@@ -125,15 +125,15 @@ namespace L2 {
    * w++ | w--
    */
   struct Inc_or_dec : Instruction {
-    std::string reg;
+    Item* w;
     std::string op;
 
     virtual std::vector<std::string> generate_gen(){
-      return {reg};
+      return {w->item_to_string()};
     }
 
     virtual std::vector<std::string> generate_kill(){
-      return {reg};
+      return {w->item_to_string()};
     }
   };
 
@@ -142,17 +142,17 @@ namespace L2 {
    * w @ w w E
    */
   struct At_arithmetic : Instruction {
-    std::string dest;
-    std::string r1;
-    std::string r2;
+    Item* dest;
+    Item* w1;
+    Item* w2;
     int64_t n;
 
     virtual std::vector<std::string> generate_gen(){
-      return {r1, r2};
+      return {w1->item_to_string(), w2->item_to_string()};
     }
 
     virtual std::vector<std::string> generate_kill(){
-      return {dest};
+      return {dest->item_to_string()};
     }
   };
 

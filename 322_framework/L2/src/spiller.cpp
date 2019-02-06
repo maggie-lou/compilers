@@ -196,6 +196,79 @@ namespace L2{
         new_fallthrough->c = new_c;
         new_fallthrough->label = fallthrough->label;
         new_f->instructions.push_back(new_fallthrough);
+      } else if (Inc_or_dec* inc_or_dec = dynamic_cast<Inc_or_dec*>(i)){
+        auto var_w = dynamic_cast<Var_item*>(inc_or_dec->w);
+        bool is_var_w = var_w && var_w->var_name == var_name;
+        if (is_var_w){
+          Var_item* new_var = create_var(prefix, counter);
+          new_f->instructions.push_back(create_assignment(stack_address, new_var, "<-"));
+          auto new_inc_or_dec = new Inc_or_dec();
+          new_inc_or_dec->op = inc_or_dec->op;
+          new_inc_or_dec->w = new_var;
+          new_f->instructions.push_back(new_inc_or_dec);
+          new_f->instructions.push_back(create_assignment(new_var, stack_address, "<-"));
+          counter++;
+        } else {
+          new_f->instructions.push_back(inc_or_dec);
+        }
+      } else if (At_arithmetic* at = dynamic_cast<At_arithmetic*>(i)) {
+        auto var_dest = dynamic_cast<Var_item*>(at->dest);
+        bool is_var_dest = var_dest && var_dest->var_name == var_name;
+
+        auto var_w1 = dynamic_cast<Var_item*>(at->w1);
+        bool is_var_w1 = var_w1 && var_w1->var_name == var_name;
+
+        auto var_w2 = dynamic_cast<Var_item*>(at->w2);
+        bool is_var_w2 = var_w2 && var_w2->var_name == var_name;
+
+        auto new_at = new At_arithmetic();
+        if (is_var_w1 || is_var_w2 || is_var_dest) {
+          Var_item* new_var = create_var(prefix, counter);
+
+          if (is_var_w1 || is_var_w2) {
+            // Generate read
+            new_f->instructions.push_back(create_assignment(stack_address, new_var, "<-"));
+
+            if (is_var_w1) {
+              new_at->w1 = new_var;
+            } else {
+              new_at->w1 = at->w1;
+            }
+            if (is_var_w2) {
+              new_at->w2 = new_var;
+            } else {
+              new_at->w2 = at->w2;
+            }
+          } else {
+            new_at->w1 = at->w1;
+            new_at->w2 = at->w2;
+          }
+
+          new_f->instructions.push_back(new_at);
+          if (is_var_dest) {
+            new_at->dest = new_var;
+            new_f->instructions.push_back(create_assignment(new_var, stack_address, "<-"));
+          } else {
+            new_at->dest = at->dest;
+          }
+          counter++;
+        } else {
+          new_f->instructions.push_back(at);
+        }
+      } else if (Custom_func_call* cus_func = dynamic_cast<Custom_func_call*>(i)){
+        Custom_func_call* new_cus_func = new Custom_func_call();
+        if (Var_rule* var = dynamic_cast<Var_item*>(cus_func->u)){
+          Var_item* new_var = create_var(prefix, counter);
+          // Generate read
+          new_f->instructions.push_back(create_assignment(stack_address, new_var, "<-"));
+          new_cus_func->u = new_var;
+          counter++;
+        } else {
+          new_cus_func->u = cus_func->u;
+        }
+        new_f->instructions.push_back(new_cus_func);
+      } else {
+        new_f->instructions.push_back(i);
       }
     }
     return new_f;

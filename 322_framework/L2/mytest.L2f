@@ -11,10 +11,17 @@
 //%var <- %var = 8
 //rdi <- 3 < rsi
 
-cjump %var < 10 :a :b
-cjump rdi < 10 :c :d
+//cjump %var < 10 :a :b
+//cjump rdi < 10 :c :d
 
-cjump 11 = %var :e
+//cjump 11 = %var :e
+//%var++
+//%var--
+//rsi--
+rsi @ %var rdi 8
+rsi @ %var %var 8
+%var @ %var rdi 8
+%var @ rax rdi 8
 )
 
 %var

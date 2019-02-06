@@ -719,11 +719,7 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto i = new Inc_or_dec();
-      if (Register_item* reg_i = dynamic_cast<Register_item*>(parsed_items.back())){
-        i->reg = reg_i->register_name;
-      } else if (Var_item* var_i = dynamic_cast<Var_item*>(parsed_items.back())){
-        i->reg = var_i->var_name;
-      }
+      i->w = parsed_items.back();
       i->op = parsed_operations.back();
       auto currentF = p.functions.back();
       currentF->instructions.push_back(i);
@@ -734,24 +730,9 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto at_a = new At_arithmetic();
-      if (Register_item* reg_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 4))){
-        at_a->dest = reg_i->register_name;
-      } else if (Var_item* var_i = dynamic_cast<Var_item*>(parsed_items.at(parsed_items.size() - 4))){
-        at_a->dest = var_i->var_name;
-      }
-
-      if (Register_item* reg_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 3))){
-        at_a->r1 = reg_i->register_name;
-      } else if (Var_item* var_i = dynamic_cast<Var_item*>(parsed_items.at(parsed_items.size() - 3))){
-        at_a->r1 = var_i->var_name;
-      }
-
-      if (Register_item* reg_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 2))){
-        at_a->r2 = reg_i->register_name;
-      } else if (Var_item* var_i = dynamic_cast<Var_item*>(parsed_items.at(parsed_items.size() - 2))){
-        at_a->r2 = var_i->var_name;
-      }
-
+      at_a->dest = parsed_items.at(parsed_items.size() - 4);
+      at_a->w1 = parsed_items.at(parsed_items.size() - 3);
+      at_a->w2 = parsed_items.at(parsed_items.size() - 2);
       if (Num_item* num_i = dynamic_cast<Num_item*>(parsed_items.back())){
         at_a->n = num_i->n;
       }
