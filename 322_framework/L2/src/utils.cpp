@@ -54,6 +54,6 @@ namespace L2{
         }
       }
     }
-    cout << ')';
+    cout << ")\n";
   }
 }
