@@ -16,7 +16,7 @@
 #include <analysis.h>
 #include <transformer.h>
 #include <code_generator.h>
-//#include <spiller.h>
+#include <spiller.h>
 //#include <register_allocation.h>
 //#include <utils.h>
 
@@ -88,7 +88,8 @@ int main(
     /*
      * Parse an L2 function and the spill arguments.
      */
-     //TODO
+    auto p = L2::parse_spill(argv[optind]);
+    L2::generate_spilled(p);
 
   } else if (liveness_only){
 

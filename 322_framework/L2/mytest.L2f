@@ -1,0 +1,11 @@
+(:go
+0 1
+%var <- mem rsp 0
+%var += 4
+%var -= %var
+rsi <- %var
+)
+
+%var
+
+%new_var

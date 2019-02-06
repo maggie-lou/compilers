@@ -101,6 +101,12 @@ namespace L2 {
       >
     > {};
 
+  struct var:
+    pegtl::seq<
+      pegtl::one< '%' >,
+      name
+    > { };
+
   struct Label_rule:
     label {};
 
@@ -108,10 +114,13 @@ namespace L2 {
     number {};
 
   struct Var_rule:
-    pegtl::seq<
-      pegtl::one< '%' >,
-      name
-    > { };
+    var {};
+
+  struct Spill_var_rule:
+    var {};
+
+  struct Spill_prefix_rule:
+    var {};
 
   struct E_rule:
     pegtl::seq<
@@ -419,6 +428,15 @@ namespace L2 {
       pegtl::one< ')' >
     > {};
 
+  struct Spill_rule:
+    pegtl::seq<
+      Function_rule,
+      seps,
+      Spill_var_rule,
+      seps,
+      Spill_prefix_rule
+    > {};
+
   struct Functions_rule:
     pegtl::plus<
       seps,
@@ -465,7 +483,7 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto newF = new Function();
-      newF->name = "_" + in.string().substr(1);
+      newF->name = in.string();
       p.functions.push_back(newF);
     }
   };
@@ -521,6 +539,22 @@ namespace L2 {
       auto i = new Var_item();
       i->var_name = in.string();
       parsed_items.push_back(i);
+    }
+  };
+
+  template<> struct action < Spill_var_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto currentF = p.functions.back();
+      currentF->var_name = in.string();
+    }
+  };
+
+  template<> struct action < Spill_prefix_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto currentF = p.functions.back();
+      currentF->prefix = in.string();
     }
   };
 
@@ -837,4 +871,22 @@ namespace L2 {
     return p;
   }
 
+  Program parse_spill (char *fileName){
+
+    /*
+     * Check the grammar for some possible issues.
+     * Check input starting from the function_rule.
+     */
+    pegtl::analyze< Spill_rule >();
+
+    // Make empty program, to pass into existing action functions
+    Program p;
+    p.entryPointLabel = std::string("no_entry_point");
+    file_input< > fileInput(fileName);
+
+    // Parse, starting from the spill_rule
+    parse< Spill_rule, action >(fileInput, p);
+
+    return p;
+  }
 }

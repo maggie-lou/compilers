@@ -8,31 +8,52 @@
 namespace L2 {
   struct Item {
     virtual ~Item() = default;
+    virtual std::string item_to_string(){
+      return "";
+    }
   };
 
   struct Address_item : Item {
     std::string r;
     int64_t offset;
+    virtual std::string item_to_string(){
+      return "mem " + r + " " + std::to_string(offset);
+    }
   };
 
   struct Num_item : Item {
     int64_t n;
+    virtual std::string item_to_string(){
+      return std::to_string(n);
+    }
   };
 
   struct Label_item : Item {
     std::string label_name;
+    virtual std::string item_to_string(){
+      return label_name;
+    }
   };
 
   struct Register_item : Item {
     std::string register_name;
+    virtual std::string item_to_string(){
+      return register_name;
+    }
   };
 
   struct Var_item : Item {
     std::string var_name;
+    virtual std::string item_to_string(){
+      return var_name;
+    }
   };
 
   struct Sys_func_item : Item {
     std::string func_name;
+    virtual std::string item_to_string(){
+      return func_name;
+    }
   };
 
   /*
@@ -85,6 +106,8 @@ namespace L2 {
     int64_t arguments;
     int64_t locals;
     std::vector<Instruction *> instructions;
+    std::string prefix;
+    std::string var_name;
   };
 
   struct Comparison {
