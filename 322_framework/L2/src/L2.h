@@ -114,12 +114,10 @@ namespace L2 {
     Item* left;
     Item* right;
     std::string cmp_sign;
-    std::map<std::string, std::string> m_sign = {
-      {"<=", "setle"}, {"<", "setl"}, {">=", "setge"}, {">", "setg"}, {"=", "sete"}
-    };
-    std::map<std::string, std::string> m_jmp = {
-      {"<=", "jle"}, {"<", "jl"}, {">=", "jge"}, {">", "jg"}, {"=", "je"}
-    };
+
+    std::string to_string() {
+      return left->item_to_string() + " " + cmp_sign + " " + right->item_to_string();
+    }
   };
 
   /*

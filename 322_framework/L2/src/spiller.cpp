@@ -72,7 +72,130 @@ namespace L2{
         }
         if (has_var){
           counter++;
+        } else {
+          new_f->instructions.push_back(assignment);
         }
+      } else if (AssignmentCmp* assignmentCmp = dynamic_cast<AssignmentCmp*>(i)){
+        Comparison c = assignmentCmp->c;
+
+        auto var_dest = dynamic_cast<Var_item*>(c.left);
+        bool is_var_dest = var_dest && var_dest->var_name == var_name;
+
+        auto var_src = dynamic_cast<Var_item*>(c.right);
+        bool is_var_src = var_src && var_src->var_name == var_name;
+
+        auto var_ass_dest = dynamic_cast<Var_item*>(assignmentCmp->d);
+        bool is_var_ass_dest = var_ass_dest && var_ass_dest->var_name == var_name;
+
+        Comparison new_c;
+        if (is_var_src || is_var_dest || is_var_ass_dest) {
+          Var_item* new_var = create_var(prefix, counter);
+
+          if (is_var_src || is_var_dest) {
+            new_c.cmp_sign = c.cmp_sign;
+            // Generate read
+            new_f->instructions.push_back(create_assignment(stack_address, new_var, "<-"));
+
+            if (is_var_dest) {
+              new_c.left = new_var;
+            } else {
+              new_c.left = c.left;
+            }
+            if (is_var_src) {
+              new_c.right = new_var;
+            } else {
+              new_c.right = c.right;
+            }
+          } else {
+            new_c = c;
+          }
+
+          AssignmentCmp* new_ac = new AssignmentCmp();
+          new_ac->c = new_c;
+          new_f->instructions.push_back(new_ac);
+          if (is_var_ass_dest) {
+            new_ac->d = new_var;
+            new_f->instructions.push_back(create_assignment(new_var, stack_address, "<-"));
+          } else {
+            new_ac->d = assignmentCmp->d;
+          }
+          counter++;
+        } else {
+          new_f->instructions.push_back(assignmentCmp);
+        }
+      } else if (Cjump* cjump = dynamic_cast<Cjump*>(i)) {
+        Comparison c = cjump->c;
+
+        auto var_dest = dynamic_cast<Var_item*>(c.left);
+        bool is_var_dest = var_dest && var_dest->var_name == var_name;
+
+        auto var_src = dynamic_cast<Var_item*>(c.right);
+        bool is_var_src = var_src && var_src->var_name == var_name;
+
+        Comparison new_c;
+        if (is_var_src || is_var_dest) {
+          Var_item* new_var = create_var(prefix, counter);
+          new_c.cmp_sign = c.cmp_sign;
+
+          // Generate read
+          new_f->instructions.push_back(create_assignment(stack_address, new_var, "<-"));
+
+          if (is_var_dest) {
+            new_c.left = new_var;
+          } else {
+            new_c.left = c.left;
+          }
+          if (is_var_src) {
+            new_c.right = new_var;
+          } else {
+            new_c.right = c.right;
+          }
+          counter++;
+        } else {
+          new_c = c;
+        }
+
+        Cjump* new_cjmp = new Cjump();
+        new_cjmp->c = new_c;
+        new_cjmp->label1 = cjump->label1;
+        new_cjmp->label2 = cjump->label2;
+        new_f->instructions.push_back(new_cjmp);
+      } else if (Cjump_fallthrough* fallthrough = dynamic_cast<Cjump_fallthrough*>(i)) {
+        Comparison c = fallthrough->c;
+
+        auto var_dest = dynamic_cast<Var_item*>(c.left);
+        bool is_var_dest = var_dest && var_dest->var_name == var_name;
+
+        auto var_src = dynamic_cast<Var_item*>(c.right);
+        bool is_var_src = var_src && var_src->var_name == var_name;
+
+        Comparison new_c;
+        if (is_var_src || is_var_dest) {
+          Var_item* new_var = create_var(prefix, counter);
+          new_c.cmp_sign = c.cmp_sign;
+
+          // Generate read
+          new_f->instructions.push_back(create_assignment(stack_address, new_var, "<-"));
+
+          if (is_var_dest) {
+            new_c.left = new_var;
+          } else {
+            new_c.left = c.left;
+          }
+          if (is_var_src) {
+            new_c.right = new_var;
+          } else {
+            new_c.right = c.right;
+          }
+          counter++;
+        } else {
+          new_c = c;
+        }
+
+        Cjump_fallthrough* new_fallthrough = new Cjump_fallthrough();
+        new_fallthrough->c = new_c;
+        new_fallthrough->label = fallthrough->label;
+        new_f->instructions.push_back(new_fallthrough);
       }
     }
     return new_f;
