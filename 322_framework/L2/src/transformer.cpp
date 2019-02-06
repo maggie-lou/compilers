@@ -76,16 +76,16 @@ namespace L2{
           }
         } else if (assignment_instruction->op == "<-") {
           // Don't add edges to variables and registers during assignment op
-          Var_item* var_s = NULL;
-          Register_item* reg_s = NULL;
-          Var_item* var_d = NULL;
-          Register_item* reg_d = NULL;
-          if (((var_s = dynamic_cast<Var_item*>(assignment_instruction->s))||
-               (reg_s = dynamic_cast<Register_item*>(assignment_instruction->s)))&&
-              ((var_d = dynamic_cast<Var_item*>(assignment_instruction->d))||
-               (reg_d = dynamic_cast<Register_item*>(assignment_instruction->d)))){
-            continue;
-          }
+          // Var_item* var_s = NULL;
+          // Register_item* reg_s = NULL;
+          // Var_item* var_d = NULL;
+          // Register_item* reg_d = NULL;
+          // if (((var_s = dynamic_cast<Var_item*>(assignment_instruction->s))||
+          //      (reg_s = dynamic_cast<Register_item*>(assignment_instruction->s)))&&
+          //     ((var_d = dynamic_cast<Var_item*>(assignment_instruction->d))||
+          //      (reg_d = dynamic_cast<Register_item*>(assignment_instruction->d)))){
+          //   continue;
+          // }
         }
       }
 
