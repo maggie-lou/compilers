@@ -598,12 +598,7 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       auto i = new Address_item();
-      if (Register_item* register_i = dynamic_cast<Register_item*>(parsed_items.at(parsed_items.size() - 2))){
-        i->r = register_i->register_name;
-      } else if (Var_item* var_i = dynamic_cast<Var_item*>(parsed_items.at(parsed_items.size() - 2))){
-        i->r = var_i->var_name;
-      }
-
+      i->x = parsed_items.at(parsed_items.size() - 2);
       if (Num_item* num_i = dynamic_cast<Num_item*>(parsed_items.back())){
         i->offset = num_i->n;
       }

@@ -66,7 +66,7 @@ namespace L2{
                                              registers.begin(), registers.end());
             graph[source_graph_index].erase(remove(graph[source_graph_index].begin(),
                                                    graph[source_graph_index].end(),
-                                                   "rcx"), 
+                                                   "rcx"),
                                             graph[source_graph_index].end());
             int rcx_index = name_index["rcx"];
             for (int reg = 0; reg < num_registers; reg++) {
@@ -74,19 +74,7 @@ namespace L2{
               graph[reg].push_back(source);
             }
           }
-        } else if (assignment_instruction->op == "<-") {
-          // Don't add edges to variables and registers during assignment op
-          // Var_item* var_s = NULL;
-          // Register_item* reg_s = NULL;
-          // Var_item* var_d = NULL;
-          // Register_item* reg_d = NULL;
-          // if (((var_s = dynamic_cast<Var_item*>(assignment_instruction->s))||
-          //      (reg_s = dynamic_cast<Register_item*>(assignment_instruction->s)))&&
-          //     ((var_d = dynamic_cast<Var_item*>(assignment_instruction->d))||
-          //      (reg_d = dynamic_cast<Register_item*>(assignment_instruction->d)))){
-          //   continue;
-          // }
-        }
+        } 
       }
 
       // Connect variables in KILL[i] with those in OUT[i]

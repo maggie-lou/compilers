@@ -7,6 +7,7 @@
 
 #include <analysis.h>
 #include <utils.h>
+#include <functional>
 
 using namespace std;
 
@@ -86,6 +87,14 @@ namespace L2{
     return output;
   }
 
+  vector<string> get_str_vec(vector<std::reference_wrapper<Item*>> items){
+    vector<string> new_vec = {};
+    for (Item* i : items){
+      new_vec.push_back(i->item_to_string());
+    }
+    return new_vec;
+  }
+
   void get_in_out_sets(Program p, vector<vector<string>> &in, vector<vector<string>> &out, vector<vector<string>> &kill){
     auto instructions = (p.functions.front())->instructions;
     vector<vector<string>> gen(instructions.size());
@@ -93,8 +102,10 @@ namespace L2{
 
     for (int j=0; j<instructions.size(); j++) {
       auto current_i = instructions[j];
-      gen[j] = current_i->generate_gen();
-      kill[j] = current_i->generate_kill();
+      auto temp_gen = current_i->generate_gen();
+      auto temp_kill = current_i->generate_kill();
+      gen[j] = get_str_vec(temp_gen);
+      kill[j] = get_str_vec(temp_kill);
       in[j] = {};
       out[j] = {};
     }

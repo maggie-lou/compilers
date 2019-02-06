@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <functional>
 
 namespace L2 {
   struct Item {
@@ -14,10 +15,10 @@ namespace L2 {
   };
 
   struct Address_item : Item {
-    std::string r;
+    Item* x;
     int64_t offset;
     virtual std::string item_to_string(){
-      return "mem " + r + " " + std::to_string(offset);
+      return "mem " + x->item_to_string() + " " + std::to_string(offset);
     }
   };
 
@@ -37,6 +38,8 @@ namespace L2 {
 
   struct Register_item : Item {
     std::string register_name;
+    Register_item(): register_name() {}
+    Register_item(std::string x): register_name(x) {}
     virtual std::string item_to_string(){
       return register_name;
     }
@@ -60,24 +63,23 @@ namespace L2 {
    * Instruction interface.
    */
   struct Instruction{
-    void get_reg_var(Item* i, std::vector<std::string> &original_set){
-      if (Var_item* var = dynamic_cast<Var_item*>(i)){
-        original_set.push_back(var->var_name);
-      } else if (Register_item* reg = dynamic_cast<Register_item*>(i)){
+    void get_reg_var(Item* &i, std::vector<std::reference_wrapper<Item*>> &original_set){
+      auto to_cast = i;
+      if (Var_item* var = dynamic_cast<Var_item*>(to_cast)){
+        original_set.push_back(i);
+      } else if (Register_item* reg = dynamic_cast<Register_item*>(to_cast)){
         if(reg->register_name != "rsp"){
-          original_set.push_back(reg->register_name);
+          original_set.push_back(i);
         }
-      } else if (Address_item* address = dynamic_cast<Address_item*>(i)){
-        if(address->r != "rsp"){
-          original_set.push_back(address->r);
-        }
+      } else if (Address_item* address = dynamic_cast<Address_item*>(to_cast)){
+        get_reg_var(address->x, original_set);
       }
     }
 
-    virtual std::vector<std::string> generate_gen(){
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
       return {};
     }
-    virtual std::vector<std::string> generate_kill(){
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
       return {};
     }
   };
@@ -89,11 +91,19 @@ namespace L2 {
     int locals;
     int arguments;
 
-    virtual std::vector<std::string> generate_gen(){
-      return {"rax", "r12", "r13", "r14", "r15", "rbp", "rbx"};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
+      // std::vector<Item*> temp_r =
+      //   {new Register_item("rax"), new Register_item("r12"), new Register_item("r13"),
+      //    new Register_item("r14"), new Register_item("r15"), new Register_item("rbp"),
+      //    new Register_item("rbx")};
+      // std::vector<std::reference_wrapper<Item*>> gen;
+      // for (auto r : temp_r){
+      //   gen.push_back(r);
+      // }
+      return {};
     }
 
-    virtual std::vector<std::string> generate_kill(){
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
       return {};
     }
   };
@@ -128,12 +138,12 @@ namespace L2 {
     Item* w;
     std::string op;
 
-    virtual std::vector<std::string> generate_gen(){
-      return {w->item_to_string()};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
+      return {w};
     }
 
-    virtual std::vector<std::string> generate_kill(){
-      return {w->item_to_string()};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
+      return {w};
     }
   };
 
@@ -147,12 +157,12 @@ namespace L2 {
     Item* w2;
     int64_t n;
 
-    virtual std::vector<std::string> generate_gen(){
-      return {w1->item_to_string(), w2->item_to_string()};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
+      return {w1, w2};
     }
 
-    virtual std::vector<std::string> generate_kill(){
-      return {dest->item_to_string()};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
+      return {dest};
     }
   };
 
@@ -173,8 +183,8 @@ namespace L2 {
       {"&=", 5}, {">>=", 6}, {"<<=", 7}, {"<- stack-arg", 8}
     };
 
-    virtual std::vector<std::string> generate_gen(){
-      std::vector<std::string> gen = {};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
+      std::vector<std::reference_wrapper<Item*>> gen = {};
       get_reg_var(s, gen);
       if (op != "<-" && op != "<- stack-arg") {
         get_reg_var(d, gen);
@@ -182,8 +192,8 @@ namespace L2 {
       return gen;
     }
 
-    virtual std::vector<std::string> generate_kill(){
-      std::vector<std::string> gen = {};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
+      std::vector<std::reference_wrapper<Item*>> gen = {};
       get_reg_var(d, gen);
       return gen;
     }
@@ -197,15 +207,15 @@ namespace L2 {
     Item* d;
     Comparison c;
 
-    virtual std::vector<std::string> generate_gen(){
-      std::vector<std::string> gen = {};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
+      std::vector<std::reference_wrapper<Item*>> gen = {};
       get_reg_var(c.left, gen);
       get_reg_var(c.right, gen);
       return gen;
     }
 
-    virtual std::vector<std::string> generate_kill(){
-      std::vector<std::string> gen = {};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
+      std::vector<std::reference_wrapper<Item*>> gen = {};
       get_reg_var(d, gen);
       return gen;
     }
@@ -220,14 +230,14 @@ namespace L2 {
     std::string label1;
     std::string label2;
 
-    virtual std::vector<std::string> generate_gen(){
-      std::vector<std::string> gen = {};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
+      std::vector<std::reference_wrapper<Item*>> gen = {};
       get_reg_var(c.left, gen);
       get_reg_var(c.right, gen);
       return gen;
     }
 
-    virtual std::vector<std::string> generate_kill(){
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
       return {};
     }
   };
@@ -240,14 +250,14 @@ namespace L2 {
     Comparison c;
     std::string label;
 
-    virtual std::vector<std::string> generate_gen(){
-      std::vector<std::string> gen = {};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
+      std::vector<std::reference_wrapper<Item*>> gen = {};
       get_reg_var(c.left, gen);
       get_reg_var(c.right, gen);
       return gen;
     }
 
-    virtual std::vector<std::string> generate_kill(){
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
       return {};
     }
   };
@@ -259,11 +269,11 @@ namespace L2 {
   struct Label_instruction : Instruction {
     std::string label;
 
-    virtual std::vector<std::string> generate_gen(){
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
       return {};
     }
 
-    virtual std::vector<std::string> generate_kill(){
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
       return {};
     }
   };
@@ -275,11 +285,11 @@ namespace L2 {
   struct Goto : Instruction {
     std::string label;
 
-    virtual std::vector<std::string> generate_gen(){
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
       return {};
     }
 
-    virtual std::vector<std::string> generate_kill(){
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
       return {};
     }
   };
@@ -291,24 +301,47 @@ namespace L2 {
   struct Custom_func_call : Instruction {
     Item* u;
     int64_t n;
+    Item* rax = new Register_item("rax");
 
-    virtual std::vector<std::string> generate_gen(){
-      // u, args
-      std::vector<std::string> gen;
-      std::vector<std::string> arguments = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-      if (Register_item* reg = dynamic_cast<Register_item*>(u)){
-        gen.push_back(reg->register_name);
-      } else if (Var_item* var = dynamic_cast<Var_item*>(u)){
-        gen.push_back(var->var_name);
-      }
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
+      // std::vector<Item*> arguments =
+      //   {new Register_item("rdi"), new Register_item("rsi"),
+      //    new Register_item("rdx"), new Register_item("rcx"),
+      //    new Register_item("r8"), new Register_item("r9")};
+
+      std::vector<std::reference_wrapper<Item*>> gen;
+      get_reg_var(u, gen);
       for (int i = 0; i < std::min((int)n, 6); i++) {
-        gen.push_back(arguments[i]);
+        // gen.push_back(arguments[i]);
+        // gen.push_back(rax);
       }
       return gen;
     }
 
-    virtual std::vector<std::string> generate_kill(){
-      return {"rax", "r8", "r9", "r10", "r11", "rcx", "rdi", "rsi", "rdx"};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
+      std::vector<std::reference_wrapper<Item*>> kill;
+      // std::vector<std::string> registers = {"rax", "r8", "r9"};
+      // for (std::string s : registers){
+      //   Item* temp = new Register_item(s);
+      //   kill.push_back(temp);
+      // }
+      // std::vector<Item*> temp_r =
+      //   {new Register_item("rax"), new Register_item("r8"), new Register_item("r9"),
+      //    new Register_item("r10"), new Register_item("r11"), new Register_item("rcx"),
+      //    new Register_item("rdi"), new Register_item("rsi"), new Register_item("rdx")};
+      // std::vector<std::reference_wrapper<Item*>> kill;
+      // for (Item* r : temp_r){
+      //   kill.push_back(r);
+      // }
+      //
+      // for (Item* &r : kill){
+      //   if (r == NULL){
+      //     std::cout << "has null\n";
+      //   }
+      //   std::cout << r->item_to_string() <<  "\n";
+      // }
+      // kill.push_back(rax);
+      return {};
     }
   };
 
@@ -319,16 +352,27 @@ namespace L2 {
   struct System_func_call : Instruction {
     std::string system_func;
 
-    virtual std::vector<std::string> generate_gen(){
-      std::vector<std::string> gen = {"rdi"};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_gen(){
+      Item* temp = new Register_item("rdi");
+      std::vector<std::reference_wrapper<Item*>> gen;
+      gen.push_back(temp);
       if (system_func != "print"){
-        gen.push_back("rsi");
+        temp = new Register_item("rsi");
+        gen.push_back(temp);
       }
       return gen;
     }
 
-    virtual std::vector<std::string> generate_kill(){
-      return {"rax", "r8", "r9", "r10", "r11", "rcx", "rdi", "rsi", "rdx"};
+    virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
+      std::vector<Item*> temp_r =
+        {new Register_item("rax"), new Register_item("r8"), new Register_item("r9"),
+         new Register_item("r10"), new Register_item("r11"), new Register_item("rcx"),
+         new Register_item("rdi"), new Register_item("rsi"), new Register_item("rdx")};
+      std::vector<std::reference_wrapper<Item*>> kill;
+      for (auto r : temp_r){
+        kill.push_back(r);
+      }
+      return kill;
     }
   };
 
