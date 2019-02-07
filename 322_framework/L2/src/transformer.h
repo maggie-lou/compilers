@@ -2,8 +2,16 @@
 
 #include <L2.h>
 
+using namespace std;
+
 namespace L2{
 
-  void generate_graph(Program p);
+  struct Node {
+    string name;
+    vector<string> edges;
+  };
+
+  map<string, Node> generate_graph(Program p);
+  void generate_and_print_graph(Program p);
 
 }

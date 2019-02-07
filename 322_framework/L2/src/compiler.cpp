@@ -105,7 +105,7 @@ int main(
      * Parse an L2 function.
      */
      auto p =  L2::parse_function(argv[optind]);
-     L2::generate_graph(p);
+     L2::generate_and_print_graph(p);
 
   } else {
 

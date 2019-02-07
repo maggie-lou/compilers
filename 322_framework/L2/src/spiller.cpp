@@ -27,6 +27,7 @@ namespace L2{
     return var;
   }
 
+  // Return value indicates whether the intended variable was in the instruction, to know whether stack reads/writes are necessary
   bool check_replace_var(Item* &to_check, string var_name, Var_item* new_var){
     bool is_var = false;
     if (Var_item* var = dynamic_cast<Var_item*>(to_check)){
@@ -34,6 +35,8 @@ namespace L2{
         to_check = new_var;
         is_var = true;
       }
+      // Intended variable was already replaced
+      // Implies that intended variable was in instruction originally - still require a stack read/write
       if (var->var_name == new_var->var_name){
         is_var = true;
       }

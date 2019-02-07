@@ -13,44 +13,38 @@
 using namespace std;
 
 namespace L2{
-  void add_edges(vector<vector<string>> &graph, vector<string> nodes, map<string, int> &name_index){
-    for (int i = 0; i < nodes.size(); i++){
-      int index = name_index[nodes[i]];
-      graph[index].insert(graph[index].end(), nodes.begin(), nodes.end());
+  void add_edges(map<string, Node> &graph, vector<string> nodes){
+    for (string node: nodes) {
+      graph[node].edges.insert(graph[node].edges.end(), nodes.begin(), nodes.end());
     }
   }
 
-  void get_graph(Program p, vector<vector<string>> &graph, map<string, int> &name_index){
+  void generate_graph_variables(Program p, map<string, Node> &graph){
     auto instructions = (p.functions.front())->instructions;
     vector<vector<string>> kill(instructions.size());
     vector<vector<string>> in(instructions.size());
     vector<vector<string>> out(instructions.size());
     L2::get_in_out_sets(p, in, out, kill);
 
-    vector<string> registers = {"r10", "r11", "r12", "r13", "r14", "r15",
-                                "r8", "r9", "rax", "rbp", "rbx", "rcx", "rdi",
-                                "rdx", "rsi"};
-    int num_registers = registers.size();
-    int next_index = num_registers;
+    // Add variables to graph
     for (vector<string> instruction_kill : kill){
       for (string s : instruction_kill){
-        if (!name_index.count(s)){
-          name_index.insert(pair<string,int>(s,next_index));
-          next_index++;
-          graph.push_back({});
+        if (!graph.count(s)){
+          Node n;
+          n.name = s;
+          n.edges = {};
+          graph.insert(pair<string,Node>(s, n));
         }
       }
     }
 
-    // Connect a register to all other registers
-    add_edges(graph, registers, name_index);
 
     // Connect each pair of variables that belong to the same IN or OUT set
     for (vector<string> in_set : in){
-      add_edges(graph, in_set, name_index);
+      add_edges(graph, in_set);
     }
     for (vector<string> out_set : out){
-      add_edges(graph, out_set, name_index);
+      add_edges(graph, out_set);
     }
 
     for (int i = 0; i < instructions.size(); i++){
@@ -61,63 +55,81 @@ namespace L2{
         if (assignment_instruction->op == "<<=" || assignment_instruction->op == ">>=") {
           if (Var_item* var = dynamic_cast<Var_item*>(assignment_instruction->s)){
             string source = var->var_name;
-            int source_graph_index = name_index[source];
-            graph[source_graph_index].insert(graph[source_graph_index].end(),
-                                             registers.begin(), registers.end());
-            graph[source_graph_index].erase(remove(graph[source_graph_index].begin(),
-                                                   graph[source_graph_index].end(),
+            graph[source].edges.insert(graph[source].edges.end(),
+                                             L2::registers.begin(), L2::registers.end());
+            graph[source].edges.erase(remove(graph[source].edges.begin(),
+                                                   graph[source].edges.end(),
                                                    "rcx"),
-                                            graph[source_graph_index].end());
-            int rcx_index = name_index["rcx"];
-            for (int reg = 0; reg < num_registers; reg++) {
-              if (reg == rcx_index) continue;
-              graph[reg].push_back(source);
+                                            graph[source].edges.end());
+            for(map<string,Node>::iterator iter = graph.begin(); iter != graph.end(); ++iter) {
+              string reg = iter-> first;
+              if (reg == "rcx") continue;
+              graph[reg].edges.push_back(source);
             }
           }
-        } 
+        }
       }
 
       // Connect variables in KILL[i] with those in OUT[i]
       for (int j = 0;  j < kill[i].size(); j++){
-        int index = name_index[kill[i][j]];
-        graph[index].insert(graph[index].end(), out[i].begin(), out[i].end());
+        string kill_var = kill[i][j];
+        graph[kill_var].edges.insert(graph[kill_var].edges.end(), out[i].begin(), out[i].end());
       }
       for (int j = 0;  j < out[i].size(); j++){
-        int index = name_index[out[i][j]];
-        graph[index].insert(graph[index].end(), kill[i].begin(), kill[i].end());
+        string out_var = out[i][j];
+        graph[out_var].edges.insert(graph[out_var].edges.end(), kill[i].begin(), kill[i].end());
       }
     }
   }
 
-  void generate_graph(Program p){
-    vector<vector<string>> graph(15);
-    map<string, int> name_index = {
-      {"r10", 0}, {"r11", 1}, {"r12", 2}, {"r13", 3},
-      {"r14", 4}, {"r15", 5}, {"r8", 6}, {"r9", 7},
-      {"rax", 8}, {"rbp", 9}, {"rbx", 10}, {"rcx", 11},
-      {"rdi", 12}, {"rdx", 13}, {"rsi", 14}
-    };
-    get_graph(p, graph, name_index);
-    for(map<string,int>::iterator iter = name_index.begin(); iter != name_index.end(); ++iter) {
-      string key = iter-> first;
-      int graph_index = iter->second;
+  void generate_graph_registers(map<string, Node> &graph) {
+    for (string r: L2::registers) {
+      Node n;
+      n.name = r;
+      n.edges = {};
+      graph.insert(pair<string,Node>(r, n));
+    }
+    add_edges(graph, L2::registers);
+  }
+
+  void print_graph(map<string, Node> graph) {
+    for(map<string,Node>::iterator iter = graph.begin(); iter != graph.end(); ++iter) {
+      string reg = iter-> first;
+
+      if (reg[0] != '%'){
+        cout << reg << " ";
+      } else {
+        cout << reg.substr(1) << " ";
+      }
+
+      L2::print_vector(graph[reg].edges);
+      cout << "\n";
+    }
+  }
+
+  map<string, Node> generate_graph(Program p){
+    map<string, Node> graph;
+    generate_graph_registers(graph);
+    generate_graph_variables(p, graph);
+
+    for(map<string,Node>::iterator iter = graph.begin(); iter != graph.end(); ++iter) {
+      string reg = iter-> first;
 
       // Remove duplicates
-      vector<string> node_edges = graph[graph_index];
+      vector<string> node_edges = graph[reg].edges;
       sort(node_edges.begin(), node_edges.end());
       node_edges.erase( unique (node_edges.begin(), node_edges.end() ), node_edges.end());
 
       // Remove itself from graph
-      node_edges.erase(remove(node_edges.begin(), node_edges.end(), key), node_edges.end());
-      graph[graph_index] = node_edges;
-      if (key[0] != '%'){
-        cout << key << " ";
-      } else {
-        cout << key.substr(1) << " ";
-      }
-      L2::print_vector(graph[graph_index]);
-      cout << "\n";
+      node_edges.erase(remove(node_edges.begin(), node_edges.end(), reg), node_edges.end());
+      graph[reg].edges = node_edges;
     }
-    return;
+    return graph;
   }
+
+  void generate_and_print_graph(Program p) {
+    map<string, Node> graph = generate_graph(p);
+    print_graph(graph);
+  }
+
 }

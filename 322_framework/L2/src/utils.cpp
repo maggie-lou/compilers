@@ -9,6 +9,10 @@ using namespace std;
 
 namespace L2{
 
+  vector<string> registers = {"r10", "r11", "r12", "r13", "r14", "r15",
+    "r8", "r9", "rax", "rbp", "rbx", "rcx", "rdi",
+    "rdx", "rsi"};
+
   void print_vector(vector<string> v) {
     for (auto item: v) {
       if (item[0] != '%'){

@@ -8,4 +8,6 @@ namespace L2{
 
   void print_vector(vector<string> v);
   void print_function(Function* f);
+
+  extern vector<string> registers;
 }
