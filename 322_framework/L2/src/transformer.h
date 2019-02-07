@@ -8,6 +8,7 @@ namespace L2{
 
   struct Node {
     string name;
+    string color;
     vector<string> edges;
   };
 
