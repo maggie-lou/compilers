@@ -19,12 +19,14 @@ using L2::registers;
 
 namespace L2{
 
-  void color_registers(vector<L2::Node> &graph) {
-    for (L2::Node n: graph) {
-      if (find(begin(registers), end(registers), n.name) != end(registers)) {
-          n.color = n.name;
-      }
+  map<string, Node> color_registers(map<string, Node> graph) {
+    map<string, Node> colored_graph;
+    for (string register: registers) {
+      Node n = graph[register];
+      n.color = register;
+      colored_graph.insert(pair<string,Node>(n.name, n));
     }
+    return colored_graph;
   }
 
   vector<L2::Node> generate_graph_vector(map<string, L2::Node> g) {
@@ -95,18 +97,18 @@ namespace L2{
     to_spill.push_back(n.name);
   }
 
-  bool assign_colors(map<string, L2::Node> g, vector<string> &to_spill) {
-    vector<L2::Node> graph = generate_graph_vector(g);
+  bool assign_colors(map<string, Node> &g, vector<string> &to_spill) {
+    vector<L2::Node> graph_vector = generate_graph_vector(g);
+    sort_graph(graph_vector);
+    stack<Node> stack = generate_stack(graph_vector);
 
-    color_registers(graph);
-    sort_graph(graph);
-    stack<Node> stack = generate_stack(graph);
-
-    map<string, Node> colored_graph;
+    map<string, Node> colored_graph = color_registers(g);
     while (!stack.empty()) {
       Node n = stack.top();
       assign_color(n, colored_graph, to_spill);
     }
+
+    g = colored_graph;
 
     return !to_spill.empty();
   }

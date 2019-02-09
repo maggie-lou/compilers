@@ -21,18 +21,45 @@ using L2::assign_colors;
 
 namespace L2{
 
-  void allocate_registers(Program p) {
-    bool spill;
-    do {
-     map<string, Node> interference_graph = generate_graph(p);
-     vector<string> to_spill;
-     spill = assign_colors(interference_graph, to_spill);
-     if (spill) {
-      for (string var: to_spill) {
-          spill(p, var, "S");
-        }
-     }
-    } while (spill);
+  void replace_var_with_register(Item*& i, map<string, Node> graph) {
+    if (Var_item* var = dynamic_cast<Var_item*>(i)){
+      string replacement_reg = graph[var->var_name].color;
+      Register_item* r = new Register_item(replacement_reg);
+      i = r;
+    }
   }
 
+  void replace_vars_with_registers(Function &f, map<string, Node> interference_graph) {
+    for (Instruction* i : f.instructions) {
+      vector<reference_wrapper<Item*>> gen = i->generate_gen();
+      vector<reference_wrapper<Item*>> kill = i->generate_kill();
+
+      for (Item*& g : gen) {
+        replace_var_with_register(g, interference_graph);
+      }
+
+      for (Item*& k : kill) {
+        replace_var_with_register(k, interference_graph);
+      }
+    }
+  }
+
+  void allocate_registers(Function f) {
+    bool spill;
+    do {
+      spill = false;
+      map<string, Node> interference_graph = generate_graph(p);
+      vector<string> to_spill;
+      spill = assign_colors(interference_graph, to_spill);
+      if (spill) {
+        for (string var: to_spill) {
+          f = spill(f, var, "S");
+        }
+      }
+    } while (spill);
+
+    replace_vars_with_registers(f, interference_graph);
+
+    return f;
+  }
 }

@@ -4,6 +4,7 @@
 
 namespace L2{
 
-  void generate_spilled(Program p);
+  void print_spill(Program p);
+  Function* spill(Function* f, string var_name, string prefix);
 
 }

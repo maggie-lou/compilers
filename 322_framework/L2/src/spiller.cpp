@@ -44,7 +44,7 @@ namespace L2{
     return is_var;
   }
 
-  Function* get_spilled(Function* f, string var_name, string prefix){
+  Function* spill(Function* f, string var_name, string prefix){
     Function* new_f = new Function();
     int64_t locals = f->locals;
     new_f->name = f->name;
@@ -87,9 +87,9 @@ namespace L2{
     return new_f;
   }
 
-  void generate_spilled(Program p){
+  void print_spill(Program p){
     Function* f = p.functions.front();
-    Function* new_f = get_spilled(f, f->var_name, f->prefix);
+    Function* new_f = spill(f, f->var_name, f->prefix);
     L2::print_function(new_f);
   }
 }

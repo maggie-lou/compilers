@@ -89,7 +89,7 @@ int main(
      * Parse an L2 function and the spill arguments.
      */
     auto p = L2::parse_spill(argv[optind]);
-    L2::generate_spilled(p);
+    L2::print_spill(p);
 
   } else if (liveness_only){
 
