@@ -12,7 +12,7 @@ namespace L2{
     vector<string> edges;
   };
 
-  map<string, Node> generate_graph(Program p);
+  map<string, Node> generate_graph(Function* f);
   void generate_and_print_graph(Program p);
 
 }

@@ -19,12 +19,12 @@ namespace L2{
     }
   }
 
-  void generate_graph_variables(Program p, map<string, Node> &graph){
-    auto instructions = (p.functions.front())->instructions;
+  void generate_graph_variables(Function* f, map<string, Node> &graph){
+    auto instructions = f->instructions;
     vector<vector<string>> kill(instructions.size());
     vector<vector<string>> in(instructions.size());
     vector<vector<string>> out(instructions.size());
-    L2::get_in_out_sets(p, in, out, kill);
+    L2::get_in_out_sets(f, in, out, kill);
 
     // Add variables to graph
     for (vector<string> instruction_kill : kill){
@@ -37,7 +37,6 @@ namespace L2{
         }
       }
     }
-
 
     // Connect each pair of variables that belong to the same IN or OUT set
     for (vector<string> in_set : in){
@@ -107,10 +106,10 @@ namespace L2{
     }
   }
 
-  map<string, Node> generate_graph(Program p){
+  map<string, Node> generate_graph(Function* f){
     map<string, Node> graph;
     generate_graph_registers(graph);
-    generate_graph_variables(p, graph);
+    generate_graph_variables(f, graph);
 
     for(map<string,Node>::iterator iter = graph.begin(); iter != graph.end(); ++iter) {
       string reg = iter-> first;
@@ -128,7 +127,8 @@ namespace L2{
   }
 
   void generate_and_print_graph(Program p) {
-    map<string, Node> graph = generate_graph(p);
+    Function* f = p.functions.front();
+    map<string, Node> graph = generate_graph(f);
     print_graph(graph);
   }
 

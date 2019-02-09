@@ -5,6 +5,6 @@
 namespace L2{
 
   void print_spill(Program p);
-  Function* spill(Function* f, string var_name, string prefix);
+  Function* spill(Function* f, std::string var_name, std::string prefix);
 
 }

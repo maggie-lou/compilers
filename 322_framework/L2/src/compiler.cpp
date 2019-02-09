@@ -17,8 +17,8 @@
 #include <transformer.h>
 #include <code_generator.h>
 #include <spiller.h>
-//#include <register_allocation.h>
-//#include <utils.h>
+#include <register_allocation.h>
+#include <utils.h>
 
 using namespace std;
 
@@ -97,35 +97,25 @@ int main(
      * Parse an L2 function.
      */
      auto p = L2::parse_function(argv[optind]);
-     L2::generate_in_out_sets(p);
+     L2::generate_and_print_in_out_sets(p);
 
   } else if (interference_only){
 
     /*
      * Parse an L2 function.
      */
-     auto p =  L2::parse_function(argv[optind]);
+     auto p = L2::parse_function(argv[optind]);
      L2::generate_and_print_graph(p);
 
-  } else {
-
-    /*
-     * Parse the L2 program.
-     */
-    //TODO
-    auto p = L2::parse_file(argv[optind]);
   }
+
+  auto p = L2::parse_file(argv[optind]);
+
 
   /*
    * Special cases.
    */
   if (spill_only){
-
-    /*
-     * Spill.
-     */
-     //TODO
-
     return 0;
   }
 
@@ -133,7 +123,6 @@ int main(
    * Liveness test.
    */
   if (liveness_only){
-    //TODO
     return 0;
   }
 
@@ -141,7 +130,6 @@ int main(
    * Interference graph test.
    */
   if (interference_only){
-    //TODO
     return 0;
   }
 
@@ -149,7 +137,10 @@ int main(
    * Generate the target code.
    */
   if (enable_code_generator){
-    //TODO
+    for (auto f : p.functions){
+      L2::allocate_registers(f);
+    }
+    L2::generate_code(p);
   }
 
   return 0;

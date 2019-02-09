@@ -21,9 +21,9 @@ namespace L2{
 
   map<string, Node> color_registers(map<string, Node> graph) {
     map<string, Node> colored_graph;
-    for (string register: registers) {
-      Node n = graph[register];
-      n.color = register;
+    for (string r: registers) {
+      Node n = graph[r];
+      n.color = r;
       colored_graph.insert(pair<string,Node>(n.name, n));
     }
     return colored_graph;
@@ -48,7 +48,7 @@ namespace L2{
     }
   }
 
-  void remove_node(string name, vector<Node> graph) {
+  void remove_node(string name, vector<Node> &graph) {
     for (Node n: graph) {
       n.edges.erase(remove(n.edges.begin(), n.edges.end(), name), n.edges.end());
     }
@@ -82,8 +82,11 @@ namespace L2{
     }
   }
 
-  void assign_color(Node n, map<string, Node> &graph, vector<string> &to_spill) {
+  void assign_color(Node &n, map<string, Node> &graph, vector<string> &to_spill) {
+    // cout << "old color: " << n.color << "\n";
     vector<string> conflicts = get_color_conflicts(n, graph);
+    // cout << "conflicts: ";
+    // L2::print_vector(conflicts);
 
     for (string color: registers) {
       if (find(begin(conflicts), end(conflicts), color) == end(conflicts)) {
@@ -93,19 +96,26 @@ namespace L2{
         return;
       }
     }
-
+    // cout << "didn't find available color\n";
     to_spill.push_back(n.name);
   }
 
   bool assign_colors(map<string, Node> &g, vector<string> &to_spill) {
+    cout << "generating graph vector...\n";
     vector<L2::Node> graph_vector = generate_graph_vector(g);
+    cout << "sorting...\n";
     sort_graph(graph_vector);
+    cout << "generating stack...\n";
     stack<Node> stack = generate_stack(graph_vector);
 
+    cout << "coloring regs...\n";
     map<string, Node> colored_graph = color_registers(g);
     while (!stack.empty()) {
       Node n = stack.top();
+      stack.pop();
+      cout << "assigning color to " << n.name << "...\n";
       assign_color(n, colored_graph, to_spill);
+      cout << "assigned color " << n.color << "...\n";
     }
 
     g = colored_graph;
@@ -113,4 +123,3 @@ namespace L2{
     return !to_spill.empty();
   }
 }
-

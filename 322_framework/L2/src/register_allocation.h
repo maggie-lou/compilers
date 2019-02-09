@@ -5,4 +5,5 @@
 using namespace std;
 
 namespace L2{
+  void allocate_registers(Function* &f);
 }

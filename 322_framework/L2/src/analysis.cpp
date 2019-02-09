@@ -95,8 +95,8 @@ namespace L2{
     return new_vec;
   }
 
-  void get_in_out_sets(Program p, vector<vector<string>> &in, vector<vector<string>> &out, vector<vector<string>> &kill){
-    auto instructions = (p.functions.front())->instructions;
+  void get_in_out_sets(Function* f, vector<vector<string>> &in, vector<vector<string>> &out, vector<vector<string>> &kill){
+    auto instructions = f->instructions;
     vector<vector<string>> gen(instructions.size());
     bool changed = false;
 
@@ -129,13 +129,14 @@ namespace L2{
     return;
   }
 
-  void generate_in_out_sets(Program p){
-    auto instructions = (p.functions.front())->instructions;
+  void generate_and_print_in_out_sets(Program p){
+    Function* f = p.functions.front();
+    auto instructions = f->instructions;
     vector<vector<string>> kill(instructions.size());
     vector<vector<string>> in(instructions.size());
     vector<vector<string>> out(instructions.size());
 
-    get_in_out_sets(p, in, out, kill);
+    get_in_out_sets(f, in, out, kill);
     cout << "(\n(in\n";
     for (int i=0; i<in.size(); i++) {
       cout << "(";

@@ -472,7 +472,7 @@ namespace L2 {
     template< typename Input >
 	static void apply( const Input & in, Program & p){
       if (p.entryPointLabel.empty()){
-        p.entryPointLabel = "_" + in.string().substr(1);
+        p.entryPointLabel = in.string();
       } else {
         abort();
       }
