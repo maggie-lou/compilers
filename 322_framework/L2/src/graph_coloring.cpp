@@ -40,13 +40,15 @@ namespace L2{
   }
 
   void sort_graph(vector<Node> &graph) {
-    sort( graph.begin(), graph.end(), [](const L2::Node&lhs, const L2::Node& rhs) {
-        return lhs.edges.size() > rhs.edges.size(); // Descending order
-    });
+    if (!graph.empty()){
+      sort( graph.begin(), graph.end(), [](const L2::Node&lhs, const L2::Node& rhs) {
+          return lhs.edges.size() > rhs.edges.size(); // Descending order
+      });
 
-    while (graph[0].edges.size() >= registers.size()) {
-      graph.push_back(graph[0]);
-      graph.erase(graph.begin());
+      while (graph[0].edges.size() >= registers.size()) {
+        graph.push_back(graph[0]);
+        graph.erase(graph.begin());
+      }
     }
   }
 
@@ -79,35 +81,39 @@ namespace L2{
   }
 
   void add_edges(map<string, Node> &graph, string node, vector<string> edges) {
-    for (string edge: edges) {
-      graph[edge].edges.push_back(node);
+    for(map<string, Node>::iterator it = graph.begin(); it != graph.end(); it++) {
+      Node n = it->second;
+      if (find(begin(edges), end(edges), n.name) != end(edges)){
+        graph[n.name].edges.push_back(node);
+      }
     }
   }
 
   void assign_color(Node &n, map<string, Node> &graph, vector<string> &to_spill) {
+    // cout << "name: " << n.name << "\n";
     // cout << "old color: " << n.color << "\n";
     vector<string> conflicts = get_color_conflicts(n, graph);
     // cout << "conflicts: ";
-    L2::print_vector(conflicts);
-    cout << endl;
+    // L2::print_vector(conflicts);
+    // cout << endl;
 
     for (string color: registers) {
       if (find(begin(conflicts), end(conflicts), color) == end(conflicts)) {
-        cout << "Assigning color "<< color << endl;
+        // cout << "Assigning color "<< color << endl;
         n.color = color;
-        if (graph.count(n.name)) {
-          cout << "already in graph" << endl;
-          auto ex = graph[n.name];
-          cout << "WTF " << ex.name << " color " << ex.color << endl;
-        }
-        cout << "before insertion size: " << graph.size() << endl;
+        // if (graph.count(n.name)) {
+        //   cout << "already in graph" << endl;
+        //   auto ex = graph[n.name];
+        //   cout << "WTF " << ex.name << " color " << ex.color << endl;
+        // }
+        // cout << "before insertion size: " << graph.size() << endl;
         graph.insert(pair<string,Node>(n.name, n));
-        cout << "after insertion size: " << graph.size() << endl;
-        for(map<string, Node>::iterator it = graph.begin(); it != graph.end(); it++) {
-          Node n = it->second;
-          cout << n.name << endl;
-          cout << "Color: " << n.color << endl;
-        }
+        // cout << "after insertion size: " << graph.size() << endl;
+        // for(map<string, Node>::iterator it = graph.begin(); it != graph.end(); it++) {
+        //   Node n = it->second;
+        //   cout << n.name << endl;
+        //   cout << "Color: " << n.color << endl;
+        // }
         add_edges(graph, n.name, n.edges);
         return;
       }
@@ -119,13 +125,16 @@ namespace L2{
   bool assign_colors(map<string, Node> &g, vector<string> &to_spill) {
     // cout << "generating graph vector...\n";
     vector<L2::Node> graph_vector = generate_graph_vector(g);
+    // for (L2::Node nn : graph_vector){
+    //   cout << "Name: " << nn.name << "\n";
+    // }
     // cout << "sorting...\n";
     sort_graph(graph_vector);
     // cout << "generating stack...\n";
     stack<Node> stack = generate_stack(graph_vector);
 
     // cout << "coloring regs...\n";
-    cout << "In graph" << endl;
+    // cout << "In graph" << endl;
     map<string, Node> colored_graph = color_registers(g);
     while (!stack.empty()) {
       Node n = stack.top();
@@ -133,17 +142,17 @@ namespace L2{
         continue;
       }
       stack.pop();
-      cout << "old size " << n.name << "...\n";
+      // cout << "in assign_colors, name: " << n.name << "...\n";
       assign_color(n, colored_graph, to_spill);
-      cout << "assigned color " << colored_graph[n.name].color << "...\n";
+      // cout << "assigned color " << colored_graph[n.name].color << "...\n";
     }
 
     g = colored_graph;
-    for(map<string, Node>::iterator it = colored_graph.begin(); it != colored_graph.end(); it++) {
-      Node n = it->second;
-      cout << n.name << endl;
-      cout << "Color: " << n.color << endl;
-    }
+    // for(map<string, Node>::iterator it = colored_graph.begin(); it != colored_graph.end(); it++) {
+    //   Node n = it->second;
+    //   cout << n.name << endl;
+    //   cout << "Color: " << n.color << endl;
+    // }
     // cout << "Size of spill: "<< to_spill.size();
 
     return !to_spill.empty();

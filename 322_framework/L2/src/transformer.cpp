@@ -37,6 +37,26 @@ namespace L2{
         }
       }
     }
+    for (vector<string> instruction_in : in){
+      for (string s : instruction_in){
+        if (!graph.count(s)){
+          Node n;
+          n.name = s;
+          n.edges = {};
+          graph.insert(pair<string,Node>(s, n));
+        }
+      }
+    }
+    for (vector<string> instruction_out : out){
+      for (string s : instruction_out){
+        if (!graph.count(s)){
+          Node n;
+          n.name = s;
+          n.edges = {};
+          graph.insert(pair<string,Node>(s, n));
+        }
+      }
+    }
 
     // Connect each pair of variables that belong to the same IN or OUT set
     for (vector<string> in_set : in){
