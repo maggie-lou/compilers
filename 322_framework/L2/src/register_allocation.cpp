@@ -22,9 +22,13 @@ using L2::registers;
 namespace L2{
 
   void replace_var_with_register(Item* &i, map<string, Node> graph) {
+    // cout <<"here"<< graph.size() << endl;
     if (Var_item* var = dynamic_cast<Var_item*>(i)){
+      if (graph.count(var->var_name)) {
+        // cout << "in graph" << endl;
+      }
       string replacement_reg = graph[var->var_name].color;
-      cout << "replacement: " << replacement_reg << "\n";
+      // cout << "replacement: " << replacement_reg << "\n";
       Register_item* r = new Register_item(replacement_reg);
       i = r;
     }
@@ -36,18 +40,20 @@ namespace L2{
       vector<reference_wrapper<Item*>> kill = i->generate_kill();
 
       for (Item*& g : gen) {
+        // cout << "g name of register: " << g->item_to_string() << "\n";
         replace_var_with_register(g, interference_graph);
-        cout << "g name of register: " << g->item_to_string() << "\n";
       }
 
       for (Item*& k : kill) {
         replace_var_with_register(k, interference_graph);
-        cout << "k name of register: " << k->item_to_string() << "\n";
+        // cout << "k name of register: " << k->item_to_string() << "\n";
       }
     }
   }
 
   void allocate_registers(Function* &f) {
+    cout << "Top of allocate registers" << endl;
+    L2::print_function(f);
     bool spill;
     map<string, Node> interference_graph;
     do {
@@ -64,11 +70,12 @@ namespace L2{
         for (string var: to_spill) {
           cout << "spilling " << var << "\n";
           f = L2::spill(f, var, "S"); // TODO find prefix?
+          L2::print_function(f);
         }
       }
     } while (spill);
-    cout << "finished spilling...\n";
-    cout << "start replacing...\n";
+    // cout << "finished spilling...\n";
+    // cout << "start replacing...\n";
     replace_vars_with_registers(f, interference_graph);
   }
 }
