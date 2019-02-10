@@ -103,6 +103,11 @@ namespace L2{
         cout << "before insertion size: " << graph.size() << endl;
         graph.insert(pair<string,Node>(n.name, n));
         cout << "after insertion size: " << graph.size() << endl;
+        for(map<string, Node>::iterator it = graph.begin(); it != graph.end(); it++) {
+          Node n = it->second;
+          cout << n.name << endl;
+          cout << "Color: " << n.color << endl;
+        }
         add_edges(graph, n.name, n.edges);
         return;
       }
@@ -122,18 +127,13 @@ namespace L2{
     // cout << "coloring regs...\n";
     cout << "In graph" << endl;
     map<string, Node> colored_graph = color_registers(g);
-    for(map<string, Node>::iterator it = colored_graph.begin(); it != colored_graph.end(); it++) {
-      Node n = it->second;
-      cout << n.name << endl;
-      // cout << "Color: " << n.color << endl;
-    }
     while (!stack.empty()) {
       Node n = stack.top();
       if (find(begin(registers), end(registers), n.name) != end(registers)) {
         continue;
       }
       stack.pop();
-      cout << "assigning color to " << n.name << "...\n";
+      cout << "old size " << n.name << "...\n";
       assign_color(n, colored_graph, to_spill);
       cout << "assigned color " << colored_graph[n.name].color << "...\n";
     }
@@ -141,7 +141,8 @@ namespace L2{
     g = colored_graph;
     for(map<string, Node>::iterator it = colored_graph.begin(); it != colored_graph.end(); it++) {
       Node n = it->second;
-      // cout << "Color: " << n.color << endl;
+      cout << n.name << endl;
+      cout << "Color: " << n.color << endl;
     }
     // cout << "Size of spill: "<< to_spill.size();
 
