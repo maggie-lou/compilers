@@ -72,9 +72,9 @@ namespace L2{
       // cout << "start spilling...\n";
       if (spill) {
         for (string var: to_spill) {
-          // cout << "spilling " << var << "\n";
-          f = L2::spill(f, var, "S"); // TODO find prefix?
-          // L2::print_function(f);
+          //cout << "spilling " << var << "\n";
+          f = L2::spill(f, var, var); // TODO find prefix?
+          //L2::print_function(f);
         }
       }
     } while (spill);

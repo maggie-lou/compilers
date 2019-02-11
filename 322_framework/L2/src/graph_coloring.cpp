@@ -45,9 +45,11 @@ namespace L2{
           return lhs.edges.size() > rhs.edges.size(); // Descending order
       });
 
-      while (graph[0].edges.size() >= registers.size()) {
+      int iterations  = graph.size();
+      while (iterations > 0 && graph[0].edges.size() >= registers.size()) {
         graph.push_back(graph[0]);
         graph.erase(graph.begin());
+	iterations--;
       }
     }
   }
@@ -144,16 +146,9 @@ namespace L2{
       stack.pop();
       // cout << "in assign_colors, name: " << n.name << "...\n";
       assign_color(n, colored_graph, to_spill);
-      // cout << "assigned color " << colored_graph[n.name].color << "...\n";
+      //cout << "assigned node "<< n.name << " color " << colored_graph[n.name].color << "...\n";
     }
-
     g = colored_graph;
-    // for(map<string, Node>::iterator it = colored_graph.begin(); it != colored_graph.end(); it++) {
-    //   Node n = it->second;
-    //   cout << n.name << endl;
-    //   cout << "Color: " << n.color << endl;
-    // }
-    // cout << "Size of spill: "<< to_spill.size();
 
     return !to_spill.empty();
   }

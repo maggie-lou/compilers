@@ -26,11 +26,12 @@ namespace L2{
       auto instructions = f->instructions;
       for (auto i : instructions){
         if (Assignment* assignment = dynamic_cast<Assignment*>(i)){
+          outputFile << "\t" << assignment->d->item_to_string() << " "; 
           if (assignment->op == "<- stack-arg"){
             Num_item* num = dynamic_cast<Num_item*>(assignment->s);
-            outputFile << " " << assignment->op << " (mem rsp " << to_string(num->n + f->locals * 8) << "\n";
+            outputFile << "<- mem rsp " << to_string(num->n) << "\n";
           } else {
-            outputFile << "\t" << assignment->d->item_to_string() << " " << assignment->op << " " << assignment->s->item_to_string() << "\n";
+            outputFile << assignment->op << " " << assignment->s->item_to_string() << "\n";
           }
         } else if (AssignmentCmp* ass_cmp = dynamic_cast<AssignmentCmp*>(i)) {
           outputFile << "\t" << ass_cmp->d->item_to_string() << " <- " << ass_cmp->c.to_string() << "\n";
