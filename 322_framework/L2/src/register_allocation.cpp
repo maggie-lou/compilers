@@ -73,7 +73,7 @@ namespace L2{
       if (spill) {
         for (string var: to_spill) {
           //cout << "spilling " << var << "\n";
-          f = L2::spill(f, var, var); // TODO find prefix?
+          f = L2::spill(f, var, var+"_ENd"); // TODO find prefix?
           //L2::print_function(f);
         }
       }

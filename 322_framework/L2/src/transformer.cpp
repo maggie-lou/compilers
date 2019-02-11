@@ -15,7 +15,11 @@ using namespace std;
 namespace L2{
   void add_edges(map<string, Node> &graph, vector<string> nodes){
     for (string node: nodes) {
-      graph[node].edges.insert(graph[node].edges.end(), nodes.begin(), nodes.end());
+      for (string to_insert: nodes){
+        if ((to_insert != node) && (find(begin(graph[node].edges), end(graph[node].edges), to_insert) == end(graph[node].edges))){
+          graph[node].edges.push_back(to_insert);
+        }
+      }
     }
   }
 
@@ -25,6 +29,19 @@ namespace L2{
     vector<vector<string>> in(instructions.size());
     vector<vector<string>> out(instructions.size());
     L2::get_in_out_sets(f, in, out, kill);
+    // for (int i = 0; i < instructions.size(); i++){
+    //   cout << "kill: \n";
+    //   L2::print_vector(kill[i]);
+    //   cout << "\n";
+    //
+    //   cout << "in: \n";
+    //   L2::print_vector(in[i]);
+    //   cout << "\n";
+    //
+    //   cout << "out: \n";
+    //   L2::print_vector(out[i]);
+    //   cout << "\n";
+    // }
 
     // Add variables to graph
     for (vector<string> instruction_kill : kill){
@@ -66,7 +83,12 @@ namespace L2{
       add_edges(graph, out_set);
     }
 
+
     for (int i = 0; i < instructions.size(); i++){
+      // cout << "instruction " << to_string(i) << "\n";
+      // cout << "in the beginning\n";
+      // L2::print_vector(graph["%v1"].edges);
+      // cout << "\n\n";
       // Add L1 Constraints
       Assignment* assignment_instruction = dynamic_cast<Assignment*>(instructions.at(i));
       if (assignment_instruction) {
@@ -74,30 +96,42 @@ namespace L2{
         if (assignment_instruction->op == "<<=" || assignment_instruction->op == ">>=") {
           if (Var_item* var = dynamic_cast<Var_item*>(assignment_instruction->s)){
             string source = var->var_name;
-            graph[source].edges.insert(graph[source].edges.end(),
-                                             L2::registers.begin(), L2::registers.end());
-            graph[source].edges.erase(remove(graph[source].edges.begin(),
-                                                   graph[source].edges.end(),
-                                                   "rcx"),
-                                            graph[source].edges.end());
-            for(map<string,Node>::iterator iter = graph.begin(); iter != graph.end(); ++iter) {
-              string reg = iter-> first;
+            for (string reg: L2::registers){
               if (reg == "rcx") continue;
-              graph[reg].edges.push_back(source);
+              if (find(begin(graph[source].edges), end(graph[source].edges), reg) == end(graph[source].edges)){
+                graph[source].edges.push_back(reg);
+              }
+              if (find(begin(graph[reg].edges), end(graph[reg].edges), source) == end(graph[reg].edges)){
+                graph[reg].edges.push_back(source);
+              }
             }
           }
         }
       }
+      // cout << "in the middle\n";
+      // L2::print_vector(graph["%v1"].edges);
+      // cout << "\n\n";
 
       // Connect variables in KILL[i] with those in OUT[i]
       for (int j = 0;  j < kill[i].size(); j++){
         string kill_var = kill[i][j];
-        graph[kill_var].edges.insert(graph[kill_var].edges.end(), out[i].begin(), out[i].end());
+        for (string to_insert : out[i]){
+          if ((to_insert != kill_var) && (find(begin(graph[kill_var].edges), end(graph[kill_var].edges), to_insert) == end(graph[kill_var].edges))){
+            graph[kill_var].edges.push_back(to_insert);
+          }
+        }
       }
       for (int j = 0;  j < out[i].size(); j++){
         string out_var = out[i][j];
-        graph[out_var].edges.insert(graph[out_var].edges.end(), kill[i].begin(), kill[i].end());
+        for (string to_insert : kill[i]){
+          if ((to_insert != out_var) && (find(begin(graph[out_var].edges), end(graph[out_var].edges), to_insert) == end(graph[out_var].edges))){
+            graph[out_var].edges.push_back(to_insert);
+          }
+        }
       }
+      // cout << "at the end\n";
+      // L2::print_vector(graph["%v1"].edges);
+      // cout << "\n\n";
     }
   }
 
@@ -128,8 +162,17 @@ namespace L2{
 
   map<string, Node> generate_graph(Function* f){
     map<string, Node> graph;
+
+    // L2::print_function(f);
+
     generate_graph_registers(graph);
     generate_graph_variables(f, graph);
+
+    // for(map<string,Node>::iterator iter = graph.begin(); iter != graph.end(); ++iter) {
+    //   cout << iter->first << "\n";
+    //   L2::print_vector(iter->second.edges);
+    //   cout << "\n\n";
+    // }
 
     for(map<string,Node>::iterator iter = graph.begin(); iter != graph.end(); ++iter) {
       string reg = iter-> first;
@@ -143,6 +186,7 @@ namespace L2{
       node_edges.erase(remove(node_edges.begin(), node_edges.end(), reg), node_edges.end());
       graph[reg].edges = node_edges;
     }
+
     return graph;
   }
 

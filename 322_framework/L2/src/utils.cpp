@@ -9,9 +9,9 @@ using namespace std;
 
 namespace L2{
 
-  vector<string> registers = {"r10", "r11", "r12", "r13", "r14", "r15",
-    "r8", "r9", "rax", "rbp", "rbx", "rcx", "rdi",
-    "rdx", "rsi"};
+  vector<string> registers = {"rdi", "rsi", "rdx", "rax", "r8", "r9", "r10",
+                           "r11", "rcx", "r12", "r13", "r14", "r15", "rbp",
+                           "rbx"};
 
   void print_vector(vector<string> v) {
     for (auto item: v) {

@@ -196,12 +196,19 @@ namespace L2 {
       get_reg_var(s, gen);
       if (op != "<-" && op != "<- stack-arg") {
         get_reg_var(d, gen);
+      } else if (op == "<-"){
+        if (Address_item* add = dynamic_cast<Address_item*>(d)){
+          get_reg_var(d, gen);
+        }
       }
       return gen;
     }
 
     virtual std::vector<std::reference_wrapper<Item*>> generate_kill(){
       std::vector<std::reference_wrapper<Item*>> gen = {};
+      if (Address_item* add = dynamic_cast<Address_item*>(d)){
+        return {};
+      }
       get_reg_var(d, gen);
       return gen;
     }
