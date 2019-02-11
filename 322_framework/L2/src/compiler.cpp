@@ -137,8 +137,10 @@ int main(
    * Generate the target code.
    */
   if (enable_code_generator){
-    for (auto f : p.functions){
+    for (int i=0; i<p.functions.size(); i++) {
+      auto f = p.functions[i];
       L2::allocate_registers(f);
+      p.functions[i] = f;
     }
     L2::generate_code(p);
   }

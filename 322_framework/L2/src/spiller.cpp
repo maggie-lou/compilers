@@ -45,9 +45,11 @@ namespace L2{
   }
 
   Function* spill(Function* f, string var_name, string prefix){
+    // cout << "function " << f->name << "Spill " << var_name << endl;
     Function* new_f = new Function();
     int64_t locals = f->locals;
     new_f->name = f->name;
+    new_f->arguments = f->arguments;
     Address_item* stack_address = new Address_item();
     stack_address->x = new Register_item("rsp");
     stack_address->offset = locals * 8;
