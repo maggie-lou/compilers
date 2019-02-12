@@ -96,46 +96,28 @@ namespace L2{
   }
 
   void get_in_out_sets(Function* f, vector<vector<string>> &in, vector<vector<string>> &out, vector<vector<string>> &kill){
-    // L2::print_function(f);
     auto instructions = f->instructions;
     vector<vector<string>> gen(instructions.size());
     bool changed = false;
 
     for (int j=0; j<instructions.size(); j++) {
-      // cout << "instruction " << to_string(j) << "\n";
       auto current_i = instructions[j];
       auto temp_gen = current_i->generate_gen();
       auto temp_kill = current_i->generate_kill();
       gen[j] = get_str_vec(temp_gen);
       kill[j] = get_str_vec(temp_kill);
-      // cout << "gen: \n";
-      // L2::print_vector(gen[j]);
-      // cout << "\n";
-      // cout << "kill: \n";
-      // L2::print_vector(kill[j]);
-      // cout << "\n";
       in[j] = {};
       out[j] = {};
     }
     do {
       changed = false;
       for (int j=instructions.size()-1; j>=0; j--) {
-        // cout << "instruction " << to_string(j) << "\n";
         vector<string> old_in = in[j];
         vector<string> old_out = out[j];
 
         vector<string> diff = get_difference(out[j], kill[j]);
         in[j] = get_union(gen[j], diff);
-
         out[j] = generate_out_set(j, instructions, in);
-
-        // cout << "in: \n";
-        // L2::print_vector(in[j]);
-        // cout << "\n";
-        // cout << "out: \n";
-        // L2::print_vector(out[j]);
-        // cout << "\n";
-
         vector<string> diff_in = get_difference(in[j], old_in);
         vector<string> diff_out = get_difference(out[j], old_out);
 
