@@ -7,5 +7,6 @@ using namespace std;
 namespace L3{
 
   bool is_int(std::string s);
-
+  bool contains(vector<string> v, string s);
+  string get_var_name(Item* i);
 }

@@ -98,6 +98,7 @@ int main(
      */
      auto p = L2::parse_function(argv[optind]);
      L2::generate_and_print_in_out_sets(p);
+     return 0;
 
   } else if (interference_only){
 

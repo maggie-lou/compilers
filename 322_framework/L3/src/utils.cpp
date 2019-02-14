@@ -14,4 +14,14 @@ namespace L3{
     std::strtol(s.c_str(), &p, 10);
     return (*p == 0);
   }
+
+  bool contains(vector<string> v, string s) {
+    return find(begin(v), end(v), s) != end(v);
+  }
+
+  string get_var_name(Item* i) {
+    if (auto var = dynamic_cast<Variable*>(i)) {
+      return var->name;
+    }
+  }
 }

@@ -108,17 +108,73 @@ namespace L3{
     return t;
   }
 
+  bool can_merge(Tree_node* t, Tree_node* merge_into) {
+    for (int j=i+1; j<trees.size(); j++) {
+      vector<string> out_set = out_sets[j];
+      vector<string> in_set = in_sets[j];
+      if (out_set.contains(var_name)) {
+        break;
+      }
+      if (in_set.contains(var_name)) {
+      }
 
-  vector<Tree_node*> generate_and_merge_trees(vector<Instruction*> context){
+  // void merge(Tree_node* t, map<string, vector<Tree_node*>> leaf_map) {
+    // if (auto t_var = dynamic_cast<Variable*>(t->value)) {
+    //   if (leaf_map.count(t_var->name)) {
+    //     for (Tree_node* potentialMerge : leaf_map[t_var->name]) {
+    //       if (can_merge(t, potentialMerge)) {
+    //         for (int child=0; child < t->children.size(); child++) {
+    //           if (auto child_var = dynamic_cast<Variable*>(t->children[child]->value)) {
+    //             if (child_var->name == t_var->name) {
+    //               t->children[child] = t;
+    //             // TODO: delete merged tree from list???
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+  // }
+
+
+  void merge(Tree_node *t, Tree_node *merge_into, vector<Tree_node*> &trees, int t_index) {
+    if (auto merge_name = get_var_name(t)) {
+      for (int child=0; child<merge_into->children.size(); child++) {
+        if (auto child_name = get_var_name(merge_into->children[child])) {
+          if (merge_name == child_name) {
+            merge_into->children[child] = t;
+          }
+        }
+      }
+      trees.erase(trees.begin() + t_index);
+    }
+  }
+
+  vector<Tree_node*> generate_and_merge_trees(vector<Instruction*> context, vector<vector<string>> in_sets, vector<vector<string>> out_sets){
     vector<Tree_node*> trees;
     map<string, vector<Tree_node*>> leaf_map;
     for (Instruction* i: context) {
       Tree_node* tree = generate_tree(i, leaf_map);
       trees.push_back(tree);
     }
-    // create a map of variable name - trees where that variable is a leave
 
-    // call merge_tree
+    for (int i=0; i<trees.size(); i++) {
+      if (auto var_name = get_var_name(trees[i]->value)) {
+        for (int j=i+1; j<trees.size(); j++) {
+          vector<string> out_set = out_sets[j];
+          vector<string> in_set = in_sets[j];
+          if (out_set.contains(var_name)) {
+            break;
+          }
+          if (in_set.contains(var_name)) {
+            merge(trees[i], trees[j]);
+            break;
+          }
+        }
+      }
+    }
+
     return trees;
   }
 }

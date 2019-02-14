@@ -1,9 +1,7 @@
 // TODO have a list/set of labels & variables inside Function
 
-// define all classes
+// tree merging
 // design tiles
-// add operands
-// tree generation
 // tile matching
 
 #include <L3.h>
