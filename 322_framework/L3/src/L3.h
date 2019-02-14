@@ -167,4 +167,12 @@ namespace L3 {
   struct Program{
     std::vector<Function *> functions;
   };
+
+  struct Node {
+    Item* value;
+    Instruction_type operand_type;
+    string op_name;
+    vector<Node*> children;
+  };
+
 }
