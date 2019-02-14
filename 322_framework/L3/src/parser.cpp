@@ -24,6 +24,7 @@
 namespace pegtl = tao::TAO_PEGTL_NAMESPACE;
 
 using namespace pegtl;
+using namespace std;
 
 namespace L3 {
 
@@ -85,7 +86,10 @@ namespace L3 {
     number {};
 
   struct Var_rule:
-    name {};
+    pegtl::seq<
+      pegtl::one< '%' >,
+      name
+    > { };
 
   struct Function_name_rule:
     label {};
@@ -170,7 +174,7 @@ namespace L3 {
       >
     > {};
 
-  struct Instruction_s_rule:
+  struct Instruction_assign_rule:
     pegtl::seq<
       Var_rule,
       seps,
@@ -241,8 +245,6 @@ namespace L3 {
       seps,
       Var_rule,
       seps,
-      Label_rule,
-      seps,
       Label_rule
     > {};
 
@@ -293,7 +295,7 @@ namespace L3 {
       pegtl::seq< pegtl::at<Instruction_store_rule>, Instruction_store_rule >,
       pegtl::seq< pegtl::at<Instruction_op_rule>, Instruction_op_rule >,
       pegtl::seq< pegtl::at<Instruction_cmp_rule>, Instruction_cmp_rule >,
-      pegtl::seq< pegtl::at<Instruction_s_rule>, Instruction_s_rule >,
+      pegtl::seq< pegtl::at<Instruction_assign_rule>, Instruction_assign_rule >,
       pegtl::seq< pegtl::at<Instruction_jump_rule>, Instruction_jump_rule >,
       pegtl::seq< pegtl::at<Instruction_goto_rule>, Instruction_goto_rule >,
       pegtl::seq< pegtl::at<Instruction_label_rule>, Instruction_label_rule >,
@@ -447,10 +449,10 @@ namespace L3 {
     }
   };
 
-  template<> struct action < Instruction_s_rule > {
+  template<> struct action < Instruction_assign_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      auto i = new Instruction_s();
+      auto i = new Instruction_assign();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))){
         i->dest = v;
       }
@@ -553,14 +555,11 @@ namespace L3 {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Instruction_jump();
-      if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-3))){
+      if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))){
         i->var = v;
       }
-      if (Label* l = dynamic_cast<Label*>(parsed_items.at(parsed_items.size()-2))){
-        i->label1 = l;
-      }
       if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
-        i->label2 = l;
+        i->label = l;
       }
 
       Function* f = p.functions.back();

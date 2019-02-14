@@ -7,9 +7,11 @@
 #include <functional>
 #include <utils.h>
 
+using namespace std;
+
 namespace L3 {
   enum Item_type {VARIABLE, NUMBER, LABEL,  SYSCALL};
-  enum Instruction_type {S, OP, CMP, LOAD, STORE, GOTO, LABELI, JUMP, RETVOID,
+  enum Instruction_type {ASSIGN, OP, CMP, LOAD, STORE, GOTO, LABELI, JUMP, RETVOID,
                          RET, CALL, CALLSTORE};
 
   struct Item {
@@ -29,7 +31,6 @@ namespace L3 {
   };
 
   struct Number : Item {
-    // type = L3::Item_type::NUMBER;
     int64_t n;
 
     Number(): n() {
@@ -54,22 +55,16 @@ namespace L3 {
     }
   };
 
-  struct Node {
-    Item* value;
-    std::vector<Node*> children;
-    std::string operand;
-  };
-
   struct Instruction {
     L3::Instruction_type type;
     virtual ~Instruction() = default;
   };
 
-  struct Instruction_s : Instruction {
+  struct Instruction_assign : Instruction {
     Variable* dest;
     Item* source;
-    Instruction_s(){
-      type = L3::Instruction_type::S;
+    Instruction_assign(){
+      type = L3::Instruction_type::ASSIGN;
     }
   };
 
@@ -125,10 +120,9 @@ namespace L3 {
   };
 
   struct Instruction_jump : Instruction  {
-    // br var label label
+    // br var label
     Variable* var;
-    Label* label1;
-    Label* label2;
+    Label* label;
     Instruction_jump(){
       type = L3::Instruction_type::JUMP;
     }

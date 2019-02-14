@@ -2,9 +2,7 @@
 
 // define all classes
 // design tiles
-// parser
 // add operands
-// context identification
 // tree generation
 // tile matching
 
