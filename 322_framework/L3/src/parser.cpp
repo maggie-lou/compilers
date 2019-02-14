@@ -8,6 +8,8 @@
 #include <cstdlib>
 #include <stdint.h>
 #include <assert.h>
+#include <stdio.h>
+#include <ctype.h>
 
 #include <iostream>
 
@@ -17,6 +19,7 @@
 
 #include <L3.h>
 #include <parser.h>
+#include <utils.h>
 
 namespace pegtl = tao::TAO_PEGTL_NAMESPACE;
 
@@ -29,13 +32,13 @@ namespace L3 {
    */
   std::vector<Item*> parsed_items;
   std::vector<std::string> parsed_operations;
+  std::vector<std::vector<Item*>> parsed_args;
 
 
   struct seps:
     pegtl::star<
       pegtl::sor<
-        pegtl::ascii::space,
-        comment
+        pegtl::ascii::space
       >
     > {};
 
@@ -84,15 +87,18 @@ namespace L3 {
   struct Var_rule:
     name {};
 
+  struct Function_name_rule:
+    label {};
+
   struct Vars_rule:
     pegtl::seq<
-      Var_rule,
+      name,
       seps,
       pegtl::star<
         seps,
         pegtl::one<','>,
         seps,
-        Var_rule
+        name
       >
     > {};
 
@@ -125,6 +131,43 @@ namespace L3 {
       pegtl::one<'<'>,
       pegtl::one<'>'>,
       pegtl::one<'='>
+    > {};
+
+  struct U_rule:
+    pegtl::sor<
+      Var_rule,
+      Label_rule
+    > {};
+
+  struct Callee_other_rule:
+    pegtl::sor<
+      pegtl::string<'p','r','i','n','t'>,
+      pegtl::string<'a','l','l','o','c','a','t','e'>,
+      pegtl::string<'a','r','r','a','y','-','e','r','r','o','r'>
+    > {};
+
+  struct Callee_rule:
+    pegtl::sor<
+      U_rule,
+      Callee_other_rule
+    > {};
+
+  struct Args_t_rule:
+    pegtl::sor<
+      name,
+      number
+    > {};
+
+  struct Args_rule:
+    pegtl::seq<
+      Args_t_rule,
+      seps,
+      pegtl::star<
+        seps,
+        pegtl::one<','>,
+        seps,
+        Args_t_rule
+      >
     > {};
 
   struct Instruction_s_rule:
@@ -187,6 +230,63 @@ namespace L3 {
       Label_rule
     > {};
 
+  struct Instruction_label_rule:
+    pegtl::seq<
+      Label_rule
+    > {};
+
+  struct Instruction_jump_rule:
+    pegtl::seq<
+      pegtl::string<'b','r'>,
+      seps,
+      Var_rule,
+      seps,
+      Label_rule,
+      seps,
+      Label_rule
+    > {};
+
+  struct Instruction_ret_void_rule:
+    pegtl::string<'r','e','t','u','r','n'> {};
+
+
+  struct Instruction_ret_rule:
+    pegtl::seq<
+      pegtl::string<'r','e','t','u','r','n'>,
+      seps,
+      T_rule
+    > {};
+
+  struct Instruction_call_rule:
+    pegtl::seq<
+      pegtl::string<'c','a','l','l'>,
+      seps,
+      Callee_rule,
+      seps,
+      pegtl::one<'('>,
+      seps,
+      Args_rule,
+      seps,
+      pegtl::one<')'>
+    > {};
+
+  struct Instruction_call_store_rule:
+    pegtl::seq<
+      Var_rule,
+      seps,
+      pegtl::string<'<','-'>,
+      seps,
+      pegtl::string<'c','a','l','l'>,
+      seps,
+      Callee_rule,
+      seps,
+      pegtl::one<'('>,
+      seps,
+      Args_rule,
+      seps,
+      pegtl::one<')'>
+    > {};
+
   struct Instruction_rule:
     pegtl::sor<
       pegtl::seq< pegtl::at<Instruction_load_rule>, Instruction_load_rule >,
@@ -194,7 +294,13 @@ namespace L3 {
       pegtl::seq< pegtl::at<Instruction_op_rule>, Instruction_op_rule >,
       pegtl::seq< pegtl::at<Instruction_cmp_rule>, Instruction_cmp_rule >,
       pegtl::seq< pegtl::at<Instruction_s_rule>, Instruction_s_rule >,
-      pegtl::seq< pegtl::at<Instruction_goto_rule>, Instruction_goto_rule >
+      pegtl::seq< pegtl::at<Instruction_jump_rule>, Instruction_jump_rule >,
+      pegtl::seq< pegtl::at<Instruction_goto_rule>, Instruction_goto_rule >,
+      pegtl::seq< pegtl::at<Instruction_label_rule>, Instruction_label_rule >,
+      pegtl::seq< pegtl::at<Instruction_ret_rule>, Instruction_ret_rule >,
+      pegtl::seq< pegtl::at<Instruction_ret_void_rule>, Instruction_ret_void_rule >,
+      pegtl::seq< pegtl::at<Instruction_call_store_rule>, Instruction_call_store_rule >,
+      pegtl::seq< pegtl::at<Instruction_call_rule>, Instruction_call_rule >
     > { };
 
   struct Instructions_rule:
@@ -210,7 +316,7 @@ namespace L3 {
     pegtl::seq<
       pegtl::string<'d','e','f','i','n','e'>,
       seps,
-      Label_rule,
+      Function_name_rule,
       seps,
       pegtl::one<'('>,
       seps,
@@ -222,7 +328,7 @@ namespace L3 {
       seps,
       Instructions_rule,
       seps,
-      pegtl::one<'}'>,
+      pegtl::one<'}'>
     > {};
 
   struct Program_rule:
@@ -277,6 +383,67 @@ namespace L3 {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       parsed_operations.push_back(in.string());
+    }
+  };
+
+  template<> struct action < Callee_other_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      auto i = new Sys_call();
+      i->name = in.string();
+      parsed_items.push_back(i);
+    }
+  };
+
+  template<> struct action < Function_name_rule > {
+    template< typename Input >
+	static void apply( const Input & in, Program & p){
+      auto f = new Function();
+      f->name = in.string();
+      p.functions.push_back(f);
+    }
+  };
+
+  template<> struct action < Vars_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      std::string vars_str = in.string();
+      vars_str.erase(std::remove_if(vars_str.begin(), vars_str.end(), isspace), vars_str.end());
+      Function* f = p.functions.back();
+      size_t index = 0;
+      while ((index = vars_str.find(',')) != std::string::npos) {
+        Variable* v = new Variable(vars_str.substr(0, index));
+        f->arguments.push_back(v);
+        vars_str.erase(0, index+1);
+      }
+      Variable* v = new Variable(vars_str);
+      f->arguments.push_back(v);
+    }
+  };
+
+  template<> struct action < Args_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      std::string arg_str = in.string();
+      arg_str.erase(std::remove_if(arg_str.begin(), arg_str.end(), isspace), arg_str.end());
+      std::vector<Item*> args;
+      std::vector<std::string> args_str;
+      size_t index = 0;
+      while ((index = arg_str.find(',')) != std::string::npos) {
+        args_str.push_back(arg_str.substr(0, index));
+        arg_str.erase(0, index+1);
+      }
+      args_str.push_back(arg_str);
+      for (std::string a : args_str){
+        if (L3::is_int(a)){
+          Number* n = new Number(std::stoll(a));
+          args.push_back(n);
+        } else {
+          Variable* v = new Variable(a);
+          args.push_back(v);
+        }
+      }
+      parsed_args.push_back(args);
     }
   };
 
@@ -369,19 +536,95 @@ namespace L3 {
     }
   };
 
+  template<> struct action < Instruction_label_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      auto i = new Instruction_label();
+      if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
+        i->label = l;
+      }
+
+      Function* f = p.functions.back();
+      f->instructions.push_back(i);
+    }
+  };
+
+  template<> struct action < Instruction_jump_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      auto i = new Instruction_jump();
+      if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-3))){
+        i->var = v;
+      }
+      if (Label* l = dynamic_cast<Label*>(parsed_items.at(parsed_items.size()-2))){
+        i->label1 = l;
+      }
+      if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
+        i->label2 = l;
+      }
+
+      Function* f = p.functions.back();
+      f->instructions.push_back(i);
+    }
+  };
+
+  template<> struct action < Instruction_ret_void_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      auto i = new Instruction_ret_void();
+      Function* f = p.functions.back();
+      f->instructions.push_back(i);
+    }
+  };
+
+  template<> struct action < Instruction_ret_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      auto i = new Instruction_ret();
+      i->t = parsed_items.back();
+      Function* f = p.functions.back();
+      f->instructions.push_back(i);
+    }
+  };
+
+  template<> struct action < Instruction_call_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      auto i = new Instruction_call();
+      i->callee = parsed_items.back();
+      i->args = parsed_args.back();
+      Function* f = p.functions.back();
+      f->instructions.push_back(i);
+    }
+  };
+
+  template<> struct action < Instruction_call_store_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      auto i = new Instruction_call_store();
+      if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))){
+        i->dest = v;
+      }
+      i->callee = parsed_items.back();
+      i->args = parsed_args.back();
+      Function* f = p.functions.back();
+      f->instructions.push_back(i);
+    }
+  };
+
   Program parse_file (char *fileName){
 
     /*
      * Check the grammar for some possible issues.
      */
-    pegtl::analyze< grammar >();
+    pegtl::analyze< Program_rule >();
 
     /*
      * Parse.
      */
     file_input< > fileInput(fileName);
     Program p;
-    parse< grammar, action >(fileInput, p);
+    parse< Program_rule, action >(fileInput, p);
 
     return p;
   }
