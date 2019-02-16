@@ -33,9 +33,9 @@ namespace L3{
 
   int find_line_num_label(string label, vector<Instruction*> instructions) {
     for (int i = 0; i<instructions.size(); i++) {
-      Label_instruction* label_instruction = dynamic_cast<Label_instruction*>(instructions.at(i));
+      Instruction_label* label_instruction = dynamic_cast<Instruction_label*>(instructions.at(i));
       if (label_instruction) {
-        if (label == label_instruction->label) {
+        if (label == label_instruction->label->name) {
           return i;
         }
       }
@@ -46,20 +46,15 @@ namespace L3{
   vector<string> generate_out_set(int current_instruction_index, vector<Instruction*> instructions, vector<vector<string>> in) {
     vector<string> output;
 
-    if (auto is_cjump = dynamic_cast<Cjump*>(instructions.at(current_instruction_index))) {
-      auto line_num_label1 = find_line_num_label(is_cjump->label1, instructions);
-      auto line_num_label2 = find_line_num_label(is_cjump->label2, instructions);
+    if (auto is_goto = dynamic_cast<Instruction_goto*>(instructions.at(current_instruction_index))) {
+      auto line_num_label = find_line_num_label(is_goto->label->name, instructions);
 
-      if (line_num_label1 < instructions.size() - 1) {
-        auto in_set = in[line_num_label1+1];
+      if (line_num_label < instructions.size() - 1) {
+        auto in_set = in[line_num_label+1];
         output.insert(output.end(), in_set.begin(), in_set.end());
       }
-      if (line_num_label2 < instructions.size() - 1) {
-        auto in_set = in[line_num_label2+1];
-        output.insert(output.end(), in_set.begin(), in_set.end());
-      }
-    } else if (auto is_cjump_fallthrough = dynamic_cast<Cjump_fallthrough*>(instructions.at(current_instruction_index))) {
-      auto line_num_label = find_line_num_label(is_cjump_fallthrough->label, instructions);
+    } else if (auto is_cond_branch = dynamic_cast<Instruction_jump*>(instructions.at(current_instruction_index))) {
+      auto line_num_label = find_line_num_label(is_cond_branch->label->name, instructions);
 
       if (line_num_label < instructions.size() - 1) {
         auto in_set = in[line_num_label+1];
@@ -71,13 +66,7 @@ namespace L3{
         auto in_set = in[current_instruction_index+1];
         output.insert(output.end(), in_set.begin(), in_set.end());
       }
-    } else if (auto is_goto = dynamic_cast<Goto*>(instructions.at(current_instruction_index))) {
-      auto line_num_label = find_line_num_label(is_goto->label, instructions);
-      if (line_num_label < instructions.size() - 1) {
-        auto in_set = in[line_num_label+1];
-        output.insert(output.end(), in_set.begin(), in_set.end());
-      }
-    } else if (auto is_return = dynamic_cast<Instruction_ret*>(instructions.at(current_instruction_index))) {
+    }  else if (auto is_return = dynamic_cast<Instruction_ret*>(instructions.at(current_instruction_index))) {
       // Do nothing - return instructions have no out set
     } else  {
       if (current_instruction_index < instructions.size() - 1) {
@@ -87,25 +76,18 @@ namespace L3{
     return output;
   }
 
-  vector<string> get_str_vec(vector<std::reference_wrapper<Item*>> items){
-    vector<string> new_vec = {};
-    for (Item* i : items){
-      new_vec.push_back(i->item_to_string());
-    }
-    return new_vec;
-  }
-
-  void get_in_out_sets(Function* f, vector<vector<string>> &in, vector<vector<string>> &out, vector<vector<string>> &kill){
+  void get_in_out_sets(Function* f, vector<vector<string>> &in, vector<vector<string>> &out){
     auto instructions = f->instructions;
     vector<vector<string>> gen(instructions.size());
     bool changed = false;
+    vector<vector<string>> kill;
 
     for (int j=0; j<instructions.size(); j++) {
       auto current_i = instructions[j];
-      auto temp_gen = current_i->generate_gen();
-      auto temp_kill = current_i->generate_kill();
-      gen[j] = get_str_vec(temp_gen);
-      kill[j] = get_str_vec(temp_kill);
+      auto temp_gen = current_i->generate_read();
+      auto temp_kill = current_i->generate_defined();
+      gen[j] = temp_gen;
+      kill[j] = temp_kill;
       in[j] = {};
       out[j] = {};
     }
