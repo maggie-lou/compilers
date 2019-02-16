@@ -58,8 +58,8 @@ namespace L3{
       t = generate_node(i_cast->dest);
       t->operand_type = i_cast->type;
       t->op_name = i_cast->op;
-      add_child(t, i_cast->t2, leaf_map);
       add_child(t, i_cast->t1, leaf_map);
+      add_child(t, i_cast->t2, leaf_map);
     } else if (auto i_cast = dynamic_cast<Instruction_cmp*>(i)) {
       t = generate_node(i_cast->dest);
       t->operand_type = i_cast->type;
@@ -83,7 +83,8 @@ namespace L3{
     } else if (auto i_cast = dynamic_cast<Instruction_jump*>(i)) {
       t = generate_node(i_cast->var);
       t->operand_type = i_cast->type;
-      add_child(t, i_cast->label, leaf_map);
+      add_child(t, i_cast->label1, leaf_map);
+      add_child(t, i_cast->label2, leaf_map);
     } else if (auto i_cast = dynamic_cast<Instruction_ret_void*>(i)) {
       t->operand_type = i_cast->type;
     } else if (auto i_cast = dynamic_cast<Instruction_ret*>(i)) {

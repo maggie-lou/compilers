@@ -17,6 +17,9 @@ namespace L3 {
   struct Item {
     L3::Item_type type;
     virtual ~Item() = default;
+    virtual std::string to_str(){
+      return "";
+    }
   };
 
   struct Variable : Item {
@@ -27,6 +30,10 @@ namespace L3 {
     }
     Variable(std::string x): name(x) {
       type = L3::Item_type::VARIABLE;
+    }
+
+    virtual std::string to_str(){
+      return name;
     }
   };
 
@@ -39,6 +46,10 @@ namespace L3 {
     Number(int64_t x): n(x) {
       type = L3::Item_type::NUMBER;
     }
+
+    virtual std::string to_str(){
+      return std::to_string(n);
+    }
   };
 
   struct Label : Item {
@@ -46,12 +57,20 @@ namespace L3 {
     Label(){
       type = L3::Item_type::LABEL;
     }
+
+    virtual std::string to_str(){
+      return name;
+    }
   };
 
   struct Sys_call : Item {
     std::string name;
     Sys_call(){
       type = L3::Item_type::SYSCALL;
+    }
+
+    virtual std::string to_str(){
+      return name;
     }
   };
 
@@ -120,9 +139,10 @@ namespace L3 {
   };
 
   struct Instruction_jump : Instruction  {
-    // br var label
+    // br var label label
     Variable* var;
-    Label* label;
+    Label* label1;
+    Label* label2;
     Instruction_jump(){
       type = L3::Instruction_type::JUMP;
     }
