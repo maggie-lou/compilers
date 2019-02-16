@@ -17,7 +17,11 @@ namespace L3 {
   struct Item {
     L3::Item_type type;
     virtual ~Item() = default;
+<<<<<<< HEAD
     virtual std::string to_str(){
+=======
+    virtual std::string to_string(){
+>>>>>>> 403987d247bd043c95e292a772e717992b83b278
       return "";
     }
   };
@@ -31,8 +35,7 @@ namespace L3 {
     Variable(std::string x): name(x) {
       type = L3::Item_type::VARIABLE;
     }
-
-    virtual std::string to_str(){
+    virtual std::string to_string(){
       return name;
     }
   };
@@ -47,7 +50,7 @@ namespace L3 {
       type = L3::Item_type::NUMBER;
     }
 
-    virtual std::string to_str(){
+    virtual std::string to_string(){
       return std::to_string(n);
     }
   };
@@ -58,7 +61,7 @@ namespace L3 {
       type = L3::Item_type::LABEL;
     }
 
-    virtual std::string to_str(){
+    virtual std::string to_string(){
       return name;
     }
   };
@@ -69,7 +72,7 @@ namespace L3 {
       type = L3::Item_type::SYSCALL;
     }
 
-    virtual std::string to_str(){
+    virtual std::string to_string(){
       return name;
     }
   };
@@ -77,6 +80,13 @@ namespace L3 {
   struct Instruction {
     L3::Instruction_type type;
     virtual ~Instruction() = default;
+
+    virtual vector<string> generate_read(){
+      return {};
+    }
+    virtual vector<string> generate_defined(){
+      return {};
+    }
   };
 
   struct Instruction_assign : Instruction {
@@ -84,6 +94,20 @@ namespace L3 {
     Item* source;
     Instruction_assign(){
       type = L3::Instruction_type::ASSIGN;
+    }
+
+    virtual vector<string> generate_read(){
+      vector<string> read = {};
+      if (source->type == Item_type::VARIABLE) {
+        read.push_back(source->to_string());
+      }
+      return read;
+    }
+
+    virtual vector<string> generate_defined(){
+      vector<string> kill = {};
+      kill.push_back(dest->name);
+      return kill;
     }
   };
 
@@ -95,6 +119,23 @@ namespace L3 {
     Instruction_op(){
       type = L3::Instruction_type::OP;
     }
+
+    virtual vector<string> generate_read(){
+      vector<string> read = {};
+      if (t1->type == Item_type::VARIABLE) {
+        read.push_back(t1->to_string());
+      }
+      if (t2->type == Item_type::VARIABLE) {
+        read.push_back(t2->to_string());
+      }
+      return read;
+    }
+
+    virtual vector<string> generate_defined(){
+      vector<string> kill = {};
+      kill.push_back(dest->name);
+      return kill;
+    }
   };
 
   struct Instruction_cmp : Instruction {
@@ -105,6 +146,23 @@ namespace L3 {
     Instruction_cmp(){
       type = L3::Instruction_type::CMP;
     }
+
+    virtual vector<string> generate_read(){
+      vector<string> read = {};
+      if (t1->type == Item_type::VARIABLE) {
+        read.push_back(t1->to_string());
+      }
+      if (t2->type == Item_type::VARIABLE) {
+        read.push_back(t2->to_string());
+      }
+      return read;
+    }
+
+    virtual vector<string> generate_defined(){
+      vector<string> kill = {};
+      kill.push_back(dest->name);
+      return kill;
+    }
   };
 
   struct Instruction_load : Instruction {
@@ -112,6 +170,18 @@ namespace L3 {
     Variable* source;
     Instruction_load(){
       type = L3::Instruction_type::LOAD;
+    }
+
+    virtual vector<string> generate_read(){
+      vector<string> read = {};
+      read.push_back(source->name);
+      return read;
+    }
+
+    virtual vector<string> generate_defined(){
+      vector<string> kill = {};
+      kill.push_back(dest->name);
+      return kill;
     }
   };
 
@@ -121,6 +191,20 @@ namespace L3 {
     Instruction_store(){
       type = L3::Instruction_type::STORE;
     }
+
+    virtual vector<string> generate_read(){
+      vector<string> read = {};
+      if (source->type == Item_type::VARIABLE) {
+        read.push_back(source->to_string());
+      }
+      return read;
+    }
+
+    virtual vector<string> generate_defined(){
+      vector<string> kill = {};
+      kill.push_back(dest->name);
+      return kill;
+    }
   };
 
   struct Instruction_goto : Instruction {
@@ -129,12 +213,28 @@ namespace L3 {
     Instruction_goto(){
       type = L3::Instruction_type::GOTO;
     }
+
+    virtual vector<string> generate_read(){
+      return {};
+    }
+
+    virtual vector<string> generate_defined(){
+      return {};
+    }
   };
 
   struct Instruction_label : Instruction {
     Label* label;
     Instruction_label(){
       type = L3::Instruction_type::LABELI;
+    }
+
+    virtual vector<string> generate_read(){
+      return {};
+    }
+
+    virtual vector<string> generate_defined(){
+      return {};
     }
   };
 
@@ -146,11 +246,29 @@ namespace L3 {
     Instruction_jump(){
       type = L3::Instruction_type::JUMP;
     }
+
+    virtual vector<string> generate_read(){
+      vector<string> read = {};
+      read.push_back(var->name);
+      return read;
+    }
+
+    virtual vector<string> generate_defined(){
+      return {};
+    }
   };
 
   struct Instruction_ret_void : Instruction {
     Instruction_ret_void(){
       type = L3::Instruction_type::RETVOID;
+    }
+
+    virtual vector<string> generate_read(){
+      return {};
+    }
+
+    virtual vector<string> generate_defined(){
+      return {};
     }
   };
 
@@ -158,6 +276,18 @@ namespace L3 {
     Item* t;
     Instruction_ret(){
       type = L3::Instruction_type::RET;
+    }
+
+    virtual vector<string> generate_read(){
+      vector<string> read = {};
+      if (t->type == Item_type::VARIABLE) {
+        read.push_back(t->to_string());
+      }
+      return read;
+    }
+
+    virtual vector<string> generate_defined(){
+      return {};
     }
   };
 
@@ -167,6 +297,23 @@ namespace L3 {
     Instruction_call(){
       type = L3::Instruction_type::CALL;
     }
+
+    virtual vector<string> generate_read(){
+      vector<string> read = {};
+      for (Item* i : args) {
+        if (i->type == Item_type::VARIABLE) {
+          read.push_back(i->to_string());
+        }
+      }
+      if (callee->type == Item_type::VARIABLE) {
+        read.push_back(callee->to_string());
+      }
+      return read;
+    }
+
+    virtual vector<string> generate_defined(){
+      return {};
+    }
   };
 
   struct Instruction_call_store : Instruction {
@@ -175,6 +322,25 @@ namespace L3 {
     Variable* dest;
     Instruction_call_store(){
       type = L3::Instruction_type::CALLSTORE;
+    }
+
+    virtual vector<string> generate_read(){
+      vector<string> read = {};
+      for (Item* i : args) {
+        if (i->type == Item_type::VARIABLE) {
+          read.push_back(i->to_string());
+        }
+      }
+      if (callee->type == Item_type::VARIABLE) {
+        read.push_back(callee->to_string());
+      }
+      return read;
+    }
+
+    virtual vector<string> generate_defined(){
+      vector<string> defined = {};
+      defined.push_back(dest->name);
+      return defined;
     }
   };
 
@@ -192,7 +358,6 @@ namespace L3 {
     Item* value;
     Instruction_type operand_type;
     string op_name;
-    vector<Node*> children;
   };
 
 }

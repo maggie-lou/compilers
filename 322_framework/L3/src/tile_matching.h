@@ -29,7 +29,7 @@ namespace L3 {
       if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::ASSIGN)&&(root->children.size()==1)){
         Item* child_val = root->children[0]->value;
         if (root->children[0]->value->type == Item_type::VARIABLE||root->children[0]->value->type == Item_type::LABEL||root->children[0]->value->type == Item_type::NUMBER){
-          ins.push("\t" + root_val->to_str() + " <- " + root->children[0]->value->to_str() + "\n");
+          ins.push("\t" + root_val->to_string() + " <- " + root->children[0]->value->to_string() + "\n");
           if (!root->children[0]->children.empty()) remains.push_back(root->children[0]);
           return true;
         }
@@ -53,8 +53,8 @@ namespace L3 {
         if ((t1_val->type == Item_type::VARIABLE||t1_val->type == Item_type::NUMBER)
             &&(t2_val->type == Item_type::VARIABLE||t2_val->type == Item_type::NUMBER)){
 
-          ins.push("\t"+t1_val->to_str()+" <- "+t1_val->to_str()+" "+root->op+" "+t2_val->to_str()+"\n");
-          ins.push("\t"+root_val->to_str()+" <- "+t1_val->to_str()+"\n");
+          ins.push("\t"+t1_val->to_string()+" <- "+t1_val->to_string()+" "+root->op+" "+t2_val->to_string()+"\n");
+          ins.push("\t"+root_val->to_string()+" <- "+t1_val->to_string()+"\n");
           if (!root->children[0]->children.empty()) remains.push_back(root->children[0]);
           if (!root->children[1]->children.empty()) remains.push_back(root->children[1]);
           return true;
@@ -87,9 +87,9 @@ namespace L3 {
             flip = true;
           }
           if (flip){
-            ins.push(root->val->to_str()+" <- "+t2_val->to_str()+" "+root->cmp+" "+t1_val->to_str()+"\n");
+            ins.push(root->val->to_string()+" <- "+t2_val->to_string()+" "+root->cmp+" "+t1_val->to_string()+"\n");
           } else {
-            ins.push(root->val->to_str()+" <- "+t1_val->to_str()+" "+root->cmp+" "+t2_val->to_str()+"\n");
+            ins.push(root->val->to_string()+" <- "+t1_val->to_string()+" "+root->cmp+" "+t2_val->to_string()+"\n");
           }
           if (!root->children[0]->children.empty()) remains.push_back(root->children[0]);
           if (!root->children[1]->children.empty()) remains.push_back(root->children[1]);
@@ -112,7 +112,7 @@ namespace L3 {
       if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::LOAD)&&(root_val->children.size()==1)){
         Item* child_val = root->children[0]->value;
         if (child_val->type == Item_type::VARIABLE){
-          ins.push("\t"+root_val->to_str()+" <- mem "+child_val->to_str()+"  0\n");
+          ins.push("\t"+root_val->to_string()+" <- mem "+child_val->to_string()+"  0\n");
           if (!root->children[0]->children.empty()) remains.push_back(root->children[0]->children);
           return true;
         }
@@ -133,7 +133,7 @@ namespace L3 {
       if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::STORE)&&(root_val->children.size()==1)){
         Item* child_val = root->children[0]->value;
         if (child_val->type == Item_type::VARIABLE){
-          ins.push("\tmem "+root_val->to_str()+" 0 <- "+child_val->to_str()+"\n");
+          ins.push("\tmem "+root_val->to_string()+" 0 <- "+child_val->to_string()+"\n");
           if (!root->children[0]->children.empty()) remains.push_back(root->children[0]->children);
           return true;
         }
@@ -152,7 +152,7 @@ namespace L3 {
     virtual void match(Node* root, std::vector<Node*> &leaves, std::stack<std::string> &ins){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::LABEL)&&(root->operand_type == Instruction_type::GOTO)){
-        ins.push("\tgoto "+root_val->to_str()+"\n");
+        ins.push("\tgoto "+root_val->to_string()+"\n");
         return true;
       }
       remains.push_back(root);
@@ -169,7 +169,7 @@ namespace L3 {
     virtual void match(Node* root, std::vector<Node*> &leaves, std::stack<std::string> &ins){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::LABEL)&&(root->operand_type == Instruction_type::LABEL)){
-        ins.push("\t"+root_val->to_str()+"\n");
+        ins.push("\t"+root_val->to_string()+"\n");
         return true;
       }
       remains.push_back(root);
@@ -190,7 +190,7 @@ namespace L3 {
         Item* l2_val = root->children[1]->value;
         // 0 is false, 1 is true
         if (l1_val->type == Item_type::LABEL && l2_val->type == Item_type::LABEL){
-          ins.push("\tcjump "+root_val->to_str()+" = 1 "+l1_val->to_str()+" "+l2_val->to_str()+"\n");
+          ins.push("\tcjump "+root_val->to_string()+" = 1 "+l1_val->to_string()+" "+l2_val->to_string()+"\n");
           return true;
         }
       }
@@ -225,7 +225,7 @@ namespace L3 {
       Item* root_val = root->value;
       if ((root->operand_type == Instruction_type::RETVOID)&&(root_val->type==Item_type::VARIABLE)){
         ins.push("\treturn\n");
-        ins.push("\trax <- "+root_val->to_str()+"\n");
+        ins.push("\trax <- "+root_val->to_string()+"\n");
         // TODO unfinished
 
       }
