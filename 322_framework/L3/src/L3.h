@@ -17,11 +17,7 @@ namespace L3 {
   struct Item {
     L3::Item_type type;
     virtual ~Item() = default;
-<<<<<<< HEAD
-    virtual std::string to_str(){
-=======
-    virtual std::string to_string(){
->>>>>>> 403987d247bd043c95e292a772e717992b83b278
+    virtual string to_string(){
       return "";
     }
   };
