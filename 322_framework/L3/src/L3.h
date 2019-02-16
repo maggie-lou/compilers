@@ -354,6 +354,7 @@ namespace L3 {
     Item* value;
     Instruction_type operand_type;
     string op_name;
+    vector<Node*> children;
   };
 
 }

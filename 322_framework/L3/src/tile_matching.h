@@ -15,6 +15,7 @@ namespace L3 {
     int64_t size;
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+      return false;
     }
   };
 
@@ -24,7 +25,7 @@ namespace L3 {
       size = 2;
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::ASSIGN)&&(root->children.size()==1)){
         Item* child_val = root->children[0]->value;
@@ -45,15 +46,15 @@ namespace L3 {
       size = 3;
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
       Item* root_val = root->value;
-      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::OP)&&(root_val->children.size()==2)){
+      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::OP)&&(root->children.size()==2)){
         Item* t1_val = root->children[0]->value;
         Item* t2_val = root->children[1]->value;
         if ((t1_val->type == Item_type::VARIABLE||t1_val->type == Item_type::NUMBER)
             &&(t2_val->type == Item_type::VARIABLE||t2_val->type == Item_type::NUMBER)){
 
-          L2_instructions.push("\t"+t1_val->to_string()+" <- "+t1_val->to_string()+" "+root->op+" "+t2_val->to_string()+"\n");
+          L2_instructions.push("\t"+t1_val->to_string()+" <- "+t1_val->to_string()+" "+root->op_name+" "+t2_val->to_string()+"\n");
           L2_instructions.push("\t"+root_val->to_string()+" <- "+t1_val->to_string()+"\n");
           if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
           if (!root->children[1]->children.empty()) unmatched.push_back(root->children[1]);
@@ -71,25 +72,25 @@ namespace L3 {
       size = 3;
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
       Item* root_val = root->value;
-      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::CMP)&&(root_val->children.size()==2)){
+      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::CMP)&&(root->children.size()==2)){
         Item* t1_val = root->children[0]->value;
         Item* t2_val = root->children[1]->value;
         if ((t1_val->type == Item_type::VARIABLE||t1_val->type == Item_type::NUMBER)
             &&(t2_val->type == Item_type::VARIABLE||t2_val->type == Item_type::NUMBER)){
           bool flip = false;
-          if (root->cmp == ">"){
-            root->cmp = "<";
+          if (root->op_name == ">"){
+            root->op_name = "<";
             flip = true;
-          } else if (root->cmp == ">="){
-            root->cmp = "<=";
+          } else if (root->op_name == ">="){
+            root->op_name = "<=";
             flip = true;
           }
           if (flip){
-            L2_instructions.push(root->val->to_string()+" <- "+t2_val->to_string()+" "+root->cmp+" "+t1_val->to_string()+"\n");
+            L2_instructions.push(root->value->to_string()+" <- "+t2_val->to_string()+" "+root->op_name+" "+t1_val->to_string()+"\n");
           } else {
-            L2_instructions.push(root->val->to_string()+" <- "+t1_val->to_string()+" "+root->cmp+" "+t2_val->to_string()+"\n");
+            L2_instructions.push(root->value->to_string()+" <- "+t1_val->to_string()+" "+root->op_name+" "+t2_val->to_string()+"\n");
           }
           if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
           if (!root->children[1]->children.empty()) unmatched.push_back(root->children[1]);
@@ -107,13 +108,13 @@ namespace L3 {
       size = 2;
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
       Item* root_val = root->value;
-      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::LOAD)&&(root_val->children.size()==1)){
+      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::LOAD)&&(root->children.size()==1)){
         Item* child_val = root->children[0]->value;
         if (child_val->type == Item_type::VARIABLE){
           L2_instructions.push("\t"+root_val->to_string()+" <- mem "+child_val->to_string()+"  0\n");
-          if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]->children);
+          if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
           return true;
         }
       }
@@ -128,13 +129,13 @@ namespace L3 {
       size = 2;
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
       Item* root_val = root->value;
-      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::STORE)&&(root_val->children.size()==1)){
+      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::STORE)&&(root->children.size()==1)){
         Item* child_val = root->children[0]->value;
         if (child_val->type == Item_type::VARIABLE){
           L2_instructions.push("\tmem "+root_val->to_string()+" 0 <- "+child_val->to_string()+"\n");
-          if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]->children);
+          if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
           return true;
         }
       }
@@ -149,7 +150,7 @@ namespace L3 {
       size = 1;
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::LABEL)&&(root->operand_type == Instruction_type::GOTO)){
         L2_instructions.push("\tgoto "+root_val->to_string()+"\n");
@@ -166,9 +167,9 @@ namespace L3 {
       size = 1;
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
       Item* root_val = root->value;
-      if ((root_val->type == Item_type::LABEL)&&(root->operand_type == Instruction_type::LABEL)){
+      if ((root_val->type == Item_type::LABEL)&&(root->operand_type == Instruction_type::LABELI)){
         L2_instructions.push("\t"+root_val->to_string()+"\n");
         return true;
       }
@@ -183,7 +184,7 @@ namespace L3 {
       size = 1;
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::JUMP)&&(root->children.size()==2)){
         Item* l1_val = root->children[0]->value;
@@ -205,7 +206,7 @@ namespace L3 {
       size = 0;
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
       if (root->operand_type == Instruction_type::RETVOID){
         L2_instructions.push("\treturn\n");
         return true;
@@ -221,14 +222,11 @@ namespace L3 {
       size = 1;
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
       Item* root_val = root->value;
       if (root->operand_type == Instruction_type::RET){
         L2_instructions.push("\treturn\n");
         L2_instructions.push("\trax <- "+root_val->to_string()+"\n");
-        if (!root->children.empty()) {
-          unmatched.insert(unmatched.end(), root->children.begin(), root->children.end());
-        }
         return true;
       }
       unmatched.push_back(root);
@@ -243,25 +241,27 @@ namespace L3 {
       size = -1; // Dependent on number of arguments
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
-      bool is_call = root->type == Instruction_type::CALL;
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+      bool is_call = root->operand_type == Instruction_type::CALL;
       if (is_call) {
-        L2_instructions.push("\tcall " + root->value->to_string() + " " + root->children.size() + "\n");
+        L2_instructions.push("\tcall " + root->value->to_string() + " " + to_string(root->children.size()) + "\n");
         for (int i=0; i<root->children.size(); i++) {
           Node* child = root->children[i];
           if (i >= argument_registers.size()) {
-            int stack_loc = -16 - 8 * (i - argument_register.size());
+            int stack_loc = -16 - 8 * (i - argument_registers.size());
             L2_instructions.push("\tmem rsp " + to_string(stack_loc) + " <- " + child->value->to_string());
           } else {
             string arg_register = argument_registers[i];
             L2_instructions.push("\t" + argument_registers[i] + " <- " + child->value->to_string());
           }
-          unmatched.insert(unmatched.end(), child->children.begin(), child->children.end());
+          if (!child->children.empty()) {
+            unmatched.push_back(child);
+          }
         }
         return true;
       }
 
-      unmatched.insert(root);
+      unmatched.push_back(root);
       return false;
     }
   };
@@ -272,26 +272,28 @@ namespace L3 {
       size = -1; // Dependent on number of arguments
     }
 
-    virtual void match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
-      bool is_call_store = root->type == Instruction_type::CALLSTORE;
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+      bool is_call_store = root->operand_type == Instruction_type::CALLSTORE;
       if (is_call_store) {
-        L2_instructions.push("\t" + t->value->to_string() + " <- rax");
-        L2_instructions.push("\tcall " + root->value->to_string() + " " + root->children.size() + "\n");
+        L2_instructions.push("\t" + root->value->to_string() + " <- rax");
+        L2_instructions.push("\tcall " + root->value->to_string() + " " + to_string(root->children.size()) + "\n");
         for (int i=0; i<root->children.size(); i++) {
           Node* child = root->children[i];
           if (i >= argument_registers.size()) {
-            int stack_loc = -16 - 8 * (i - argument_register.size());
+            int stack_loc = -16 - 8 * (i - argument_registers.size());
             L2_instructions.push("\tmem rsp " + to_string(stack_loc) + " <- " + child->value->to_string());
           } else {
             string arg_register = argument_registers[i];
             L2_instructions.push("\t" + argument_registers[i] + " <- " + child->value->to_string());
           }
-          unmatched.insert(unmatched.end(), child->children.begin(), child->children.end());
+          if (!child->children.empty()) {
+            unmatched.push_back(child);
+          }
         }
         return true;
       }
 
-      unmatched.insert(root);
+      unmatched.push_back(root);
       return false;
     }
   };
