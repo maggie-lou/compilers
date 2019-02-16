@@ -17,6 +17,9 @@ namespace L3 {
   struct Item {
     L3::Item_type type;
     virtual ~Item() = default;
+    virtual std::string to_string(){
+      return "";
+    }
   };
 
   struct Variable : Item {
@@ -27,6 +30,9 @@ namespace L3 {
     }
     Variable(std::string x): name(x) {
       type = L3::Item_type::VARIABLE;
+    }
+    virtual std::string to_string(){
+      return name;
     }
   };
 
@@ -39,12 +45,20 @@ namespace L3 {
     Number(int64_t x): n(x) {
       type = L3::Item_type::NUMBER;
     }
+
+    virtual std::string to_string(){
+      return std::to_string(n);
+    }
   };
 
   struct Label : Item {
     std::string name;
     Label(){
       type = L3::Item_type::LABEL;
+    }
+
+    virtual std::string to_string(){
+      return name;
     }
   };
 
@@ -172,7 +186,6 @@ namespace L3 {
     Item* value;
     Instruction_type operand_type;
     string op_name;
-    vector<Node*> children;
   };
 
 }

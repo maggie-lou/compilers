@@ -11,7 +11,7 @@
 
 using namespace std;
 
-namespace L2{
+namespace L3{
 
   vector<string> get_union(vector<string> v1, vector<string> v2)  {
     vector<string> union_vec;
@@ -125,29 +125,5 @@ namespace L2{
       }
     } while (changed);
     return;
-  }
-
-  void generate_and_print_in_out_sets(Program p){
-    Function* f = p.functions.front();
-    auto instructions = f->instructions;
-    vector<vector<string>> kill(instructions.size());
-    vector<vector<string>> in(instructions.size());
-    vector<vector<string>> out(instructions.size());
-
-    get_in_out_sets(f, in, out, kill);
-    cout << "(\n(in\n";
-    for (int i=0; i<in.size(); i++) {
-      cout << "(";
-      L2::print_vector(in[i]);
-      cout << ")\n";
-    }
-    cout << ")\n\n(out\n";
-    for (int i=0; i<out.size(); i++) {
-      cout << "(";
-      L2::print_vector(out[i]);
-      cout << ")\n";
-    }
-    cout << ")\n\n)";
-    return ;
   }
 }
