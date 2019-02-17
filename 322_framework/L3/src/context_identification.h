@@ -6,6 +6,6 @@ using namespace std;
 
 namespace L3{
 
-  vector<vector<Instruction*>> generate_contexts(Program p);
+  vector<vector<Instruction*>> generate_contexts(Function* f);
 
 }

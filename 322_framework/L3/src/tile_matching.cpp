@@ -27,9 +27,11 @@
 #include <iostream>
 #include <string>
 #include <iterator>
+#include <algorithm>
 #include <L3.h>
 #include <tile_matching.h>
 #include <tree_generation.h>
+#include <unordered_map>
 
 using namespace std;
 
@@ -39,9 +41,11 @@ namespace L3{
     stack<string> temp;
     while (!s2.empty()) {
       temp.push(s2.top());
+      s2.pop();
     }
     while (!temp.empty()) {
       s1.push(temp.top());
+      s2.pop();
     }
   }
 
@@ -73,21 +77,20 @@ namespace L3{
     return tiles;
   }
 
-  stack<string> generate_l2_instructions(vector<Node*> trees) {
+  stack<string> generate_l2_instructions(vector<Node*> trees, std::string longest_label_name, int64_t &label_count) {
+    stack<string> L2_instructions;
     if (trees.empty()) {
-      return {};
+      return L2_instructions;
     }
 
     vector<Tile> tiles = generate_tiles();
-    stack<string> L2_instructions;
-
     for (Node* tree : trees) {
       stack<string> generated_instructions;
       vector<Node*> unmatched;
 
       for (Tile tile : tiles) {
-        if (tile.match(tree, unmatched, generated_instructions)) {
-          stack<string> child_instructions = generate_l2_instructions(unmatched);
+        if (tile.match(tree, unmatched, generated_instructions, longest_label_name, label_count)) {
+          stack<string> child_instructions = generate_l2_instructions(unmatched, longest_label_name, label_count);
           append(L2_instructions, child_instructions);
           break;
         }

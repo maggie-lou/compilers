@@ -5,7 +5,6 @@
 #include <string>
 #include <iostream>
 #include <functional>
-#include <utils.h>
 
 using namespace std;
 
@@ -235,10 +234,9 @@ namespace L3 {
   };
 
   struct Instruction_jump : Instruction  {
-    // br var label label
+    // br var label
     Variable* var;
-    Label* label1;
-    Label* label2;
+    Label* label;
     Instruction_jump(){
       type = L3::Instruction_type::JUMP;
     }
@@ -343,11 +341,14 @@ namespace L3 {
   struct Function{
     std::string name;
     std::vector<Variable*> arguments;
-    std::vector<Instruction *> instructions;
+    std::vector<Instruction*> instructions;
+    std::vector<Label*> labels;
   };
 
   struct Program{
-    std::vector<Function *> functions;
+    std::vector<Function*> functions;
+    std::string longest_label_name = "";
+    int64_t label_count = 0;
   };
 
   struct Node {

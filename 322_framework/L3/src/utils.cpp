@@ -4,6 +4,8 @@
 #include <string>
 #include <iterator>
 #include <L3.h>
+#include <algorithm>
+#include <unordered_map>
 
 namespace L3{
   vector<string> argument_registers = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
@@ -18,6 +20,18 @@ namespace L3{
   }
 
   bool contains(vector<string> v, string s) {
-    return find(begin(v), end(v), s) != end(v);
+    return find(v.begin(), v.end(), s) != v.end();
+  }
+
+  std::unordered_map<std::string, std::string> create_label_map(Program &p, Function* f){
+    std::unordered_map<std::string, std::string> label_map;
+    for (Label* label : f->labels){
+      std::string label_name = label->name;
+      if (label_map.count(label_name) == 0){
+        label_map[label_name] = p.longest_label_name + std::to_string(p.label_count);
+        p.label_count++;
+      }
+    }
+    return label_map;
   }
 }

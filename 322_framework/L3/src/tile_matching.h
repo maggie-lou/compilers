@@ -10,11 +10,13 @@
 #include <stack>
 
 namespace L3 {
+  std::stack<std::string> generate_l2_instructions(std::vector<Node*> trees, std::string longest_label_name, int64_t &label_count);
+
   struct Tile {
     int64_t cost;
     int64_t size;
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       return false;
     }
   };
@@ -25,7 +27,7 @@ namespace L3 {
       size = 2;
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::ASSIGN)&&(root->children.size()==1)){
         Item* child_val = root->children[0]->value;
@@ -46,7 +48,7 @@ namespace L3 {
       size = 3;
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::OP)&&(root->children.size()==2)){
         Item* t1_val = root->children[0]->value;
@@ -72,7 +74,7 @@ namespace L3 {
       size = 3;
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::CMP)&&(root->children.size()==2)){
         Item* t1_val = root->children[0]->value;
@@ -108,7 +110,7 @@ namespace L3 {
       size = 2;
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::LOAD)&&(root->children.size()==1)){
         Item* child_val = root->children[0]->value;
@@ -129,7 +131,7 @@ namespace L3 {
       size = 2;
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::STORE)&&(root->children.size()==1)){
         Item* child_val = root->children[0]->value;
@@ -150,7 +152,7 @@ namespace L3 {
       size = 1;
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::LABEL)&&(root->operand_type == Instruction_type::GOTO)){
         L2_instructions.push("\tgoto "+root_val->to_string()+"\n");
@@ -167,7 +169,7 @@ namespace L3 {
       size = 1;
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::LABEL)&&(root->operand_type == Instruction_type::LABELI)){
         L2_instructions.push("\t"+root_val->to_string()+"\n");
@@ -184,14 +186,13 @@ namespace L3 {
       size = 1;
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       Item* root_val = root->value;
       if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::JUMP)&&(root->children.size()==2)){
-        Item* l1_val = root->children[0]->value;
-        Item* l2_val = root->children[1]->value;
+        Item* l_val = root->children[0]->value;
         // 0 is false, 1 is true
-        if (l1_val->type == Item_type::LABEL && l2_val->type == Item_type::LABEL){
-          L2_instructions.push("\tcjump "+root_val->to_string()+" = 1 "+l1_val->to_string()+" "+l2_val->to_string()+"\n");
+        if (l_val->type == Item_type::LABEL){
+          L2_instructions.push("\tcjump "+root_val->to_string()+" = 1 "+l_val->to_string()+"\n");
           return true;
         }
       }
@@ -206,7 +207,7 @@ namespace L3 {
       size = 0;
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       if (root->operand_type == Instruction_type::RETVOID){
         L2_instructions.push("\treturn\n");
         return true;
@@ -222,7 +223,7 @@ namespace L3 {
       size = 1;
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       Item* root_val = root->value;
       if (root->operand_type == Instruction_type::RET){
         L2_instructions.push("\treturn\n");
@@ -241,9 +242,10 @@ namespace L3 {
       size = -1; // Dependent on number of arguments
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       bool is_call = root->operand_type == Instruction_type::CALL;
       if (is_call) {
+        L2_instructions.push("\t"+longest_label_name+std::to_string(label_count)+"\n");
         L2_instructions.push("\tcall " + root->value->to_string() + " " + to_string(root->children.size()) + "\n");
         for (int i=0; i<root->children.size(); i++) {
           Node* child = root->children[i];
@@ -258,6 +260,8 @@ namespace L3 {
             unmatched.push_back(child);
           }
         }
+        L2_instructions.push("\tmem rsp -8 <- "+longest_label_name+std::to_string(label_count)+"\n");
+        label_count++;
         return true;
       }
 
@@ -272,10 +276,11 @@ namespace L3 {
       size = -1; // Dependent on number of arguments
     }
 
-    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions){
+    virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       bool is_call_store = root->operand_type == Instruction_type::CALLSTORE;
       if (is_call_store) {
         L2_instructions.push("\t" + root->value->to_string() + " <- rax");
+        L2_instructions.push("\t"+longest_label_name+std::to_string(label_count)+"\n");
         L2_instructions.push("\tcall " + root->value->to_string() + " " + to_string(root->children.size()) + "\n");
         for (int i=0; i<root->children.size(); i++) {
           Node* child = root->children[i];
@@ -290,6 +295,8 @@ namespace L3 {
             unmatched.push_back(child);
           }
         }
+        L2_instructions.push("\tmem rsp -8 <- "+longest_label_name+std::to_string(label_count)+"\n");
+        label_count++;
         return true;
       }
 

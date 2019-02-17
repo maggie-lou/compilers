@@ -353,6 +353,11 @@ namespace L3 {
       auto i = new Label();
       i->name = in.string();
       parsed_items.push_back(i);
+      Function* f = p.functions.back();
+      if (p.longest_label_name.length() < in.string().length()){
+        p.longest_label_name = in.string();
+      }
+      f->labels.push_back(i);
     }
   };
 
@@ -402,6 +407,9 @@ namespace L3 {
 	static void apply( const Input & in, Program & p){
       auto f = new Function();
       f->name = in.string();
+      if (p.longest_label_name.length() < in.string().length()){
+        p.longest_label_name = in.string();
+      }
       p.functions.push_back(f);
     }
   };
@@ -410,7 +418,10 @@ namespace L3 {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       std::string vars_str = in.string();
-      // vars_str.erase(std::remove_if(vars_str.begin(), vars_str.end(), isspace), vars_str.end());
+      vars_str.erase(std::remove_if(vars_str.begin(), vars_str.end(),
+                     [](char c){
+                       return std::isspace(static_cast<unsigned char>(c));
+                     }), vars_str.end());
       Function* f = p.functions.back();
       size_t index = 0;
       while ((index = vars_str.find(',')) != std::string::npos) {
@@ -427,7 +438,10 @@ namespace L3 {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       std::string arg_str = in.string();
-      // arg_str.erase(std::remove_if(arg_str.begin(), arg_str.end(), isspace), arg_str.end());
+      arg_str.erase(std::remove_if(arg_str.begin(), arg_str.end(),
+                     [](char c){
+                       return std::isspace(static_cast<unsigned char>(c));
+                     }), arg_str.end());
       std::vector<Item*> args;
       std::vector<std::string> args_str;
       size_t index = 0;
