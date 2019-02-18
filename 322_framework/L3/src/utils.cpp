@@ -57,8 +57,12 @@ namespace L3{
   }
 
   void print_tree(Node* root, int64_t layer){
+    if (layer == 0){
+      cout << "\n";
+    }
+
     if (root->value){
-      cout << to_string(layer) << ": " << root->value->to_string() << "with oprand " << root->operand_type << "\n";
+      cout << to_string(layer) << ": " << root->value->to_string() << " with oprand " << root->operand_type << "\n";
     } else {
       cout << to_string(layer) << ": no root value with oprand " << root->operand_type << "\n";
     }

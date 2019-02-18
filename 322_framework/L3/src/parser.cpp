@@ -366,7 +366,7 @@ namespace L3 {
   template<> struct action < Label_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      cout << "label " << in.string();
+      // cout << "label " << in.string();
       auto i = new Label();
       i->name = in.string();
       parsed_items.push_back(i);
@@ -383,7 +383,7 @@ namespace L3 {
   static void apply( const Input & in, Program & p){
       auto i = new Number();
       i->n = std::stoll(in.string());
-      cout << "number " << i->n << endl;
+      // cout << "number " << i->n << endl;
       parsed_items.push_back(i);
     }
   };
@@ -391,7 +391,7 @@ namespace L3 {
   template<> struct action < Var_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      cout << "Variable " << in.string() << endl;
+      // cout << "Variable " << in.string() << endl;
       auto i = new Variable();
       i->name = in.string();
       parsed_items.push_back(i);
@@ -415,7 +415,7 @@ namespace L3 {
   template<> struct action < Callee_other_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-    cout << "Callee other " << endl;
+    // cout << "Callee other " << endl;
       auto i = new Sys_call();
       i->name = in.string();
       parsed_items.push_back(i);
@@ -450,12 +450,12 @@ namespace L3 {
         size_t index = 0;
         while ((index = vars_str.find(',')) != std::string::npos) {
           Variable* v = new Variable(vars_str.substr(0, index));
-          cout << "created var with name: " << v->name << "\n";
+          // cout << "created var with name: " << v->name << "\n";
           f->arguments.push_back(v);
           vars_str.erase(0, index+1);
         }
         Variable* v = new Variable(vars_str);
-        cout << "created var with name: " << v->name << "\n";
+        // cout << "created var with name: " << v->name << "\n";
         f->arguments.push_back(v);
       }
     }
@@ -464,43 +464,48 @@ namespace L3 {
   template<> struct action < Args_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-    cout << "Args rule" << endl;
+    // cout << "Args rule" << endl;
       std::string arg_str = in.string();
       arg_str.erase(std::remove_if(arg_str.begin(), arg_str.end(),
                      [](char c){
                        return std::isspace(static_cast<unsigned char>(c));
                      }), arg_str.end());
-      std::vector<Item*> args;
-      std::vector<std::string> args_str;
-      size_t index = 0;
-      while ((index = arg_str.find(',')) != std::string::npos) {
-        args_str.push_back(arg_str.substr(0, index));
-        arg_str.erase(0, index+1);
-      }
-      args_str.push_back(arg_str);
-      for (std::string a : args_str){
-        cout << "Arg ";
-        if (L3::is_int(a)){
-          Number* n = new Number(std::stoll(a));
-          cout << to_string(n->n)<< endl;
-          args.push_back(n);
-        } else {
-          Variable* v = new Variable(a);
-          cout << v->name << endl;
-          args.push_back(v);
+      // cout << "after removing spaces: " << arg_str << "with length " << arg_str.length() <<"\n";
+      if (arg_str.length() > 0){
+        std::vector<Item*> args;
+        std::vector<std::string> args_str;
+        size_t index = 0;
+        while ((index = arg_str.find(',')) != std::string::npos) {
+          args_str.push_back(arg_str.substr(0, index));
+          arg_str.erase(0, index+1);
         }
+        args_str.push_back(arg_str);
+        for (std::string a : args_str){
+          // cout << "Arg ";
+          if (L3::is_int(a)){
+            Number* n = new Number(std::stoll(a));
+            // cout << to_string(n->n)<< endl;
+            args.push_back(n);
+          } else {
+            Variable* v = new Variable(a);
+            // cout << v->name << endl;
+            args.push_back(v);
+          }
+        }
+        parsed_args.push_back(args);
+      } else {
+        parsed_args.push_back({});
       }
-      parsed_args.push_back(args);
     }
   };
 
   template<> struct action < Instruction_assign_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-    cout << "assignment ";
+    // cout << "assignment ";
       auto i = new Instruction_assign();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))){
-        cout << "with variable name " << v->name << endl;
+        // cout << "with variable name " << v->name << endl;
         i->dest = v;
       }
       i->source = parsed_items.back();
@@ -513,7 +518,7 @@ namespace L3 {
   template<> struct action < Instruction_op_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-    cout << "assignment op ";
+    // cout << "assignment op ";
       auto i = new Instruction_op();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-3))){
         i->dest = v;
@@ -522,7 +527,7 @@ namespace L3 {
       i->t2 = parsed_items.back();
       i->op = parsed_operations.back();
 
-      cout << i->op << endl;
+      // cout << i->op << endl;
 
       Function* f = p.functions.back();
       f->instructions.push_back(i);
@@ -532,7 +537,7 @@ namespace L3 {
   template<> struct action < Instruction_cmp_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      cout << "Cmp" << endl;
+      // cout << "Cmp" << endl;
       auto i = new Instruction_cmp();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-3))){
         i->dest = v;
@@ -549,7 +554,7 @@ namespace L3 {
   template<> struct action < Instruction_load_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      cout << "Load " << endl;
+      // cout << "Load " << endl;
       auto i = new Instruction_load();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))){
         i->dest = v;
@@ -566,7 +571,7 @@ namespace L3 {
   template<> struct action < Instruction_store_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      cout << "Store" << endl;
+      // cout << "Store" << endl;
       auto i = new Instruction_store();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))){
         i->dest = v;
@@ -581,7 +586,7 @@ namespace L3 {
   template<> struct action < Instruction_goto_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      cout << "Goto" << endl;
+      // cout << "Goto" << endl;
       auto i = new Instruction_goto();
       if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
         i->label = l;

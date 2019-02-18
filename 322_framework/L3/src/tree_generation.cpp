@@ -65,13 +65,16 @@ namespace L3{
       t = generate_node(i_cast->dest, label_map);
       t->operand_type = i_cast->type;
       t->op_name = i_cast->op;
-      if (auto v1 = dynamic_cast<Variable*>(i_cast->t1)){
+      if (auto dest1 = dynamic_cast<Variable*>(i_cast->dest)){
         if (auto v2 = dynamic_cast<Variable*>(i_cast->t2)){
-          string temp = v1->name;
-          v1->name = v2->name;
-          v2->name = temp;
+          if (dest1->name == v2->name){
+            Item* temp = i_cast->t1;
+            i_cast->t1 = i_cast->t2;
+            i_cast->t2 = temp;
+          }
         }
       }
+
       add_child(t, i_cast->t1, leaf_map, label_map);
       add_child(t, i_cast->t2, leaf_map, label_map);
     } else if (auto i_cast = dynamic_cast<Instruction_cmp*>(i)) {
@@ -157,23 +160,42 @@ namespace L3{
       trees.push_back(tree);
     }
 
-	  cout << "Pre merging " << trees.size() << " trees" << endl;
+	  // cout << "Pre merging " << trees.size() << " trees" << endl;
 
     for (int i=0; i<trees.size(); i++) {
       if (trees[i]->operand_type==Instruction_type::RETVOID||trees[i]->operand_type==Instruction_type::RET||trees[i]->operand_type==Instruction_type::CALL||trees[i]->operand_type==Instruction_type::CALLSTORE){
         continue;
       }
+      vector<string> in_set_i = in_sets[i];
       if (trees[i]->value->type == Item_type::VARIABLE) {
         string var_name = trees[i]->value->to_string();
+        // cout << "\ni var name: " << var_name << "\n";
         for (int j=i+1; j<trees.size(); j++) {
-          if (trees[j]->operand_type==Instruction_type::RETVOID||trees[j]->operand_type==Instruction_type::RET||trees[j]->operand_type==Instruction_type::CALL||trees[j]->operand_type==Instruction_type::CALLSTORE){
-            continue;
-          }
+
           vector<string> out_set = out_sets[j];
           vector<string> in_set = in_sets[j];
           if (L3::contains(in_set, var_name)) {
+            //  don't merge if root is used by other instruction
+            // cout << "not merging" << var_name << "for " << to_string(j) << "\n";
             break;
           }
+
+          bool do_not_merge = false;
+          for (string out_var : out_set){
+            // don't merge if var in IN was changed by other instructions
+            if (L3::contains(in_set_i, out_var)){
+              do_not_merge = true;
+              break;
+            }
+          }
+          if (do_not_merge){
+            break;
+          }
+
+          if (trees[j]->operand_type==Instruction_type::RETVOID||trees[j]->operand_type==Instruction_type::RET||trees[j]->operand_type==Instruction_type::CALL||trees[j]->operand_type==Instruction_type::CALLSTORE){
+            continue;
+          }
+
           if (is_leaf(trees[j], var_name)) {
             merge(trees[i], trees[j], trees, i);
             break;
@@ -187,15 +209,15 @@ namespace L3{
   vector<Node*> generate_and_merge_trees_all(vector<vector<Instruction*>> contexts, vector<vector<string>> in, vector<vector<string>> out, unordered_map<string, string> label_map) {
     vector<Node*> all_trees;
     for (auto context : contexts){
-      cout << "About to generate trees for a context" << endl;
+      // cout << "About to generate trees for a context" << endl;
       auto trees = generate_and_merge_trees(context, in, out, label_map);
-      cout << "trees size " << trees.size() << endl;
+      // cout << "trees size " << trees.size() << endl;
       all_trees.insert(all_trees.end(), trees.begin(), trees.end());
     }
-    cout << "all trees size " << all_trees.size() << endl;
-    for (auto tree : all_trees){
-      L3::print_tree(tree, 0);
-    }
+    // cout << "all trees size " << all_trees.size() << endl;
+    // for (auto tree : all_trees){
+    //   L3::print_tree(tree, 0);
+    // }
     return all_trees;
   }
 
