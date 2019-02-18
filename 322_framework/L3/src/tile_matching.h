@@ -289,8 +289,14 @@ namespace L3 {
       cout << "in tile call\n";
       bool is_call = root->operand_type == Instruction_type::CALL;
       if (is_call) {
-        L2_instructions.push("\t"+longest_label_name+std::to_string(label_count)+"\n");
+        if (root->value->type != L3::Item_type::SYSCALL){
+          L2_instructions.push("\t"+longest_label_name+std::to_string(label_count)+"\n");
+        }
         L2_instructions.push("\tcall " + root->value->to_string() + " " + to_string(root->children.size()) + "\n");
+        if (root->value->type != L3::Item_type::SYSCALL){
+          L2_instructions.push("\tmem rsp -8 <- "+longest_label_name+std::to_string(label_count)+"\n");
+        }
+
         for (int i=0; i<root->children.size(); i++) {
           Node* child = root->children[i];
           if (i >= argument_registers.size()) {
@@ -304,7 +310,7 @@ namespace L3 {
             unmatched.push_back(child);
           }
         }
-        L2_instructions.push("\tmem rsp -8 <- "+longest_label_name+std::to_string(label_count)+"\n");
+
         label_count++;
         return true;
       }
@@ -323,24 +329,30 @@ namespace L3 {
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       cout << "in tile call store\n";
       bool is_call_store = root->operand_type == Instruction_type::CALLSTORE;
-      if (is_call_store) {
-        L2_instructions.push("\t" + root->value->to_string() + " <- rax");
-        L2_instructions.push("\t"+longest_label_name+std::to_string(label_count)+"\n");
-        L2_instructions.push("\tcall " + root->value->to_string() + " " + to_string(root->children.size()) + "\n");
-        for (int i=0; i<root->children.size(); i++) {
+      if (is_call_store && root->children.size() > 0) {
+        L2_instructions.push("\t" + root->value->to_string() + " <- rax\n");
+        if (root->children[0]->value->type != L3::Item_type::SYSCALL){
+          L2_instructions.push("\t"+longest_label_name+std::to_string(label_count)+"\n");
+        }
+        L2_instructions.push("\tcall " + root->children[0]->value->to_string() + " " + to_string(root->children.size()-1) + "\n");
+        if (root->children[0]->value->type != L3::Item_type::SYSCALL){
+          L2_instructions.push("\tmem rsp -8 <- "+longest_label_name+std::to_string(label_count)+"\n");
+        }
+
+        for (int i=1; i<root->children.size(); i++) {
           Node* child = root->children[i];
           if (i >= argument_registers.size()) {
             int stack_loc = -16 - 8 * (i - argument_registers.size());
-            L2_instructions.push("\tmem rsp " + to_string(stack_loc) + " <- " + child->value->to_string());
+            L2_instructions.push("\tmem rsp " + to_string(stack_loc) + " <- " + child->value->to_string() + "\n");
           } else {
             string arg_register = argument_registers[i];
-            L2_instructions.push("\t" + argument_registers[i] + " <- " + child->value->to_string());
+            L2_instructions.push("\t" + argument_registers[i-1] + " <- " + child->value->to_string() + "\n");
           }
           if (!child->children.empty()) {
             unmatched.push_back(child);
           }
         }
-        L2_instructions.push("\tmem rsp -8 <- "+longest_label_name+std::to_string(label_count)+"\n");
+
         label_count++;
         return true;
       }

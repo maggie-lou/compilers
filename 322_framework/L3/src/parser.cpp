@@ -659,6 +659,7 @@ namespace L3 {
       }
       i->callee = parsed_items.back();
       i->args = parsed_args.back();
+
       Function* f = p.functions.back();
       f->instructions.push_back(i);
     }

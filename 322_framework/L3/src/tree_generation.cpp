@@ -130,6 +130,18 @@ namespace L3{
     trees.erase(trees.begin() + t_index);
   }
 
+  bool is_leaf(Node* tree,  string var_name){
+    if (tree->children.empty()){
+      if (tree->value->to_string() == var_name) return true;
+      return false;
+    }
+    bool child_leaf = false;
+    for (Node* child : tree->children){
+      child_leaf |= is_leaf(child, var_name);
+    }
+    return child_leaf;
+  }
+
   vector<Node*> generate_and_merge_trees(vector<Instruction*> context, vector<vector<string>> in_sets, vector<vector<string>> out_sets, unordered_map<string, string> label_map){
     vector<Node*> trees;
     map<string, vector<Node*>> leaf_map;
@@ -141,19 +153,18 @@ namespace L3{
 	  cout << "Pre merging " << trees.size() << " trees" << endl;
 
     for (int i=0; i<trees.size(); i++) {
-      if (trees[i]->operand_type==Instruction_type::RETVOID||trees[i]->operand_type==Instruction_type::RET||trees[i]->operand_type==Instruction_type::CALL){
-        cout << "not merging\n";
-        continue;
-      }
       if (trees[i]->value->type == Item_type::VARIABLE) {
         string var_name = trees[i]->value->to_string();
         for (int j=i+1; j<trees.size(); j++) {
+          if (trees[j]->operand_type==Instruction_type::RETVOID||trees[j]->operand_type==Instruction_type::RET||trees[j]->operand_type==Instruction_type::CALL||trees[j]->operand_type==Instruction_type::CALLSTORE){
+            continue;
+          }
           vector<string> out_set = out_sets[j];
           vector<string> in_set = in_sets[j];
           if (L3::contains(out_set, var_name)) {
             break;
           }
-          if (L3::contains(in_set, var_name)) {
+          if (is_leaf(trees[j], var_name)) {
             merge(trees[i], trees[j], trees, i);
             break;
           }
