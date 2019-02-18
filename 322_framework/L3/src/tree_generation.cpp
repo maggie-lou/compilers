@@ -34,7 +34,7 @@ namespace L3{
   Node* generate_node(Item* i, unordered_map<string, string> label_map) {
     Node *t = new Node();
     if (Label* label = dynamic_cast<Label*>(i)){
-      label->name = label_map[label->name];
+//      label->name = label_map[label->name];
       t->value = label;
     } else {
       t->value = i;
@@ -92,6 +92,7 @@ namespace L3{
       t->operand_type = i_cast->type;
       add_child(t, i_cast->label, leaf_map, label_map);
     } else if (auto i_cast = dynamic_cast<Instruction_ret_void*>(i)) {
+      t = new Node();
       t->operand_type = i_cast->type;
     } else if (auto i_cast = dynamic_cast<Instruction_ret*>(i)) {
       t = generate_node(i_cast->t, label_map);
@@ -139,6 +140,8 @@ namespace L3{
       Node* tree = generate_tree(i, leaf_map, label_map);
       trees.push_back(tree);
     }
+
+	cout << "Pre merging " << trees.size() << " trees" << endl;
 
     for (int i=0; i<trees.size(); i++) {
       if (trees[i]->value->type == Item_type::VARIABLE) {

@@ -17,6 +17,7 @@ namespace L3 {
     int64_t size;
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
+cout <<"In default"<<endl;
       return false;
     }
   };
@@ -37,7 +38,7 @@ namespace L3 {
           return true;
         }
       }
-      unmatched.push_back(root);
+      //unmatched.push_back(root);
       return false;
     }
   };
@@ -63,7 +64,7 @@ namespace L3 {
           return true;
         }
       }
-      unmatched.push_back(root);
+     // unmatched.push_back(root);
       return false;
     }
   };
@@ -99,7 +100,7 @@ namespace L3 {
           return true;
         }
       }
-      unmatched.push_back(root);
+      //unmatched.push_back(root);
       return false;
     }
   };
@@ -120,7 +121,7 @@ namespace L3 {
           return true;
         }
       }
-      unmatched.push_back(root);
+      //unmatched.push_back(root);
       return false;
     }
   };
@@ -141,7 +142,7 @@ namespace L3 {
           return true;
         }
       }
-      unmatched.push_back(root);
+      //unmatched.push_back(root);
       return false;
     }
   };
@@ -158,7 +159,7 @@ namespace L3 {
         L2_instructions.push("\tgoto "+root_val->to_string()+"\n");
         return true;
       }
-      unmatched.push_back(root);
+      //unmatched.push_back(root);
       return false;
     }
   };
@@ -175,7 +176,7 @@ namespace L3 {
         L2_instructions.push("\t"+root_val->to_string()+"\n");
         return true;
       }
-      unmatched.push_back(root);
+      //unmatched.push_back(root);
       return false;
     }
   };
@@ -196,7 +197,7 @@ namespace L3 {
           return true;
         }
       }
-      unmatched.push_back(root);
+      //unmatched.push_back(root);
       return false;
     }
   };
@@ -212,7 +213,7 @@ namespace L3 {
         L2_instructions.push("\treturn\n");
         return true;
       }
-      unmatched.push_back(root);
+      //unmatched.push_back(root);
       return false;
     }
   };
@@ -230,7 +231,7 @@ namespace L3 {
         L2_instructions.push("\trax <- "+root_val->to_string()+"\n");
         return true;
       }
-      unmatched.push_back(root);
+      //unmatched.push_back(root);
       return false;
 
     }
@@ -265,7 +266,7 @@ namespace L3 {
         return true;
       }
 
-      unmatched.push_back(root);
+      //unmatched.push_back(root);
       return false;
     }
   };
@@ -300,7 +301,7 @@ namespace L3 {
         return true;
       }
 
-      unmatched.push_back(root);
+      //unmatched.push_back(root);
       return false;
     }
   };

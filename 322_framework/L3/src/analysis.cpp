@@ -77,25 +77,22 @@ namespace L3{
   }
 
   void get_in_out_sets(Function* f, vector<vector<string>> &in, vector<vector<string>> &out){
-    cout <<"Generating in out sets "<<endl;
+    //cout <<"Generating in out sets "<<endl;
     auto instructions = f->instructions;
     vector<vector<string>> gen(instructions.size());
     bool changed = false;
-    vector<vector<string>> kill;
+    vector<vector<string>> kill(instructions.size());
 
     for (int j=0; j<instructions.size(); j++) {
       auto current_i = instructions[j];
-      cout << "Instruction type "<<current_i->type <<endl;
-      if (current_i->type == Instruction_type::ASSIGN) cout <<"PLS"<<endl;
-      cout << "About to generate read" << endl;
+     // cout << "About to generate read" << endl;
       auto temp_gen = current_i->generate_read();
-      cout << "About to generate defined" << endl;
+      //cout << "About to generate defined" << endl;
       auto temp_kill = current_i->generate_defined();
       gen[j] = temp_gen;
       kill[j] = temp_kill;
       in[j] = {};
       out[j] = {};
-      cout << "End of loop" << endl;
     }
     do {
       changed = false;

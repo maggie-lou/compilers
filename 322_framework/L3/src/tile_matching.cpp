@@ -45,32 +45,32 @@ namespace L3{
     }
     while (!temp.empty()) {
       s1.push(temp.top());
-      s2.pop();
+      temp.pop();
     }
   }
 
-  vector<Tile> generate_tiles() {
-    vector<Tile> tiles;
-    tiles.push_back(Tile_assign());
-    tiles.push_back(Tile_op());
-    tiles.push_back(Tile_cmp());
-    tiles.push_back(Tile_load());
-    tiles.push_back(Tile_store());
-    tiles.push_back(Tile_goto());
-    tiles.push_back(Tile_label());
-    tiles.push_back(Tile_jump());
-    tiles.push_back(Tile_ret_void());
-    tiles.push_back(Tile_ret());
-    tiles.push_back(Tile_call());
-    tiles.push_back(Tile_call_store());
+  vector<Tile*> generate_tiles() {
+    vector<Tile*> tiles;
+    tiles.push_back(new Tile_assign());
+    tiles.push_back(new Tile_op());
+    tiles.push_back(new Tile_cmp());
+    tiles.push_back(new Tile_load());
+    tiles.push_back(new Tile_store());
+    tiles.push_back(new Tile_goto());
+    tiles.push_back(new Tile_label());
+    tiles.push_back(new Tile_jump());
+    tiles.push_back(new Tile_ret_void());
+    tiles.push_back(new Tile_ret());
+    tiles.push_back(new Tile_call());
+    tiles.push_back(new Tile_call_store());
 
     // Sort tiles ascending order
     // sort by cost, and then size
     sort(tiles.begin(), tiles.end(), [](const auto& lhs, const auto& rhs) {
-        if (lhs.cost == rhs.cost) {
-        return lhs.size > rhs.size;
+        if (lhs->cost == rhs->cost) {
+        return lhs->size > rhs->size;
         } else {
-        return lhs.cost < rhs.cost;
+        return lhs->cost < rhs->cost;
         }
     });
 
@@ -83,20 +83,21 @@ namespace L3{
       return L2_instructions;
     }
 
-    vector<Tile> tiles = generate_tiles();
+    vector<Tile*> tiles = generate_tiles();
     for (Node* tree : trees) {
+cout << "Generating instructions for node "<< tree->value->to_string()<< " with operand " << tree->operand_type<<endl;
       stack<string> generated_instructions;
       vector<Node*> unmatched;
 
-      for (Tile tile : tiles) {
-        if (tile.match(tree, unmatched, generated_instructions, longest_label_name, label_count)) {
+      for (Tile* tile : tiles) {
+        if (tile->match(tree, unmatched, generated_instructions, longest_label_name, label_count)) {
+	      append(L2_instructions, generated_instructions);
           stack<string> child_instructions = generate_l2_instructions(unmatched, longest_label_name, label_count);
-          append(L2_instructions, child_instructions);
           break;
         }
       }
     }
-
+	print_stack(L2_instructions);
     return L2_instructions;
   }
 }

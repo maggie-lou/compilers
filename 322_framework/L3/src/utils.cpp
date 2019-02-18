@@ -3,12 +3,16 @@
 #include <iostream>
 #include <string>
 #include <iterator>
+#include <stack>
 #include <L3.h>
 #include <algorithm>
 #include <unordered_map>
 
+using namespace std;
+
 namespace L3{
   vector<string> argument_registers = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+  vector<string> instruction_types = {"ASSIGN", "OP", "CMP", "LOAD", "STORE", "GOTO", "LABELI", "JUMP", "RETVOID", "RET", "CALL", "CALLSTORE"};
 
   bool is_int(std::string s){
     if(s.empty()) return false;
@@ -34,4 +38,15 @@ namespace L3{
     }
     return label_map;
   }
+
+  string instruction_type_string(Instruction_type s) {
+	return instruction_types[s];
+}
+
+void print_stack(stack<string> s) {
+	while (!s.empty()) {
+		cout << s.top()<<endl;
+		s.pop();
+	}
+}
 }
