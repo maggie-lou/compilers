@@ -1,8 +1,8 @@
 define :main () {
- :entry
- br :myLabel1
- :myLabel1
- %newVar1 <- 3 >> 1
+// :entry
+// br :myLabel1
+// :myLabel1
+// %newVar1 <- 3 >> 1
  %newVar0 <- %newVar1
  %newVar0 <- %newVar0 << 1
  %newVar0 <- %newVar0 + 1

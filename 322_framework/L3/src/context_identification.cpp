@@ -10,6 +10,7 @@ using namespace std;
 
 namespace L3{
   vector<vector<Instruction*>> generate_contexts(Function* f) {
+    cout << "Generate context with #instructions: " << f->instructions.size()<<endl;
     vector<vector<Instruction*>> contexts;
     vector<Instruction*> current_context;
     for (Instruction* i : f->instructions) {

@@ -77,6 +77,7 @@ namespace L3 {
     virtual ~Instruction() = default;
 
     virtual vector<string> generate_read(){
+      cout << "Default read"<<endl;
       return {};
     }
     virtual vector<string> generate_defined(){
@@ -92,6 +93,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read assignment"<<endl;
       vector<string> read = {};
       if (source->type == Item_type::VARIABLE) {
         read.push_back(source->to_string());
@@ -116,6 +118,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read op"<<endl;
       vector<string> read = {};
       if (t1->type == Item_type::VARIABLE) {
         read.push_back(t1->to_string());
@@ -143,6 +146,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read cmp"<<endl;
       vector<string> read = {};
       if (t1->type == Item_type::VARIABLE) {
         read.push_back(t1->to_string());
@@ -168,6 +172,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read load"<<endl;
       vector<string> read = {};
       read.push_back(source->name);
       return read;
@@ -188,6 +193,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read store"<<endl;
       vector<string> read = {};
       if (source->type == Item_type::VARIABLE) {
         read.push_back(source->to_string());
@@ -210,6 +216,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read goto"<<endl;
       return {};
     }
 
@@ -225,6 +232,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read goto"<<endl;
       return {};
     }
 
@@ -242,6 +250,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read goto"<<endl;
       vector<string> read = {};
       read.push_back(var->name);
       return read;
@@ -258,6 +267,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read goto"<<endl;
       return {};
     }
 
@@ -273,6 +283,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read goto"<<endl;
       vector<string> read = {};
       if (t->type == Item_type::VARIABLE) {
         read.push_back(t->to_string());
@@ -293,6 +304,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read goto"<<endl;
       vector<string> read = {};
       for (Item* i : args) {
         if (i->type == Item_type::VARIABLE) {
@@ -319,6 +331,7 @@ namespace L3 {
     }
 
     virtual vector<string> generate_read(){
+      cout <<"Gen read goto"<<endl;
       vector<string> read = {};
       for (Item* i : args) {
         if (i->type == Item_type::VARIABLE) {

@@ -31,6 +31,7 @@ namespace L3{
       }
     }
 
+    cout << "Size of l2 instructions in code generator" << all_l2_instructions.size() << endl;
     for (stack<string> l2_instructions : all_l2_instructions){
       while(!l2_instructions.empty()){
         outputFile << l2_instructions.top();
