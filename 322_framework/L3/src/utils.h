@@ -15,4 +15,5 @@ namespace L3{
   string instruction_type_string(Instruction_type s);
   void print_stack(stack<string> s);
   unordered_map<string, string> create_label_map(Program &p, Function* f);
+  void print_tree(Node* root, int64_t layer);
 }

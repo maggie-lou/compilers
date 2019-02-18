@@ -25,9 +25,9 @@ namespace L3{
     outputFile << '(' << f->name << "\n\t" << to_string(arguments.size()) << " 0\n";
     for (int i = 0; i < arguments.size(); i++){
       if (i < 6){
-        outputFile << "\t" << arguments[i] << " <- " << L3::argument_registers[i] + "\n";
+        outputFile << "\t" << arguments[i]->to_string() << " <- " << L3::argument_registers[i] + "\n";
       } else {
-        outputFile << "\t" << arguments[i] << " <- stack-arg " << to_string((arguments.size()-1-i)*8) + "\n";
+        outputFile << "\t" << arguments[i]->to_string() << " <- stack-arg " << to_string((arguments.size()-1-i)*8) + "\n";
       }
     }
 

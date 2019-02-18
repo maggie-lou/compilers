@@ -45,6 +45,7 @@ int main(
 
   for (auto f : p.functions){
     auto instructions = f->instructions;
+    cout << "instruction size: " << instructions.size() << "\n";
     auto label_map = L3::create_label_map(p, f);
 
     auto contexts = L3::generate_contexts(f);
@@ -55,13 +56,14 @@ int main(
     cout << "About to generate in out sets"<<endl;
     L3::get_in_out_sets(f, in, out);
 
+    auto all_trees = L3::generate_and_merge_trees_all(contexts, in, out, label_map);
+
+
     vector<stack<string>> all_l2_instructions;
-    for (auto context : contexts){
-      cout << "About to generate trees" << endl;
-      auto trees = L3::generate_and_merge_trees(context, in, out, label_map);
-    cout << "trees size " << trees.size() << endl;
-      stack<string> l2_instructions = L3::generate_l2_instructions(trees, p.longest_label_name, p.label_count);
-    cout << "l2 instructions size " << l2_instructions.size() << endl;
+    for (auto tree : all_trees){
+      cout << "generating instructions for one tree\n";
+      stack<string> l2_instructions = L3::generate_l2_instructions(tree, p.longest_label_name, p.label_count);
+      cout << "for this tree, l2 instructions size " << l2_instructions.size() << endl;
       all_l2_instructions.push_back(l2_instructions);
     }
 

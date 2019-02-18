@@ -6,9 +6,9 @@
 using namespace std;
 
 namespace L3{
-vector<Node*> generate_and_merge_trees(vector<Instruction*> context,
-                                       vector<vector<string>> in_sets,
-                                       vector<vector<string>> out_sets,
-                                       unordered_map<string, string> label_map);
+vector<Node*> generate_and_merge_trees_all(vector<vector<Instruction*>> contexts,
+                                           vector<vector<string>> in,
+                                           vector<vector<string>> out,
+                                           unordered_map<string, string> label_map);
 
 }

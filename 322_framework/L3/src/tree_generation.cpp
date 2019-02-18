@@ -117,9 +117,6 @@ namespace L3{
   }
 
   void merge(Node *t, Node *merge_into, vector<Node*> &trees, int t_index) {
-    if(merge_into->operand_type==Instruction_type::RETVOID||merge_into->operand_type==Instruction_type::RET||merge_into->operand_type==Instruction_type::CALL){
-      return;
-    }
     string merge_name = t->value->to_string();
     for (int i=0; i < merge_into->children.size(); i++) {
       Node *child = merge_into->children[i];
@@ -141,9 +138,13 @@ namespace L3{
       trees.push_back(tree);
     }
 
-	cout << "Pre merging " << trees.size() << " trees" << endl;
+	  cout << "Pre merging " << trees.size() << " trees" << endl;
 
     for (int i=0; i<trees.size(); i++) {
+      if (trees[i]->operand_type==Instruction_type::RETVOID||trees[i]->operand_type==Instruction_type::RET||trees[i]->operand_type==Instruction_type::CALL){
+        cout << "not merging\n";
+        continue;
+      }
       if (trees[i]->value->type == Item_type::VARIABLE) {
         string var_name = trees[i]->value->to_string();
         for (int j=i+1; j<trees.size(); j++) {
@@ -159,7 +160,22 @@ namespace L3{
         }
       }
     }
-
     return trees;
   }
+
+  vector<Node*> generate_and_merge_trees_all(vector<vector<Instruction*>> contexts, vector<vector<string>> in, vector<vector<string>> out, unordered_map<string, string> label_map) {
+    vector<Node*> all_trees;
+    for (auto context : contexts){
+      cout << "About to generate trees for a context" << endl;
+      auto trees = generate_and_merge_trees(context, in, out, label_map);
+      cout << "trees size " << trees.size() << endl;
+      all_trees.insert(all_trees.end(), trees.begin(), trees.end());
+    }
+    cout << "all trees size " << all_trees.size() << endl;
+    for (auto tree : all_trees){
+      L3::print_tree(tree, 0);
+    }
+    return all_trees;
+  }
+
 }

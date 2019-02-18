@@ -40,13 +40,24 @@ namespace L3{
   }
 
   string instruction_type_string(Instruction_type s) {
-	return instruction_types[s];
-}
+	   return instruction_types[s];
+   }
 
-void print_stack(stack<string> s) {
-	while (!s.empty()) {
-		cout << s.top()<<endl;
-		s.pop();
-	}
-}
+  void print_stack(stack<string> s) {
+  	while (!s.empty()) {
+  		cout << s.top()<<endl;
+  		s.pop();
+  	}
+  }
+
+  void print_tree(Node* root, int64_t layer){
+    if (root->value){
+      cout << to_string(layer) << ": " << root->value->to_string() << "with oprand " << root->operand_type << "\n";
+    } else {
+      cout << to_string(layer) << ": no root value with oprand " << root->operand_type << "\n";
+    }
+    for (Node* child : root->children){
+      print_tree(child, layer+1);
+    }
+  }
 }

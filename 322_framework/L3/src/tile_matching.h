@@ -10,14 +10,14 @@
 #include <stack>
 
 namespace L3 {
-  std::stack<std::string> generate_l2_instructions(std::vector<Node*> trees, std::string longest_label_name, int64_t &label_count);
+  std::stack<std::string> generate_l2_instructions(Node* trees, std::string longest_label_name, int64_t &label_count);
 
   struct Tile {
     int64_t cost;
     int64_t size;
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
-cout <<"In default"<<endl;
+      cout <<"In default"<<endl;
       return false;
     }
   };
@@ -29,13 +29,18 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
-      Item* root_val = root->value;
-      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::ASSIGN)&&(root->children.size()==1)){
-        Item* child_val = root->children[0]->value;
-        if (root->children[0]->value->type == Item_type::VARIABLE||root->children[0]->value->type == Item_type::LABEL||root->children[0]->value->type == Item_type::NUMBER){
-          L2_instructions.push("\t" + root_val->to_string() + " <- " + root->children[0]->value->to_string() + "\n");
-          if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
-          return true;
+      cout << "in tile assign\n";
+      if (root->operand_type == Instruction_type::ASSIGN){
+        Item* root_val = root->value;
+        if ((root_val->type == Item_type::VARIABLE)&&(root->children.size()==1)){
+          if (root->children[0]->value){
+            Item* child_val = root->children[0]->value;
+            if (child_val->type == Item_type::VARIABLE||child_val->type == Item_type::LABEL||child_val->type == Item_type::NUMBER){
+              L2_instructions.push("\t" + root_val->to_string() + " <- " + child_val->to_string() + "\n");
+              if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
+              return true;
+            }
+          }
         }
       }
       //unmatched.push_back(root);
@@ -50,21 +55,27 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
-      Item* root_val = root->value;
-      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::OP)&&(root->children.size()==2)){
-        Item* t1_val = root->children[0]->value;
-        Item* t2_val = root->children[1]->value;
-        if ((t1_val->type == Item_type::VARIABLE||t1_val->type == Item_type::NUMBER)
-            &&(t2_val->type == Item_type::VARIABLE||t2_val->type == Item_type::NUMBER)){
+      cout << "in tile op\n";
+      if (root->operand_type == Instruction_type::OP){
+        Item* root_val = root->value;
+        if ((root_val->type == Item_type::VARIABLE)&&(root->children.size()==2)){
+          if (root->children[0]->value && root->children[1]->value){
+            Item* t1_val = root->children[0]->value;
+            Item* t2_val = root->children[1]->value;
+            if ((t1_val->type == Item_type::VARIABLE||t1_val->type == Item_type::NUMBER)
+                &&(t2_val->type == Item_type::VARIABLE||t2_val->type == Item_type::NUMBER)){
 
-          L2_instructions.push("\t"+t1_val->to_string()+" <- "+t1_val->to_string()+" "+root->op_name+" "+t2_val->to_string()+"\n");
-          L2_instructions.push("\t"+root_val->to_string()+" <- "+t1_val->to_string()+"\n");
-          if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
-          if (!root->children[1]->children.empty()) unmatched.push_back(root->children[1]);
-          return true;
+              L2_instructions.push("\t"+root_val->to_string()+" <- "+t1_val->to_string()+"\n");
+              L2_instructions.push("\t"+t1_val->to_string()+" "+root->op_name+"= "+t2_val->to_string()+"\n");
+
+              if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
+              if (!root->children[1]->children.empty()) unmatched.push_back(root->children[1]);
+              return true;
+            }
+          }
         }
       }
-     // unmatched.push_back(root);
+      // unmatched.push_back(root);
       return false;
     }
   };
@@ -76,30 +87,36 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
-      Item* root_val = root->value;
-      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::CMP)&&(root->children.size()==2)){
-        Item* t1_val = root->children[0]->value;
-        Item* t2_val = root->children[1]->value;
-        if ((t1_val->type == Item_type::VARIABLE||t1_val->type == Item_type::NUMBER)
-            &&(t2_val->type == Item_type::VARIABLE||t2_val->type == Item_type::NUMBER)){
-          bool flip = false;
-          if (root->op_name == ">"){
-            root->op_name = "<";
-            flip = true;
-          } else if (root->op_name == ">="){
-            root->op_name = "<=";
-            flip = true;
+      cout << "in tile cmp\n";
+      if (root->operand_type == Instruction_type::CMP){
+        Item* root_val = root->value;
+        if ((root_val->type == Item_type::VARIABLE)&&(root->children.size()==2)){
+          if (root->children[0]->value && root->children[1]->value){
+            Item* t1_val = root->children[0]->value;
+            Item* t2_val = root->children[1]->value;
+            if ((t1_val->type == Item_type::VARIABLE||t1_val->type == Item_type::NUMBER)
+                &&(t2_val->type == Item_type::VARIABLE||t2_val->type == Item_type::NUMBER)){
+              bool flip = false;
+              if (root->op_name == ">"){
+                root->op_name = "<";
+                flip = true;
+              } else if (root->op_name == ">="){
+                root->op_name = "<=";
+                flip = true;
+              }
+              if (flip){
+                L2_instructions.push("\t"+root->value->to_string()+" <- "+t2_val->to_string()+" "+root->op_name+" "+t1_val->to_string()+"\n");
+              } else {
+                L2_instructions.push("\t"+root->value->to_string()+" <- "+t1_val->to_string()+" "+root->op_name+" "+t2_val->to_string()+"\n");
+              }
+              if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
+              if (!root->children[1]->children.empty()) unmatched.push_back(root->children[1]);
+              return true;
+            }
           }
-          if (flip){
-            L2_instructions.push(root->value->to_string()+" <- "+t2_val->to_string()+" "+root->op_name+" "+t1_val->to_string()+"\n");
-          } else {
-            L2_instructions.push(root->value->to_string()+" <- "+t1_val->to_string()+" "+root->op_name+" "+t2_val->to_string()+"\n");
-          }
-          if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
-          if (!root->children[1]->children.empty()) unmatched.push_back(root->children[1]);
-          return true;
         }
       }
+
       //unmatched.push_back(root);
       return false;
     }
@@ -112,15 +129,21 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
-      Item* root_val = root->value;
-      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::LOAD)&&(root->children.size()==1)){
-        Item* child_val = root->children[0]->value;
-        if (child_val->type == Item_type::VARIABLE){
-          L2_instructions.push("\t"+root_val->to_string()+" <- mem "+child_val->to_string()+"  0\n");
-          if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
-          return true;
+      cout << "in tile load\n";
+      if (root->operand_type == Instruction_type::LOAD){
+        Item* root_val = root->value;
+        if ((root_val->type == Item_type::VARIABLE)&&(root->children.size()==1)){
+          if (root->children[0]->value){
+            Item* child_val = root->children[0]->value;
+            if (child_val->type == Item_type::VARIABLE){
+              L2_instructions.push("\t"+root_val->to_string()+" <- mem "+child_val->to_string()+"  0\n");
+              if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
+              return true;
+            }
+          }
         }
       }
+
       //unmatched.push_back(root);
       return false;
     }
@@ -133,15 +156,21 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
-      Item* root_val = root->value;
-      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::STORE)&&(root->children.size()==1)){
-        Item* child_val = root->children[0]->value;
-        if (child_val->type == Item_type::VARIABLE){
-          L2_instructions.push("\tmem "+root_val->to_string()+" 0 <- "+child_val->to_string()+"\n");
-          if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
-          return true;
+      cout << "in tile store\n";
+      if (root->operand_type == Instruction_type::STORE){
+        Item* root_val = root->value;
+        if ((root_val->type == Item_type::VARIABLE)&&(root->children.size()==1)){
+          if (root->children[0]->value){
+            Item* child_val = root->children[0]->value;
+            if (child_val->type == Item_type::VARIABLE){
+              L2_instructions.push("\tmem "+root_val->to_string()+" 0 <- "+child_val->to_string()+"\n");
+              if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
+              return true;
+            }
+          }
         }
       }
+
       //unmatched.push_back(root);
       return false;
     }
@@ -154,10 +183,13 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
-      Item* root_val = root->value;
-      if ((root_val->type == Item_type::LABEL)&&(root->operand_type == Instruction_type::GOTO)){
-        L2_instructions.push("\tgoto "+root_val->to_string()+"\n");
-        return true;
+      cout << "in tile goto\n";
+      if (root->operand_type == Instruction_type::GOTO){
+        Item* root_val = root->value;
+        if ((root_val->type == Item_type::LABEL)){
+          L2_instructions.push("\tgoto "+root_val->to_string()+"\n");
+          return true;
+        }
       }
       //unmatched.push_back(root);
       return false;
@@ -171,10 +203,13 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
-      Item* root_val = root->value;
-      if ((root_val->type == Item_type::LABEL)&&(root->operand_type == Instruction_type::LABELI)){
-        L2_instructions.push("\t"+root_val->to_string()+"\n");
-        return true;
+      cout << "in tile label\n";
+      if (root->operand_type == Instruction_type::LABELI){
+        Item* root_val = root->value;
+        if ((root_val->type == Item_type::LABEL)){
+          L2_instructions.push("\t"+root_val->to_string()+"\n");
+          return true;
+        }
       }
       //unmatched.push_back(root);
       return false;
@@ -188,15 +223,21 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
-      Item* root_val = root->value;
-      if ((root_val->type == Item_type::VARIABLE)&&(root->operand_type == Instruction_type::JUMP)&&(root->children.size()==2)){
-        Item* l_val = root->children[0]->value;
-        // 0 is false, 1 is true
-        if (l_val->type == Item_type::LABEL){
-          L2_instructions.push("\tcjump "+root_val->to_string()+" = 1 "+l_val->to_string()+"\n");
-          return true;
+      cout << "in tile jump\n";
+      if (root->operand_type == Instruction_type::JUMP){
+        Item* root_val = root->value;
+        if ((root_val->type == Item_type::VARIABLE)&&(root->children.size()==1)){
+          if (root->children[0]->value){
+            Item* l_val = root->children[0]->value;
+            // 0 is false, 1 is true
+            if (l_val->type == Item_type::LABEL){
+              L2_instructions.push("\tcjump "+root_val->to_string()+" = 1 "+l_val->to_string()+"\n");
+              return true;
+            }
+          }
         }
       }
+
       //unmatched.push_back(root);
       return false;
     }
@@ -209,6 +250,7 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
+      cout << "in tile ret void\n";
       if (root->operand_type == Instruction_type::RETVOID){
         L2_instructions.push("\treturn\n");
         return true;
@@ -225,10 +267,10 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
-      Item* root_val = root->value;
+      cout << "in tile ret\n";
       if (root->operand_type == Instruction_type::RET){
         L2_instructions.push("\treturn\n");
-        L2_instructions.push("\trax <- "+root_val->to_string()+"\n");
+        L2_instructions.push("\trax <- "+root->value->to_string()+"\n");
         return true;
       }
       //unmatched.push_back(root);
@@ -244,6 +286,7 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
+      cout << "in tile call\n";
       bool is_call = root->operand_type == Instruction_type::CALL;
       if (is_call) {
         L2_instructions.push("\t"+longest_label_name+std::to_string(label_count)+"\n");
@@ -252,10 +295,10 @@ cout <<"In default"<<endl;
           Node* child = root->children[i];
           if (i >= argument_registers.size()) {
             int stack_loc = -16 - 8 * (i - argument_registers.size());
-            L2_instructions.push("\tmem rsp " + to_string(stack_loc) + " <- " + child->value->to_string());
+            L2_instructions.push("\tmem rsp " + to_string(stack_loc) + " <- " + child->value->to_string() + "\n");
           } else {
             string arg_register = argument_registers[i];
-            L2_instructions.push("\t" + argument_registers[i] + " <- " + child->value->to_string());
+            L2_instructions.push("\t" + argument_registers[i] + " <- " + child->value->to_string() + "\n");
           }
           if (!child->children.empty()) {
             unmatched.push_back(child);
@@ -278,6 +321,7 @@ cout <<"In default"<<endl;
     }
 
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
+      cout << "in tile call store\n";
       bool is_call_store = root->operand_type == Instruction_type::CALLSTORE;
       if (is_call_store) {
         L2_instructions.push("\t" + root->value->to_string() + " <- rax");

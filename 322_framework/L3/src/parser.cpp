@@ -85,6 +85,12 @@ namespace L3 {
       >
     >{};
 
+  struct var:
+    pegtl::seq<
+      pegtl::one< '%' >,
+      name
+    > { };
+
   struct Label_rule:
     label {};
 
@@ -92,10 +98,7 @@ namespace L3 {
     number {};
 
   struct Var_rule:
-    pegtl::seq<
-      pegtl::one< '%' >,
-      name
-    > { };
+    var {};
 
   struct Function_name_rule:
     label {};
@@ -103,14 +106,14 @@ namespace L3 {
   struct Vars_rule:
     pegtl::seq<
       pegtl::star<
-        name,
+        var,
         seps
       >,
       pegtl::star<
         seps,
         pegtl::one<','>,
         seps,
-        name
+        var
       >
     > {};
 
@@ -166,8 +169,8 @@ namespace L3 {
 
   struct Args_t_rule:
     pegtl::sor<
-      Var_rule,
-      Number_rule,
+      var,
+      number,
       seps
     > {};
 
@@ -208,6 +211,8 @@ namespace L3 {
   struct Instruction_cmp_rule:
     pegtl::seq<
       Var_rule,
+      seps,
+      pegtl::string<'<','-'>,
       seps,
       T_rule,
       seps,
@@ -432,20 +437,26 @@ namespace L3 {
   template<> struct action < Vars_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+      // cout << "in parser vars rule\noriginal vars string: " << in.string() << "with length " << in.string().length() << "\n";
       std::string vars_str = in.string();
       vars_str.erase(std::remove_if(vars_str.begin(), vars_str.end(),
                      [](char c){
                        return std::isspace(static_cast<unsigned char>(c));
                      }), vars_str.end());
-      Function* f = p.functions.back();
-      size_t index = 0;
-      while ((index = vars_str.find(',')) != std::string::npos) {
-        Variable* v = new Variable(vars_str.substr(0, index));
+      // cout << "after removing spaces: " << vars_str << "with length " << vars_str.length() <<"\n";
+      if (vars_str.length() > 0){
+        Function* f = p.functions.back();
+        size_t index = 0;
+        while ((index = vars_str.find(',')) != std::string::npos) {
+          Variable* v = new Variable(vars_str.substr(0, index));
+          cout << "created var with name: " << v->name << "\n";
+          f->arguments.push_back(v);
+          vars_str.erase(0, index+1);
+        }
+        Variable* v = new Variable(vars_str);
+        cout << "created var with name: " << v->name << "\n";
         f->arguments.push_back(v);
-        vars_str.erase(0, index+1);
       }
-      Variable* v = new Variable(vars_str);
-      f->arguments.push_back(v);
     }
   };
 

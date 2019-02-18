@@ -77,27 +77,34 @@ namespace L3{
     return tiles;
   }
 
-  stack<string> generate_l2_instructions(vector<Node*> trees, std::string longest_label_name, int64_t &label_count) {
+  stack<string> generate_l2_instructions(Node* tree, std::string longest_label_name, int64_t &label_count) {
     stack<string> L2_instructions;
-    if (trees.empty()) {
-      return L2_instructions;
+
+    cout  << "initializing tiles\n";
+    vector<Tile*> tiles = generate_tiles();
+    if (tree->value){
+      cout << "Generating instructions for node "<< tree->value->to_string()<< " with operand " << tree->operand_type << endl;
+    } else {
+      cout << "Generating instructions for node with no root value with operand " << tree->operand_type << endl;
     }
 
-    vector<Tile*> tiles = generate_tiles();
-    for (Node* tree : trees) {
-cout << "Generating instructions for node "<< tree->value->to_string()<< " with operand " << tree->operand_type<<endl;
-      stack<string> generated_instructions;
-      vector<Node*> unmatched;
+    stack<string> generated_instructions;
+    vector<Node*> unmatched;
 
-      for (Tile* tile : tiles) {
-        if (tile->match(tree, unmatched, generated_instructions, longest_label_name, label_count)) {
-	      append(L2_instructions, generated_instructions);
-          stack<string> child_instructions = generate_l2_instructions(unmatched, longest_label_name, label_count);
-          break;
+    for (Tile* tile : tiles) {
+      if (tile->match(tree, unmatched, generated_instructions, longest_label_name, label_count)) {
+        cout << "matched!\ngenerated instructions size: " << generated_instructions.size() << "\n";
+
+        append(L2_instructions, generated_instructions);
+        for (Node* unmatch : unmatched){
+          stack<string> child_instructions = generate_l2_instructions(unmatch, longest_label_name, label_count);
+          append(L2_instructions, child_instructions);
         }
+        break;
       }
     }
-	print_stack(L2_instructions);
+
+	  print_stack(L2_instructions);
     return L2_instructions;
   }
 }
