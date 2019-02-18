@@ -34,7 +34,7 @@ namespace L3{
   Node* generate_node(Item* i, unordered_map<string, string> label_map) {
     Node *t = new Node();
     if (Label* label = dynamic_cast<Label*>(i)){
-//      label->name = label_map[label->name];
+     label->name = label_map[label->name];
       t->value = label;
     } else {
       t->value = i;
@@ -65,6 +65,13 @@ namespace L3{
       t = generate_node(i_cast->dest, label_map);
       t->operand_type = i_cast->type;
       t->op_name = i_cast->op;
+      if (auto v1 = dynamic_cast<Variable*>(i_cast->t1)){
+        if (auto v2 = dynamic_cast<Variable*>(i_cast->t2)){
+          string temp = v1->name;
+          v1->name = v2->name;
+          v2->name = temp;
+        }
+      }
       add_child(t, i_cast->t1, leaf_map, label_map);
       add_child(t, i_cast->t2, leaf_map, label_map);
     } else if (auto i_cast = dynamic_cast<Instruction_cmp*>(i)) {
@@ -153,6 +160,9 @@ namespace L3{
 	  cout << "Pre merging " << trees.size() << " trees" << endl;
 
     for (int i=0; i<trees.size(); i++) {
+      if (trees[i]->operand_type==Instruction_type::RETVOID||trees[i]->operand_type==Instruction_type::RET||trees[i]->operand_type==Instruction_type::CALL||trees[i]->operand_type==Instruction_type::CALLSTORE){
+        continue;
+      }
       if (trees[i]->value->type == Item_type::VARIABLE) {
         string var_name = trees[i]->value->to_string();
         for (int j=i+1; j<trees.size(); j++) {
@@ -161,7 +171,7 @@ namespace L3{
           }
           vector<string> out_set = out_sets[j];
           vector<string> in_set = in_sets[j];
-          if (L3::contains(out_set, var_name)) {
+          if (L3::contains(in_set, var_name)) {
             break;
           }
           if (is_leaf(trees[j], var_name)) {

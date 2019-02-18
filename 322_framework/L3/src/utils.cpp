@@ -31,8 +31,14 @@ namespace L3{
     std::unordered_map<std::string, std::string> label_map;
     for (Label* label : f->labels){
       std::string label_name = label->name;
+      if (find(begin(p.function_names), end(p.function_names), label_name) != end(p.function_names)){
+        if (label_map.count(label_name) == 0){
+          label_map[label_name] = label_name;
+        }
+      }
+
       if (label_map.count(label_name) == 0){
-        label_map[label_name] = p.longest_label_name + std::to_string(p.label_count);
+        label_map[label_name] = p.longest_label_name + std::to_string(p.label_count) + "_" + label_name.substr(1);
         p.label_count++;
       }
     }

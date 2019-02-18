@@ -65,8 +65,8 @@ namespace L3 {
             if ((t1_val->type == Item_type::VARIABLE||t1_val->type == Item_type::NUMBER)
                 &&(t2_val->type == Item_type::VARIABLE||t2_val->type == Item_type::NUMBER)){
 
+              L2_instructions.push("\t"+root_val->to_string()+" "+root->op_name+"= "+t2_val->to_string()+"\n");
               L2_instructions.push("\t"+root_val->to_string()+" <- "+t1_val->to_string()+"\n");
-              L2_instructions.push("\t"+t1_val->to_string()+" "+root->op_name+"= "+t2_val->to_string()+"\n");
 
               if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
               if (!root->children[1]->children.empty()) unmatched.push_back(root->children[1]);
@@ -162,11 +162,9 @@ namespace L3 {
         if ((root_val->type == Item_type::VARIABLE)&&(root->children.size()==1)){
           if (root->children[0]->value){
             Item* child_val = root->children[0]->value;
-            if (child_val->type == Item_type::VARIABLE){
-              L2_instructions.push("\tmem "+root_val->to_string()+" 0 <- "+child_val->to_string()+"\n");
-              if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
-              return true;
-            }
+            L2_instructions.push("\tmem "+root_val->to_string()+" 0 <- "+child_val->to_string()+"\n");
+            if (!root->children[0]->children.empty()) unmatched.push_back(root->children[0]);
+            return true;
           }
         }
       }
@@ -290,11 +288,11 @@ namespace L3 {
       bool is_call = root->operand_type == Instruction_type::CALL;
       if (is_call) {
         if (root->value->type != L3::Item_type::SYSCALL){
-          L2_instructions.push("\t"+longest_label_name+std::to_string(label_count)+"\n");
+          L2_instructions.push("\t"+longest_label_name+std::to_string(label_count)+"_"+root->value->to_string().substr(1)+"\n");
         }
         L2_instructions.push("\tcall " + root->value->to_string() + " " + to_string(root->children.size()) + "\n");
         if (root->value->type != L3::Item_type::SYSCALL){
-          L2_instructions.push("\tmem rsp -8 <- "+longest_label_name+std::to_string(label_count)+"\n");
+          L2_instructions.push("\tmem rsp -8 <- "+longest_label_name+std::to_string(label_count)+"_"+root->value->to_string().substr(1)+"\n");
         }
 
         for (int i=0; i<root->children.size(); i++) {
@@ -332,11 +330,11 @@ namespace L3 {
       if (is_call_store && root->children.size() > 0) {
         L2_instructions.push("\t" + root->value->to_string() + " <- rax\n");
         if (root->children[0]->value->type != L3::Item_type::SYSCALL){
-          L2_instructions.push("\t"+longest_label_name+std::to_string(label_count)+"\n");
+          L2_instructions.push("\t"+longest_label_name+std::to_string(label_count)+"_"+root->value->to_string().substr(1)+"\n");
         }
         L2_instructions.push("\tcall " + root->children[0]->value->to_string() + " " + to_string(root->children.size()-1) + "\n");
         if (root->children[0]->value->type != L3::Item_type::SYSCALL){
-          L2_instructions.push("\tmem rsp -8 <- "+longest_label_name+std::to_string(label_count)+"\n");
+          L2_instructions.push("\tmem rsp -8 <- "+longest_label_name+std::to_string(label_count)+"_"+root->value->to_string().substr(1)+"\n");
         }
 
         for (int i=1; i<root->children.size(); i++) {
