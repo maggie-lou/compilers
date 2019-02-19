@@ -184,7 +184,7 @@ namespace L3 {
       // cout << "in tile goto\n";
       if (root->operand_type == Instruction_type::GOTO){
         Item* root_val = root->value;
-        if ((root_val->type == Item_type::LABEL)){
+        if (root_val->type == Item_type::LABEL){
           L2_instructions.push("\tgoto "+root_val->to_string()+"\n");
           return true;
         }
