@@ -30,20 +30,6 @@ namespace L3{
 
   unordered_map<string, string> create_label_map(Program &p, Function* f){
     unordered_map<string, string> label_map;
-    for (string name : p.function_names){
-      label_map[name] = name;
-    }
-
-    for (Instruction* i : f->instructions){
-      if (Instruction_label* label_i = dynamic_cast<Instruction_label*>(i)){
-        string label_i_name = label_i->label->name;
-        if (p.function_names.count(label_i_name)){
-          label_map[label_i_name] = p.longest_label_name + std::to_string(p.label_count) + "_" + label_i_name.substr(1);
-          p.label_count++;
-        }
-      }
-    }
-
     for (Label* label : f->labels){
       string label_name = label->name;
       if (label_map.count(label_name) == 0){

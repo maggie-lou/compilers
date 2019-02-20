@@ -430,7 +430,6 @@ namespace L3 {
       if (p.longest_label_name.length() < in.string().length()){
         p.longest_label_name = in.string();
       }
-      p.function_names.insert(in.string());
       p.functions.push_back(f);
     }
   };

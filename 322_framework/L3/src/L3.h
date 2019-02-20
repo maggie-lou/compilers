@@ -349,7 +349,6 @@ namespace L3 {
   struct Program{
     std::vector<Function*> functions;
     std::string longest_label_name = "";
-    std::set<std::string> function_names;
     int64_t label_count = 0;
   };
 

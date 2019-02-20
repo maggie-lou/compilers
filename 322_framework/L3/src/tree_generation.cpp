@@ -31,19 +31,21 @@ using namespace std;
 using namespace L3;
 
 namespace L3{
-  Node* generate_node(Item* i, unordered_map<string, string> label_map) {
+  Node* generate_node(Item* i, unordered_map<string, string> label_map, bool translate) {
     Node *t = new Node();
-    if (Label* label = dynamic_cast<Label*>(i)){
-      label->name = label_map[label->name];
-      t->value = label;
-    } else {
-      t->value = i;
+    if (translate){
+      if (Label* label = dynamic_cast<Label*>(i)){
+        label->name = label_map[label->name];
+        t->value = label;
+        return t;
+      }
     }
+    t->value = i;
     return t;
   }
 
-  void add_child(Node* t, Item* child, map<string, vector<Node*>> &leaf_map, unordered_map<string, string> label_map) {
-    t->children.push_back(generate_node(child, label_map));
+  void add_child(Node* t, Item* child, map<string, vector<Node*>> &leaf_map, unordered_map<string, string> label_map, bool translate) {
+    t->children.push_back(generate_node(child, label_map, translate));
     if (auto variable = dynamic_cast<Variable*>(child)) {
       vector<Node*> trees_containing_leaf;
       if (leaf_map.count(variable->name)) {
@@ -58,11 +60,11 @@ namespace L3{
     Node* t;
 
     if (auto i_cast = dynamic_cast<Instruction_assign*>(i)) {
-      t = generate_node(i_cast->dest, label_map);
+      t = generate_node(i_cast->dest, label_map, false);
       t->operand_type = i_cast->type;
-      add_child(t, i_cast->source, leaf_map, label_map);
+      add_child(t, i_cast->source, leaf_map, label_map, false);
     } else if (auto i_cast = dynamic_cast<Instruction_op*>(i)) {
-      t = generate_node(i_cast->dest, label_map);
+      t = generate_node(i_cast->dest, label_map, false);
       t->operand_type = i_cast->type;
       t->op_name = i_cast->op;
       if (auto dest1 = dynamic_cast<Variable*>(i_cast->dest)){
@@ -75,56 +77,51 @@ namespace L3{
         }
       }
 
-      add_child(t, i_cast->t1, leaf_map, label_map);
-      add_child(t, i_cast->t2, leaf_map, label_map);
+      add_child(t, i_cast->t1, leaf_map, label_map, false);
+      add_child(t, i_cast->t2, leaf_map, label_map, false);
     } else if (auto i_cast = dynamic_cast<Instruction_cmp*>(i)) {
-      t = generate_node(i_cast->dest, label_map);
+      t = generate_node(i_cast->dest, label_map, false);
       t->operand_type = i_cast->type;
       t->op_name = i_cast->cmp;
-      add_child(t, i_cast->t1, leaf_map, label_map);
-      add_child(t, i_cast->t2, leaf_map, label_map);
+      add_child(t, i_cast->t1, leaf_map, label_map, false);
+      add_child(t, i_cast->t2, leaf_map, label_map, false);
     } else if (auto i_cast = dynamic_cast<Instruction_load*>(i)) {
-      t = generate_node(i_cast->dest, label_map);
+      t = generate_node(i_cast->dest, label_map, false);
       t->operand_type = i_cast->type;
-      add_child(t, i_cast->source, leaf_map, label_map);
+      add_child(t, i_cast->source, leaf_map, label_map, false);
     } else if (auto i_cast = dynamic_cast<Instruction_store*>(i)) {
-      t = generate_node(i_cast->dest, label_map);
+      t = generate_node(i_cast->dest, label_map, false);
       t->operand_type = i_cast->type;
-      add_child(t, i_cast->source, leaf_map, label_map);
+      add_child(t, i_cast->source, leaf_map, label_map, false);
     } else if (auto i_cast = dynamic_cast<Instruction_goto*>(i)) {
-      t = generate_node(i_cast->label, label_map);
+      t = generate_node(i_cast->label, label_map, true);
       t->operand_type = i_cast->type;
     } else if (auto i_cast = dynamic_cast<Instruction_label*>(i)) {
-      // string label_i_name = i_cast->label->name;
-      // if (function_names.count(label_i_name)){
-      //   label_map[label_i_name] = longest_label_name + std::to_string(label_count) + "_" + label_i_name.substr(1);
-      //   label_count++;
-      // }
-      t = generate_node(i_cast->label, label_map);
+      t = generate_node(i_cast->label, label_map, true);
       t->operand_type = i_cast->type;
     } else if (auto i_cast = dynamic_cast<Instruction_jump*>(i)) {
-      t = generate_node(i_cast->var, label_map);
+      t = generate_node(i_cast->var, label_map, true);
       t->operand_type = i_cast->type;
-      add_child(t, i_cast->label, leaf_map, label_map);
+      add_child(t, i_cast->label, leaf_map, label_map, true);
     } else if (auto i_cast = dynamic_cast<Instruction_ret_void*>(i)) {
       t = new Node();
       t->operand_type = i_cast->type;
     } else if (auto i_cast = dynamic_cast<Instruction_ret*>(i)) {
-      t = generate_node(i_cast->t, label_map);
+      t = generate_node(i_cast->t, label_map, false);
       t->operand_type = i_cast->type;
     } else if (auto i_cast = dynamic_cast<Instruction_call*>(i)) {
-      t = generate_node(i_cast->callee, label_map);
+      t = generate_node(i_cast->callee, label_map, false);
       t->operand_type = i_cast->type;
       for (Item* arg: i_cast->args) {
-        add_child(t, arg, leaf_map, label_map);
+        add_child(t, arg, leaf_map, label_map, false);
       }
     } else if (auto i_cast = dynamic_cast<Instruction_call_store*>(i)) {
-      t = generate_node(i_cast->dest, label_map);
+      t = generate_node(i_cast->dest, label_map, false);
       t->operand_type = i_cast->type;
 
-      add_child(t, i_cast->callee, leaf_map, label_map);
+      add_child(t, i_cast->callee, leaf_map, label_map, false);
       for (Item* arg: i_cast->args) {
-        add_child(t, arg, leaf_map, label_map);
+        add_child(t, arg, leaf_map, label_map, false);
       }
     }
 
