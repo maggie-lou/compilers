@@ -25,16 +25,16 @@
 #include <iterator>
 #include <unordered_map>
 #include <utils.h>
+#include <set>
 
 using namespace std;
 using namespace L3;
 
 namespace L3{
-
   Node* generate_node(Item* i, unordered_map<string, string> label_map) {
     Node *t = new Node();
     if (Label* label = dynamic_cast<Label*>(i)){
-     label->name = label_map[label->name];
+      label->name = label_map[label->name];
       t->value = label;
     } else {
       t->value = i;
@@ -54,7 +54,7 @@ namespace L3{
     }
   }
 
-  Node* generate_tree(Instruction* i, map<string, vector<Node*>> &leaf_map, unordered_map<string, string> label_map) {
+  Node* generate_tree(Instruction* i, map<string, vector<Node*>> &leaf_map, unordered_map<string, string> &label_map) {
     Node* t;
 
     if (auto i_cast = dynamic_cast<Instruction_assign*>(i)) {
@@ -95,6 +95,11 @@ namespace L3{
       t = generate_node(i_cast->label, label_map);
       t->operand_type = i_cast->type;
     } else if (auto i_cast = dynamic_cast<Instruction_label*>(i)) {
+      // string label_i_name = i_cast->label->name;
+      // if (function_names.count(label_i_name)){
+      //   label_map[label_i_name] = longest_label_name + std::to_string(label_count) + "_" + label_i_name.substr(1);
+      //   label_count++;
+      // }
       t = generate_node(i_cast->label, label_map);
       t->operand_type = i_cast->type;
     } else if (auto i_cast = dynamic_cast<Instruction_jump*>(i)) {
