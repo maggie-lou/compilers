@@ -77,7 +77,6 @@ namespace L3{
   }
 
   void get_in_out_sets(Function* f, vector<vector<string>> &in, vector<vector<string>> &out){
-    //cout <<"Generating in out sets "<<endl;
     auto instructions = f->instructions;
     vector<vector<string>> gen(instructions.size());
     bool changed = false;
@@ -85,9 +84,7 @@ namespace L3{
 
     for (int j=0; j<instructions.size(); j++) {
       auto current_i = instructions[j];
-     // cout << "About to generate read" << endl;
       auto temp_gen = current_i->generate_read();
-      //cout << "About to generate defined" << endl;
       auto temp_kill = current_i->generate_defined();
       gen[j] = temp_gen;
       kill[j] = temp_kill;

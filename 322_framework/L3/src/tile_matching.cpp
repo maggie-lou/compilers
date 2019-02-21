@@ -1,27 +1,3 @@
-// Tile_node
-// type
-// operand
-// children
-// associated instruction
-// cost
-// size
-// other constraints
-
-// sort tiles by size & cost
-
-// tile & tree matching
-// recursion
-// helper function that takes in two Nodes and compare type & operand
-// call the helper function on children
-
-// maximal munch
-// start at root
-// start from the largest tile and try to match
-// try to match subtrees
-//
-// vector<Instruction*> maximal_munching(Tree_node* n){
-//
-// }
 #include <utils.h>
 #include <vector>
 #include <iostream>
@@ -80,31 +56,17 @@ namespace L3{
   stack<string> generate_l2_instructions(Node* tree, std::string longest_label_name, int64_t &label_count) {
     stack<string> L2_instructions;
 
-    // cout  << "initializing tiles\n";
     vector<Tile*> tiles = generate_tiles();
-    // if (tree->value){
-    //   cout << "\nGenerating instructions for node "<< tree->value->to_string()<< " with operand " << tree->operand_type << endl;
-    // } else {
-    //   cout << "Generating instructions for node with no root value with operand " << tree->operand_type << endl;
-    // }
 
     stack<string> generated_instructions;
     vector<Node*> unmatched;
 
     for (Tile* tile : tiles) {
       if (tile->match(tree, unmatched, generated_instructions, longest_label_name, label_count)) {
-        // cout << "matched!\ngenerated instructions size: " << generated_instructions.size() << "\n";
-        // print_stack(generated_instructions);
-        // cout << "appending to l2  instructions\n";
         append(L2_instructions, generated_instructions);
-        // cout << "appended! now l2 instructions size: " << L2_instructions.size() << "\n";
         for (Node* unmatch : unmatched){
           stack<string> child_instructions = generate_l2_instructions(unmatch, longest_label_name, label_count);
-          // cout << "generated child instructions size: " << child_instructions.size() << "\n";
-          // print_stack(child_instructions);
-          // cout << "appending to l2 instructions\n";
           append(L2_instructions, child_instructions);
-          // cout << "appended! now l2 instructions size: " << L2_instructions.size() << "\n";
         }
         break;
       }
