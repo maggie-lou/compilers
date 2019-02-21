@@ -1,21 +1,3 @@
-// merging trees
-// make a list of all Roots
-// go through each tree to see if one of the Roots shows up as a child
-// if so, do some checks
-// - liveness analysis, only merge if Root will be dead
-// - ...
-// if safe, merge the two trees
-
-//
-// vector<Node*> merge_tree(vector<Node*>){
-//   // go through each tree and look at the Root
-//   // check the map, and merge trees
-//   // delete merged tree
-// }
-//
-// bool check_liveness(Variable v, vector<string> out_set){
-//
-// }
 #include <L3.h>
 #include <tree_generation.h>
 
@@ -162,8 +144,6 @@ namespace L3{
       trees.push_back(tree);
     }
 
-	  // cout << "Pre merging " << trees.size() << " trees" << endl;
-
     for (int i=0; i<trees.size(); i++) {
       if (trees[i]->operand_type==Instruction_type::RETVOID||trees[i]->operand_type==Instruction_type::RET||trees[i]->operand_type==Instruction_type::CALL||trees[i]->operand_type==Instruction_type::CALLSTORE){
         continue;
@@ -171,14 +151,12 @@ namespace L3{
       vector<string> in_set_i = in_sets[i];
       if (trees[i]->value->type == Item_type::VARIABLE) {
         string var_name = trees[i]->value->to_string();
-        // cout << "\ni var name: " << var_name << "\n";
         for (int j=i+1; j<trees.size(); j++) {
 
           vector<string> out_set = out_sets[j];
           vector<string> in_set = in_sets[j];
           if (L3::contains(in_set, var_name)) {
             //  don't merge if root is used by other instruction
-            // cout << "not merging" << var_name << "for " << to_string(j) << "\n";
             break;
           }
 
@@ -211,15 +189,9 @@ namespace L3{
   vector<Node*> generate_and_merge_trees_all(vector<vector<Instruction*>> contexts, vector<vector<string>> in, vector<vector<string>> out, unordered_map<string, string> label_map) {
     vector<Node*> all_trees;
     for (auto context : contexts){
-      // cout << "About to generate trees for a context" << endl;
       auto trees = generate_and_merge_trees(context, in, out, label_map);
-      // cout << "trees size " << trees.size() << endl;
       all_trees.insert(all_trees.end(), trees.begin(), trees.end());
     }
-    // cout << "all trees size " << all_trees.size() << endl;
-    // for (auto tree : all_trees){
-    //   L3::print_tree(tree, 0);
-    // }
     return all_trees;
   }
 
