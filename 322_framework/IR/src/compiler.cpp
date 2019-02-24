@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <iostream>
 
-// #include <parser.h>
+ #include <parser.h>
 #include <code_generator.h>
 
 using namespace std;

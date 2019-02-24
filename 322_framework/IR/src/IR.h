@@ -12,7 +12,8 @@ using namespace std;
 namespace IR {
   enum Item_type {VARIABLE, NUMBER, LABEL, SYSCALL};
   enum Instruction_type {ASSIGN, OP, LOAD, STORE, LENGTH, CALL, CALLSTORE,
-                         ARRAY, LABEL, GOTO, JUMP, RETVOID, RET};
+                         ARRAYINIT, LABELI, GOTO, JUMP, RETVOID, RET};
+  enum Variable_type {VOID, INT64, ARRAY, CODE};
 
   struct Item {
     IR::Item_type type;
@@ -24,13 +25,20 @@ namespace IR {
 
   struct Variable : Item {
     string name;
+    IR::Variable_type var_type;
 
     Variable(): name() {
       type = IR::Item_type::VARIABLE;
     }
-    Variable(std::string x): name(x) {
+
+    Variable(std::string n): name(n) {
       type = IR::Item_type::VARIABLE;
     }
+
+    Variable(std::string n, IR::Variable_type t): name(n), var_type(t) {
+      type = IR::Item_type::VARIABLE;
+    }
+
     virtual string to_string(){
       return name;
     }
@@ -47,7 +55,7 @@ namespace IR {
     }
 
     virtual string to_string(){
-      return to_string(n);
+      return ::to_string(n);
     }
   };
 
@@ -103,31 +111,31 @@ namespace IR {
     // var <- var([t])+
     Variable* dest;
     Variable* source;
-    vector<int64_t> indices;
+    vector<Item*> indices;
     Instruction_load(){
       type = IR::Instruction_type::LOAD;
     }
-  }
+  };
 
   struct Instruction_store : Instruction {
     // var([t])+ <- s
     Variable* dest;
     Item* source;
-    vector<int64_t> indices;
+    vector<Item*> indices;
     Instruction_store(){
       type = IR::Instruction_type::STORE;
     }
-  }
+  };
 
-  struct Intruction_length : Instruction {
+  struct Instruction_length : Instruction {
     // var <- length var t
     Variable* dest;
     Variable* source;
     Item* dimension;
-    Intruction_length(){
+    Instruction_length(){
       type = IR::Instruction_type::LENGTH;
     }
-  }
+  };
 
   struct Instruction_call : Instruction {
     // call callee (args?)
@@ -153,7 +161,7 @@ namespace IR {
     Variable* dest;
     std::vector<Item*> args;
     Instruction_array(){
-      type = IR::Instruction_type::ARRAY;
+      type = IR::Instruction_type::ARRAYINIT;
     }
   };
 
@@ -184,8 +192,8 @@ namespace IR {
   };
 
   struct Instruction_jump : Instruction  {
-    // br var label label
-    Variable* var;
+    // br t label label
+    Item* check;
     Label* label1;
     Label* label2;
     Instruction_jump(){
@@ -210,6 +218,7 @@ namespace IR {
 
   struct Function {
     string name;
+    IR::Variable_type type;
     vector<Variable*> arguments;
     vector<Instruction*> instructions;
     string arg_to_string(){
