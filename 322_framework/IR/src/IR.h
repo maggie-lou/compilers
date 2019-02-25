@@ -69,7 +69,6 @@ namespace IR {
   };
 
   struct Instruction_definition : Instruction {
-    // type var
     IR::Variable_type type;
     Variable* var;
   };
@@ -180,13 +179,17 @@ namespace IR {
     vector<Variable*> arguments;
     vector<Instruction*> instructions;
     string arg_to_string(){
+      // cout << "in arg to string\n";
       if (arguments.empty()){
+        // cout << "empty\n";
         return "";
       }
+      // cout << "not empty\n";
       string ans;
       for (Variable* arg : arguments){
         ans = ans + ", " + arg->name;
       }
+      // cout << "ans: " << ans << "\n";
       return ans.substr(2);
     }
   };
