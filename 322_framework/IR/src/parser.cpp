@@ -670,6 +670,7 @@ namespace IR {
   template<> struct action < Instruction_array_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+      cout << "parsing new array instruction\n";
       auto i = new Instruction_array();
 
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.back())) {

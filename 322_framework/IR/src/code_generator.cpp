@@ -51,11 +51,13 @@ namespace IR{
      */
     ofstream outputFile;
     outputFile.open("prog.L3");
+    cout << "generating code\n";
 
     /*
      * Generate target code
      */
     for (auto f : p.functions){
+      cout << "function name: "  << f->name << "\n";
 
       outputFile << "define " << f->name << "(" << f->arg_to_string() << "){\n";
 
@@ -98,6 +100,7 @@ namespace IR{
           outputFile << "\t" << call_store->dest->name << " <- call " << call->callee->to_string() << "(" << call->arg_to_string() << ")\n";
 
         } else if (Instruction_array* new_array = dynamic_cast<Instruction_array*>(i)) {
+          cout << "generating code for creating array\n";
           int64_t size = new_array->args.size();
           string dest = new_array->dest->to_string();
           string v0 = p.longest_var + "_" + to_string(p.var_count);
