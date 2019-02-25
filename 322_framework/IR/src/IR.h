@@ -21,6 +21,7 @@ namespace IR {
 
   struct Variable : Item {
     string name;
+    IR::Variable_type var_type;
 
     Variable(): name() {
     }

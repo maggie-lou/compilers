@@ -57,7 +57,7 @@ namespace IR{
      */
     for (auto f : p.functions){
 
-      outputFile << 'define ' << f->name << "(" << f->arg_to_string() << "){\n";
+      outputFile << "define " << f->name << "(" << f->arg_to_string() << "){\n";
 
       auto instructions = f->instructions;
       for (auto i : instructions){
@@ -65,17 +65,17 @@ namespace IR{
           outputFile << "\t" << assign->dest->to_string() << " <- " << assign->source->to_string() << "\n";
 
         } else if (Instruction_op* op = dynamic_cast<Instruction_op*>(i)) {
-          outputFile << "\t" << assign->dest->to_string() << " <- " << assign->t1->to_string() << " " << op << " " << assign->t2->to_string() << "\n";
+          outputFile << "\t" << op->dest->to_string() << " <- " << op->t1->to_string() << " " << op->op << " " << op->t2->to_string() << "\n";
 
         } else if (Instruction_load* load = dynamic_cast<Instruction_load*>(i)) {
           string source = load->source->to_string();
-          int64_t size = load->indices->size();
+          int64_t size = load->indices.size();
           string addr = get_offset(p, size, source, outputFile, load->indices);
           outputFile << "\t" << load->dest->to_string() << " <- load " << addr << "\n";
 
         } else if (Instruction_store* store = dynamic_cast<Instruction_store*>(i)) {
           string dest = store->dest->to_string();
-          int64_t size = store->indices->size();
+          int64_t size = store->indices.size();
           string addr = get_offset(p, size, dest, outputFile, store->indices);
           outputFile << "\tstore " << addr << " <- " << store->source->to_string() << "\n";
 
@@ -86,7 +86,7 @@ namespace IR{
           p.var_count++;
           string v2 = p.longest_var + "_" + to_string(p.var_count);
           p.var_count++;
-          outputFile << "\t" << v0 << " <- " << to_string(length_i->dimension) << " * 8\n";
+          outputFile << "\t" << v0 << " <- " << length_i->dimension->to_string() << " * 8\n";
           outputFile << "\t" << v1 << " <- " << v0 << " + 16\n";
           outputFile << "\t" << v2 << " <- " << length_i->source->to_string() << " + " << v1 << "\n";
           outputFile << "\t" << length_i->dest->to_string() << " <- load " << v2 << "\n";
@@ -98,7 +98,7 @@ namespace IR{
           outputFile << "\t" << call_store->dest->name << " <- call " << call->callee->to_string() << "(" << call->arg_to_string() << ")\n";
 
         } else if (Instruction_array* new_array = dynamic_cast<Instruction_array*>(i)) {
-          int64_t size = new_array->args->size();
+          int64_t size = new_array->args.size();
           string dest = new_array->dest->to_string();
           string v0 = p.longest_var + "_" + to_string(p.var_count);
           p.var_count++;
