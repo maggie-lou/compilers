@@ -114,6 +114,9 @@ namespace IR {
     vector<Item*> args;
     Item* callee;
     string arg_to_string(){
+      if (args.empty()){
+        return "";
+      }
       string ans;
       for (Item* arg : args){
         ans = ans + ", " + arg->to_string();
@@ -128,6 +131,9 @@ namespace IR {
     Item* callee;
     Variable* dest;
     string arg_to_string(){
+      if (args.empty()){
+        return "";
+      }
       string ans;
       for (Item* arg : args){
         ans = ans + ", " + arg->to_string();
@@ -174,6 +180,9 @@ namespace IR {
     vector<Variable*> arguments;
     vector<Instruction*> instructions;
     string arg_to_string(){
+      if (arguments.empty()){
+        return "";
+      }
       string ans;
       for (Variable* arg : arguments){
         ans = ans + ", " + arg->name;
