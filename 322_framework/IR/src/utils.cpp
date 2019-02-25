@@ -25,4 +25,20 @@ namespace IR{
   bool contains(vector<string> v, string s) {
     return find(v.begin(), v.end(), s) != v.end();
   }
+
+  IR::Variable_type str_to_variable_type(string s) {
+    IR::Variable_type var_type;
+    if (s == "int64") {
+      var_type = IR::Variable_type::INT64;
+    } else if (s == "code") {
+      var_type = IR::Variable_type::CODE;
+    }else if (s == "tuple" || s.find("int64[]") != std::string::npos) {
+      var_type = IR::Variable_type::ARRAY;
+    } else if (s == "void") {
+      var_type = IR::Variable_type::VOID;
+    } else {
+      var_type = IR::Variable_type::INVALID;
+    }
+    return var_type;
+  }
 }

@@ -33,6 +33,7 @@ namespace IR {
    */
   std::vector<Item*> parsed_items;
   std::vector<std::string> parsed_operations;
+  std::vector<IR::Variable_type> parsed_variable_types;
   std::vector<std::vector<Item*>> parsed_args;
 
   struct comment:
@@ -200,6 +201,12 @@ namespace IR {
       pegtl::string<'v','o', 'i', 'd'>
     > {};
 
+  struct Instruction_definition_rule:
+    pegtl::seq<
+      Type_rule,
+      Var_rule
+    > {};
+
   struct Instruction_assign_rule:
     pegtl::seq<
       Var_rule,
@@ -352,6 +359,7 @@ namespace IR {
 
   struct Instruction_rule:
     pegtl::sor<
+      pegtl::seq< pegtl::at<Instruction_definition_rule>, Instruction_definition_rule >,
       pegtl::seq< pegtl::at<Instruction_op_rule>, Instruction_op_rule >,
       pegtl::seq< pegtl::at<Instruction_assign_rule>, Instruction_assign_rule >,
       pegtl::seq< pegtl::at<Instruction_load_rule>, Instruction_load_rule >,
@@ -464,6 +472,14 @@ namespace IR {
     }
   };
 
+  template<> struct action < Type_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      IR::Variable_type type = IR::str_to_variable_type(in.string());
+      parsed_variable_types.push_back(type);
+    }
+  };
+
   template<> struct action < Callee_other_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
@@ -530,15 +546,7 @@ namespace IR {
             int space = var.find(" ");
             std::string type = var.substr(0, space);
             std::string var_name = var.substr(space+1);
-            IR::Variable_type var_type;
-
-            if (type == "int64") {
-              var_type = IR::Variable_type::INT64;
-            } else if (type == "code") {
-              var_type = IR::Variable_type::CODE;
-            }else if (type == "tuple" || type.find("int64[]") != std::string::npos) {
-              var_type = IR::Variable_type::ARRAY;
-            }
+            IR::Variable_type var_type = IR::str_to_variable_type(type);
 
             Variable* v = new Variable(var_name, var_type);
             f->arguments.push_back(v);
@@ -577,6 +585,20 @@ namespace IR {
       } else {
         parsed_args.push_back({});
       }
+    }
+  };
+
+  template<> struct action < Instruction_definition_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      auto i = new Instruction_definition();
+      if (Variable* v = dynamic_cast<Variable*>(parsed_items.back())) {
+        i->var = v;
+      }
+      i->type = parsed_variable_types.back();
+
+      Function* f = p.functions.back();
+      f->instructions.push_back(i);
     }
   };
 

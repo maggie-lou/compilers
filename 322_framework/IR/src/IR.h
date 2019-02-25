@@ -10,7 +10,7 @@
 using namespace std;
 
 namespace IR {
-  enum Variable_type {VOID, INT64, ARRAY, CODE};
+  enum Variable_type {VOID, INT64, ARRAY, CODE, INVALID};
 
   struct Item {
     virtual ~Item() = default;
@@ -21,6 +21,7 @@ namespace IR {
 
   struct Variable : Item {
     string name;
+    IR::Variable_type type;
 
     Variable(): name() {
     }
@@ -28,7 +29,7 @@ namespace IR {
     Variable(std::string n): name(n) {
     }
 
-    Variable(std::string n, IR::Variable_type t): name(n), var_type(t) {
+    Variable(std::string n, IR::Variable_type t): name(n), type(t) {
     }
 
     virtual string to_string(){
@@ -65,6 +66,12 @@ namespace IR {
 
   struct Instruction {
     virtual ~Instruction() = default;
+  };
+
+  struct Instruction_definition : Instruction {
+    // type var
+    IR::Variable_type type;
+    Variable* var;
   };
 
   struct Instruction_assign : Instruction {
