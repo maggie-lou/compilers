@@ -113,24 +113,23 @@ namespace IR{
           int64_t num_dimensions = new_array->dimensions.size();
           string arr_name = new_array->dest->to_string();
 
-          string linearized_len_var = generate_unique_var_name(p);
-
           // Generate code to calculate linearized length of array
+          string linearized_len_var = generate_unique_var_name(p);
+          outputFile << "\t" << linearized_len_var << " <- 1\n"; // Initialize var to 1 for accumulating product
+          for (Item* dim : new_array->dimensions){
+            string temp_dimension_var = generate_unique_var_name(p);
+
+            // Decode dimension
+            outputFile << "\t" << temp_dimension_var << " <- " << dim->to_string() <<  " >> 1\n";
+            // Generate total dimension product for array size
+            outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " * " << temp_dimension_var << "\n";
+          }
+
+          // Add memory for each dimension size
           if (new_array->is_tuple) {
-            string tuple_size = new_array->dimensions[0]->to_string() + " + 1";
-            outputFile << "\t" << linearized_len_var << " <- " << tuple_size << "\n";
-          } else {  // is array
-            outputFile << "\t" << linearized_len_var << " <- 1\n"; // Initialize var to 1
-            for (Item* dim : new_array->dimensions){
-              string temp_dimension_var = generate_unique_var_name(p);
-
-              // Decode dimension
-              outputFile << "\t" << temp_dimension_var << " <- " << dim->to_string() <<  " >> 1\n";
-              // Generate total dimension product for array size
-              outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " * " << temp_dimension_var << "\n";
-            }
-
-            // Add elements of memory for total # dimensions, each dimension size
+            outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " + " << to_string(num_dimensions) << "\n";
+          } else {
+            // Include additional memory for total # dimensions
             outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " + " << to_string(num_dimensions+1) << "\n";
           }
 
