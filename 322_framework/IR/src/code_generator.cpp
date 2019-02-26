@@ -49,6 +49,16 @@ namespace IR{
     return addr;
   }
 
+  string generate_unique_var_name(Program p) {
+    string name = p.longest_var + "_" + to_string(p.var_count);
+    p.var_count++;
+    return name;
+  }
+
+  int encode(int n) {
+    return (n << 1) + 1;
+  }
+
   void generate_code(Program p){
 
     /*
@@ -56,14 +66,11 @@ namespace IR{
      */
     ofstream outputFile;
     outputFile.open("prog.L3");
-    // cout << "generating code\n";
 
     /*
      * Generate target code
      */
     for (auto f : p.functions){
-      // cout << "function name: "  << f->name << "\n";
-
       outputFile << "define " << f->name << "(" << f->arg_to_string() << "){\n";
 
       auto instructions = f->instructions;
@@ -75,7 +82,6 @@ namespace IR{
           outputFile << "\t" << op->dest->to_string() << " <- " << op->t1->to_string() << " " << op->op << " " << op->t2->to_string() << "\n";
 
         } else if (Instruction_load* load = dynamic_cast<Instruction_load*>(i)) {
-          // cout << "generating code for load instruction\n";
           string source = load->source->to_string();
           string addr = get_offset(p, source, outputFile, load->indices);
           outputFile << "\t" << load->dest->to_string() << " <- load " << addr << "\n";
@@ -98,43 +104,56 @@ namespace IR{
           outputFile << "\t" << length_i->dest->to_string() << " <- load " << v2 << "\n";
 
         } else if (Instruction_call* call = dynamic_cast<Instruction_call*>(i)) {
-          // cout << "generating code for call instruction\n";
           outputFile << "\tcall " << call->callee->to_string() << "(" << call->arg_to_string() << ")\n";
 
         } else if (Instruction_call_store* call_store = dynamic_cast<Instruction_call_store*>(i)) {
-          // cout << "generating code for call store instruction\n";
           outputFile << "\t" << call_store->dest->name << " <- call " << call_store->callee->to_string() << "(" << call_store->arg_to_string() << ")\n";
 
         } else if (Instruction_array* new_array = dynamic_cast<Instruction_array*>(i)) {
-          // cout << "generating code for creating array\n";
-          int64_t size = new_array->args.size();
-          string dest = new_array->dest->to_string();
-          string v0 = p.longest_var + "_" + to_string(p.var_count);
-          p.var_count++;
-          outputFile << "\t" << v0 << " <- 1\n";
-          for (Item* arg : new_array->args){
-            string temp = p.longest_var + "_" + to_string(p.var_count);
-            p.var_count++;
-            outputFile << "\t" << temp << " <- " << arg->to_string() <<  " >> 1\n";
-            outputFile << "\t" << v0 << " <- " << v0 <<  " * " << temp << "\n";
+          int64_t num_dimensions = new_array->dimensions.size();
+          string arr_name = new_array->dest->to_string();
+
+          string linearized_len_var = generate_unique_var_name(p);
+
+          // Generate code to calculate linearized length of array
+          if (new_array->is_tuple) {
+            string tuple_size = new_array->dimensions[0]->to_string() + " + 1";
+            outputFile << "\t" << linearized_len_var << " <- " << tuple_size << "\n";
+          } else {  // is array
+            outputFile << "\t" << linearized_len_var << " <- 1\n"; // Initialize var to 1
+            for (Item* dim : new_array->dimensions){
+              string temp_dimension_var = generate_unique_var_name(p);
+
+              // Decode dimension
+              outputFile << "\t" << temp_dimension_var << " <- " << dim->to_string() <<  " >> 1\n";
+              // Generate total dimension product for array size
+              outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " * " << temp_dimension_var << "\n";
+            }
+
+            // Add elements of memory for total # dimensions, each dimension size
+            outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " + " << to_string(num_dimensions+1) << "\n";
           }
 
-          outputFile << "\t" << v0 << " <- " << v0 <<  " + " << to_string(size+1) << "\n";
-          outputFile << "\t" << v0 << " <- " << v0 <<  " << 1\n";
-          outputFile << "\t" << v0 << " <- " << v0 <<  " + 1\n";
+          // Encode
+          outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " << 1\n";
+          outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " + 1\n";
 
-          outputFile << "\t" << dest << " <- call allocate(" << v0 << ", 1)\n";
+          outputFile << "\t" << arr_name << " <- call allocate(" << linearized_len_var << ", 1)\n";
 
-          string v1 = p.longest_var + "_" + to_string(p.var_count);
-          p.var_count++;
-          outputFile << "\t" << v1 << " <- " << dest + " + 8\n";
-          outputFile << "\tstore " << v1 << " <- " << to_string((size << 1) + 1) << "\n";
+          int start_address_dim_storage = 8;
+          if (!new_array->is_tuple) {
+            // Store number dimensions in array
+            string num_dimensions_var = generate_unique_var_name(p);
+            outputFile << "\t" << num_dimensions_var << " <- " << arr_name + " + 8\n";
+            outputFile << "\tstore " << num_dimensions_var << " <- " << to_string(encode(num_dimensions)) << "\n";
+            start_address_dim_storage = 16;
+          }
 
-          for (int64_t i  = 0; i < size; i++){
-            string temp = p.longest_var + "_" + to_string(p.var_count);
-            p.var_count++;
-            outputFile << "\t" << temp << " <- " << dest + " + " << to_string(16+8*i) << "\n";
-            outputFile << "\tstore " << temp << " <- " << new_array->args[i]->to_string() << "\n";
+          // Store dimension sizes
+          for (int64_t i  = 0; i < num_dimensions; i++){
+            string current_dimension_size_var = generate_unique_var_name(p);
+            outputFile << "\t" << current_dimension_size_var << " <- " << arr_name + " + " << to_string(start_address_dim_storage+8*i) << "\n";
+            outputFile << "\tstore " << current_dimension_size_var << " <- " << new_array->dimensions[i]->to_string() << "\n";
           }
 
         } else if (Instruction_goto* goto_i = dynamic_cast<Instruction_goto*>(i)) {
