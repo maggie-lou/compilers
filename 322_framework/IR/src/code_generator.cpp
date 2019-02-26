@@ -8,6 +8,12 @@ using namespace std;
 
 namespace IR{
 
+  string generate_unique_var_name(Program &p) {
+    string name = p.longest_var + "_" + to_string(p.var_count);
+    p.var_count++;
+    return name;
+  }
+
   string get_offset(Program &p, string arr_name, ofstream &outputFile, vector<Item*> indices){
     int64_t size = indices.size();
     string addr = generate_unique_var_name(p);
@@ -37,12 +43,6 @@ namespace IR{
     outputFile << "\t" << addr << " <- " << addr << " + " << arr_name << "\n";
 
     return addr;
-  }
-
-  string generate_unique_var_name(Program &p) {
-    string name = p.longest_var + "_" + to_string(p.var_count);
-    p.var_count++;
-    return name;
   }
 
   int encode(int n) {
