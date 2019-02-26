@@ -142,9 +142,11 @@ namespace IR {
   };
 
   struct Instruction_array : Instruction {
-    // var <- new Array(args)
+    // var <- new Array(t...) || var <- new Tuple(t)
     Variable* dest;
-    std::vector<Item*> args;
+    std::vector<Item*> dimensions;
+    bool is_tuple;
+    // can i just have a bool tuple here?
   };
 
   struct Instruction_goto : Instruction {

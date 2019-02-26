@@ -288,14 +288,28 @@ namespace IR {
       seps,
       pegtl::string<'n','e','w'>,
       seps,
-      pegtl::sor<
-        pegtl::string<'A','r','r','a','y'>,
-        pegtl::string<'T','u','p','l','e'>
-      >,
+      pegtl::string<'A','r','r','a','y'>,
       seps,
       pegtl::one<'('>,
       seps,
       Args_rule,
+      seps,
+      pegtl::one<')'>
+    > {};
+
+  struct Instruction_tuple_rule:
+    pegtl::seq<
+      Var_rule,
+      seps,
+      pegtl::string<'<','-'>,
+      seps,
+      pegtl::string<'n','e','w'>,
+      seps,
+      pegtl::string<'T','u','p','l','e'>,
+      seps,
+      pegtl::one<'('>,
+      seps,
+      T_rule,
       seps,
       pegtl::one<')'>
     > {};
@@ -373,6 +387,7 @@ namespace IR {
       pegtl::seq< pegtl::at<Instruction_assign_rule>, Instruction_assign_rule >,
       pegtl::seq< pegtl::at<Instruction_length_rule>, Instruction_length_rule >,
       pegtl::seq< pegtl::at<Instruction_array_rule>, Instruction_array_rule >,
+      pegtl::seq< pegtl::at<Instruction_tuple_rule>, Instruction_tuple_rule >,
       pegtl::seq< pegtl::at<Instruction_call_store_rule>, Instruction_call_store_rule >,
       pegtl::seq< pegtl::at<Instruction_call_rule>, Instruction_call_rule >
     > { };
@@ -461,7 +476,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Number();
-      // cout << "in number rule\n";
       i->n = std::stoll(in.string());
       parsed_items.push_back(i);
     }
@@ -471,7 +485,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Variable();
-      // cout << "in var rule\n";
       i->name = in.string();
       parsed_items.push_back(i);
       if (p.longest_var.length() < in.string().length()){
@@ -745,13 +758,31 @@ namespace IR {
   template<> struct action < Instruction_array_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      // cout << "parsing new array instruction\n";
       auto i = new Instruction_array();
 
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.back())) {
         i->dest = v;
       }
-      i->args = parsed_args.back();
+      i->dimensions = parsed_args.back();
+      i->is_tuple = false;
+
+      Function* f = p.functions.back();
+      f->instructions.push_back(i);
+    }
+  };
+
+  template<> struct action < Instruction_tuple_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      auto i = new Instruction_array();
+
+      if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))) {
+        i->dest = v;
+      }
+      vector<Item*> dimensions;
+      dimensions.push_back(parsed_items.back());
+      i->dimensions = dimensions;
+      i->is_tuple = true;
 
       Function* f = p.functions.back();
       f->instructions.push_back(i);
@@ -762,7 +793,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Instruction_goto();
-      // cout << "in instruction goto\n";
       if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
         i->label = l;
       }
