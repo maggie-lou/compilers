@@ -10,22 +10,17 @@ namespace IR{
 
   string get_offset(Program &p, string arr_name, ofstream &outputFile, vector<Item*> indices){
     int64_t size = indices.size();
-    string addr = p.longest_var + "_" + to_string(p.var_count);
-    p.var_count++;
-    string product = p.longest_var + "_" + to_string(p.var_count);
-    p.var_count++;
+    string addr = generate_unique_var_name(p);
+    string product = generate_unique_var_name(p);
 
     outputFile << "\t" << addr << " <- 0\n";
     outputFile << "\t" << product << " <- 1\n";
 
     // get the size of each dimension
     for (int64_t i = 0; i < size-1; i++){
-      string temp_addr = p.longest_var + "_" + to_string(p.var_count);
-      p.var_count++;
-      string temp_var = p.longest_var + "_" + to_string(p.var_count);
-      p.var_count++;
-      string temp_sum = p.longest_var + "_" + to_string(p.var_count);
-      p.var_count++;
+      string temp_addr = generate_unique_var_name(p);
+      string temp_var = generate_unique_var_name(p);
+      string temp_sum = generate_unique_var_name(p);
       outputFile << "\t" << temp_addr << " <- " << arr_name << " + " << to_string(24+i*8) << "\n";
       outputFile << "\t" << temp_var << " <- load " << temp_addr << "\n";
       outputFile << "\t" << temp_var << " <- " << temp_var << " >> 1\n";
@@ -36,8 +31,7 @@ namespace IR{
     outputFile << "\t" << addr << " <- " << addr << " + " << indices[size-1]->to_string() << "\n";
     outputFile << "\t" << addr << " <- " << addr << " * 8\n";
     outputFile << "\t" << addr << " <- " << addr << " + 16\n";
-    string temp = p.longest_var + "_" + to_string(p.var_count);
-    p.var_count++;
+    string temp = generate_unique_var_name(p);
     outputFile << "\t" << temp << " <- " << size << " * 8\n";
     outputFile << "\t" << addr << " <- " << addr << " + " << temp << "\n";
     outputFile << "\t" << addr << " <- " << addr << " + " << arr_name << "\n";
