@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <map>
 
 #include <code_generator.h>
 
@@ -14,35 +15,54 @@ namespace IR{
     return name;
   }
 
-  string get_offset(Program &p, string arr_name, ofstream &outputFile, vector<Item*> indices){
-    int64_t size = indices.size();
-    string addr = generate_unique_var_name(p);
-    string product = generate_unique_var_name(p);
+  bool is_tuple(string var_name, Function* f) {
+    return f->var_definitions[var_name] == IR::Variable_type::TUPLE;
+  }
 
-    outputFile << "\t" << addr << " <- 0\n";
-    outputFile << "\t" << product << " <- 1\n";
+  string get_offset(Program &p, string arr_name, ofstream &outputFile, vector<Item*> indices, bool is_tuple){
+    if (is_tuple) {
+	string offset_addr_var = generate_unique_var_name(p);
+	string offset = indices[0]->to_string();
 
-    // get the size of each dimension
-    for (int64_t i = 0; i < size-1; i++){
-      string temp_addr = generate_unique_var_name(p);
-      string temp_var = generate_unique_var_name(p);
-      string temp_sum = generate_unique_var_name(p);
-      outputFile << "\t" << temp_addr << " <- " << arr_name << " + " << to_string(24+i*8) << "\n";
-      outputFile << "\t" << temp_var << " <- load " << temp_addr << "\n";
-      outputFile << "\t" << temp_var << " <- " << temp_var << " >> 1\n";
-      outputFile << "\t" << product << " <- " << product << " * " << temp_var << "\n";
-      outputFile << "\t" << temp_sum << " <- " << product << " * " << indices[size-i-2]->to_string() << "\n";
-      outputFile << "\t" << addr << " <- " << addr << " + " << temp_sum << "\n";
+	// Generate size of offset
+	outputFile << "\t" << offset_addr_var << " <- " << offset << endl;
+	outputFile << "\t" << offset_addr_var << " <- " << offset_addr_var << " * 8" << endl;
+	// Offset by element used to store size of array
+	outputFile << "\t" << offset_addr_var << " <- " << offset_addr_var << " + 8" << endl;
+	
+	// Add offset to array address
+	outputFile << "\t" << offset_addr_var << " <- " << arr_name << " + " << offset_addr_var << endl;
+	return offset_addr_var;
+    } else {
+	    int64_t size = indices.size();
+	    string addr = generate_unique_var_name(p);
+	    string product = generate_unique_var_name(p);
+
+	    outputFile << "\t" << addr << " <- 0\n";
+	    outputFile << "\t" << product << " <- 1\n";
+
+	    // get the size of each dimension
+	    for (int64_t i = 0; i < size-1; i++){
+		    string temp_addr = generate_unique_var_name(p);
+		    string temp_var = generate_unique_var_name(p);
+		    string temp_sum = generate_unique_var_name(p);
+		    outputFile << "\t" << temp_addr << " <- " << arr_name << " + " << to_string(24+i*8) << "\n";
+		    outputFile << "\t" << temp_var << " <- load " << temp_addr << "\n";
+		    outputFile << "\t" << temp_var << " <- " << temp_var << " >> 1\n";
+		    outputFile << "\t" << product << " <- " << product << " * " << temp_var << "\n";
+		    outputFile << "\t" << temp_sum << " <- " << product << " * " << indices[size-i-2]->to_string() << "\n";
+		    outputFile << "\t" << addr << " <- " << addr << " + " << temp_sum << "\n";
+	    }
+	    outputFile << "\t" << addr << " <- " << addr << " + " << indices[size-1]->to_string() << "\n";
+	    outputFile << "\t" << addr << " <- " << addr << " * 8\n";
+	    outputFile << "\t" << addr << " <- " << addr << " + 16\n";
+	    string temp = generate_unique_var_name(p);
+	    outputFile << "\t" << temp << " <- " << size << " * 8\n";
+	    outputFile << "\t" << addr << " <- " << addr << " + " << temp << "\n";
+	    outputFile << "\t" << addr << " <- " << addr << " + " << arr_name << "\n";
+
+	    return addr;
     }
-    outputFile << "\t" << addr << " <- " << addr << " + " << indices[size-1]->to_string() << "\n";
-    outputFile << "\t" << addr << " <- " << addr << " * 8\n";
-    outputFile << "\t" << addr << " <- " << addr << " + 16\n";
-    string temp = generate_unique_var_name(p);
-    outputFile << "\t" << temp << " <- " << size << " * 8\n";
-    outputFile << "\t" << addr << " <- " << addr << " + " << temp << "\n";
-    outputFile << "\t" << addr << " <- " << addr << " + " << arr_name << "\n";
-
-    return addr;
   }
 
   int encode(int n) {
@@ -73,12 +93,12 @@ namespace IR{
 
         } else if (Instruction_load* load = dynamic_cast<Instruction_load*>(i)) {
           string source = load->source->to_string();
-          string addr = get_offset(p, source, outputFile, load->indices);
+          string addr = get_offset(p, source, outputFile, load->indices, is_tuple(source, f));
           outputFile << "\t" << load->dest->to_string() << " <- load " << addr << "\n";
 
         } else if (Instruction_store* store = dynamic_cast<Instruction_store*>(i)) {
           string dest = store->dest->to_string();
-          string addr = get_offset(p, dest, outputFile, store->indices);
+          string addr = get_offset(p, dest, outputFile, store->indices, is_tuple(dest, f));
           outputFile << "\tstore " << addr << " <- " << store->source->to_string() << "\n";
 
         } else if (Instruction_length* length_i = dynamic_cast<Instruction_length*>(i)) {

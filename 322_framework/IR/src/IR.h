@@ -10,7 +10,7 @@
 using namespace std;
 
 namespace IR {
-  enum Variable_type {VOID, INT64, ARRAY, CODE, INVALID};
+  enum Variable_type {VOID, INT64, ARRAY, TUPLE, CODE, INVALID};
 
   struct Item {
     virtual ~Item() = default;
@@ -180,18 +180,16 @@ namespace IR {
     IR::Variable_type type;
     vector<Variable*> arguments;
     vector<Instruction*> instructions;
+    map<string, IR::Variable_type> var_definitions;
+
     string arg_to_string(){
-      // cout << "in arg to string\n";
       if (arguments.empty()){
-        // cout << "empty\n";
         return "";
       }
-      // cout << "not empty\n";
       string ans;
       for (Variable* arg : arguments){
         ans = ans + ", " + arg->name;
       }
-      // cout << "ans: " << ans << "\n";
       return ans.substr(2);
     }
   };

@@ -32,7 +32,9 @@ namespace IR{
       var_type = IR::Variable_type::INT64;
     } else if (s == "code") {
       var_type = IR::Variable_type::CODE;
-    }else if (s == "tuple" || s.find("int64[]") != std::string::npos) {
+    }else if (s == "tuple") {
+      var_type = IR::Variable_type::TUPLE;
+    } else if (s.find("int64[]") != std::string::npos) {
       var_type = IR::Variable_type::ARRAY;
     } else if (s == "void") {
       var_type = IR::Variable_type::VOID;

@@ -465,7 +465,6 @@ namespace IR {
   template<> struct action < Label_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      // cout << "in label rule\n";
       auto i = new Label();
       i->name = in.string();
       parsed_items.push_back(i);
@@ -496,7 +495,6 @@ namespace IR {
   template<> struct action < Op_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-    // cout << "in op rule\n";
       parsed_operations.push_back(in.string());
     }
   };
@@ -504,7 +502,6 @@ namespace IR {
   template<> struct action < Type_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      // cout << "in type rule\n";
       IR::Variable_type type = IR::str_to_variable_type(in.string());
       parsed_variable_types.push_back(type);
     }
@@ -514,7 +511,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Sys_call();
-      // cout << "in callee other rule\n";
       i->name = in.string();
       parsed_items.push_back(i);
     }
@@ -525,9 +521,10 @@ namespace IR {
       static void apply( const Input & in, Program & p){
         auto f = new Function();
         std::string type = in.string();
-        // cout << "in function type rule\n";
 
-        if (type == "tuple" || type.find("int64[]") != std::string::npos) {
+        if (type == "tuple") {
+          f->type = IR::Variable_type::TUPLE;
+	} else if (type.find("int64[]") != std::string::npos) {
           f->type = IR::Variable_type::ARRAY;
         } else if (type == "code") {
           f->type = IR::Variable_type::CODE;
@@ -544,7 +541,6 @@ namespace IR {
     template< typename Input >
       static void apply( const Input & in, Program & p){
         Function* f = p.functions.back();
-        // cout << "in function name rule\n";
         f->name = in.string();
       }
   };
@@ -553,7 +549,6 @@ namespace IR {
     template< typename Input >
       static void apply( const Input & in, Program & p){
         std::vector<Item*> array_accesses;
-        // cout << "in array accesses rule\n";
         std::string accesses_str = in.string();
         std::vector<std::string> accesses_strs;
         size_t index = 0;
@@ -563,14 +558,11 @@ namespace IR {
         }
         for (std::string a : accesses_strs){
           a = a.substr(1);
-          // cout << "a: " << a << "end\n";
           if (IR::is_int(a)){
             Number* n = new Number(std::stoll(a));
-            // cout << "parsed number " << a << "\n";
             array_accesses.push_back(n);
           } else {
             Variable* v = new Variable(a);
-            // cout << "parsed var " << v->name << "\n";
             array_accesses.push_back(v);
           }
         }
@@ -585,7 +577,6 @@ namespace IR {
         std::string vars_str = in.string();
         if (vars_str.length() > 0){
           Function* f = p.functions.back();
-          // cout << "in vars rule\n";
 
           // Tokenize vars to parse
           std::istringstream iss(vars_str);
@@ -604,9 +595,8 @@ namespace IR {
             IR::Variable_type var_type = IR::str_to_variable_type(type);
 
             Variable* v = new Variable(var_name, var_type);
-            // cout << "created v with name: "  << v->name << "\n";
-            // cout << "created v with type: "  << type << "\n";
             f->arguments.push_back(v);
+	    f->var_definitions.insert( std::pair< std::string, IR::Variable_type>(var_name, var_type ));
           };
         }
       }
@@ -616,7 +606,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       std::string arg_str = in.string();
-      // cout << "in args rule\n";
       arg_str.erase(std::remove_if(arg_str.begin(), arg_str.end(),
                      [](char c){
                        return std::isspace(static_cast<unsigned char>(c));
@@ -633,11 +622,9 @@ namespace IR {
         for (std::string a : args_str){
           if (IR::is_int(a)){
             Number* n = new Number(std::stoll(a));
-            // cout << "parsed number " << a << "\n";
             args.push_back(n);
           } else {
             Variable* v = new Variable(a);
-            // cout << "parsed var " << v->name << "\n";
             args.push_back(v);
           }
         }
@@ -651,14 +638,15 @@ namespace IR {
   template<> struct action < Instruction_definition_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      // cout << "in instruction definition\n";
+      Function* f = p.functions.back();
       auto i = new Instruction_definition();
+
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.back())) {
         i->var = v;
       }
       i->type = parsed_variable_types.back();
+      f->var_definitions.insert( std::pair< std::string, IR::Variable_type>(parsed_items.back()->to_string(), parsed_variable_types.back() ));
 
-      Function* f = p.functions.back();
       f->instructions.push_back(i);
     }
   };
@@ -666,7 +654,6 @@ namespace IR {
   template<> struct action < Instruction_assign_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      // cout << "in instruction assign\n";
       auto i = new Instruction_assign();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))){
         i->dest = v;
@@ -681,7 +668,6 @@ namespace IR {
   template<> struct action < Instruction_op_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      // cout << "in instruction op\n";
       auto i = new Instruction_op();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-3))){
         i->dest = v;
@@ -699,11 +685,7 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Instruction_load();
-      // cout << "in instruction load\n";
-
       auto a = parsed_args.back();
-      // cout << "dest: " <<parsed_items.at(parsed_items.size() - num_indices - 2)->to_string() << "\n";
-      // cout << "source: " <<parsed_items.at(parsed_items.size() - num_indices - 1)->to_string() << "\n";
 
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size() - 2))){
         i->dest = v;
@@ -722,7 +704,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Instruction_store();
-      // cout << "in instruction store\n";
       auto a = parsed_args.back();
 
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size() - 2))){
@@ -740,7 +721,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Instruction_length();
-      // cout << "in instruction length\n";
 
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size() - 3))){
         i->dest = v;
@@ -806,7 +786,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Instruction_label();
-      // cout << "in instruction label\n";
       if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
         i->label = l;
       }
@@ -820,7 +799,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Instruction_jump();
-      // cout << "in instruction jump\n";
 
       i->check = parsed_items.at(parsed_items.size() -3);
 
@@ -840,7 +818,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Instruction_ret_void();
-      // cout << "in instruction retvoid\n";
       Function* f = p.functions.back();
       f->instructions.push_back(i);
     }
@@ -850,7 +827,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Instruction_ret();
-      // cout << "in instruction ret\n";
       i->t = parsed_items.back();
       Function* f = p.functions.back();
       f->instructions.push_back(i);
@@ -861,7 +837,6 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Instruction_call();
-      // cout << "in instruction call\n";
       i->callee = parsed_items.back();
       i->args = parsed_args.back();
       Function* f = p.functions.back();
@@ -873,9 +848,7 @@ namespace IR {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Instruction_call_store();
-      // cout << "in instruction call store\n";
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))){
-        // cout << "created dest\n";
         i->dest = v;
       }
       i->callee = parsed_items.back();
