@@ -9,9 +9,7 @@ using namespace std;
 namespace IR{
 
   string get_offset(Program &p, string arr_name, ofstream &outputFile, vector<Item*> indices){
-    // cout << "in get offset\n";
     int64_t size = indices.size();
-    // cout << "size: " << to_string(size) << "\n";
     string addr = p.longest_var + "_" + to_string(p.var_count);
     p.var_count++;
     string product = p.longest_var + "_" + to_string(p.var_count);
@@ -22,8 +20,6 @@ namespace IR{
 
     // get the size of each dimension
     for (int64_t i = 0; i < size-1; i++){
-      // cout << "i: " << to_string(i) << "\n";
-      // cout << "size-i-2: " << to_string(size-2-i) << "\n";
       string temp_addr = p.longest_var + "_" + to_string(p.var_count);
       p.var_count++;
       string temp_var = p.longest_var + "_" + to_string(p.var_count);
@@ -49,7 +45,7 @@ namespace IR{
     return addr;
   }
 
-  string generate_unique_var_name(Program p) {
+  string generate_unique_var_name(Program &p) {
     string name = p.longest_var + "_" + to_string(p.var_count);
     p.var_count++;
     return name;
@@ -126,10 +122,7 @@ namespace IR{
           }
 
           // Add memory for each dimension size
-          if (new_array->is_tuple) {
-            outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " + " << to_string(num_dimensions) << "\n";
-          } else {
-            // Include additional memory for total # dimensions
+          if (!new_array->is_tuple) {
             outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " + " << to_string(num_dimensions+1) << "\n";
           }
 
@@ -139,20 +132,16 @@ namespace IR{
 
           outputFile << "\t" << arr_name << " <- call allocate(" << linearized_len_var << ", 1)\n";
 
-          int start_address_dim_storage = 8;
           if (!new_array->is_tuple) {
             // Store number dimensions in array
             string num_dimensions_var = generate_unique_var_name(p);
             outputFile << "\t" << num_dimensions_var << " <- " << arr_name + " + 8\n";
             outputFile << "\tstore " << num_dimensions_var << " <- " << to_string(encode(num_dimensions)) << "\n";
-            start_address_dim_storage = 16;
-          }
-
-          // Store dimension sizes
-          for (int64_t i  = 0; i < num_dimensions; i++){
-            string current_dimension_size_var = generate_unique_var_name(p);
-            outputFile << "\t" << current_dimension_size_var << " <- " << arr_name + " + " << to_string(start_address_dim_storage+8*i) << "\n";
-            outputFile << "\tstore " << current_dimension_size_var << " <- " << new_array->dimensions[i]->to_string() << "\n";
+            for (int64_t i  = 0; i < num_dimensions; i++){
+              string current_dimension_size_var = generate_unique_var_name(p);
+              outputFile << "\t" << current_dimension_size_var << " <- " << arr_name + " + " << to_string(16+8*i) << "\n";
+              outputFile << "\tstore " << current_dimension_size_var << " <- " << new_array->dimensions[i]->to_string() << "\n";
+            }
           }
 
         } else if (Instruction_goto* goto_i = dynamic_cast<Instruction_goto*>(i)) {
