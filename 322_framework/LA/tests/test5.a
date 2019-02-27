@@ -9,7 +9,7 @@ void main ( ){
   ar <- new Array(3)
   ar[1] <- 5
   arElement <- ar[1]
-  call print(arElement)
+   print(arElement)
   return
 
 }

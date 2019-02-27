@@ -2,9 +2,9 @@ void main ( ){
 
   tuple t
   int64 v
-  t <- call createMyClosure(3)
-  v <- call callMyClosure(t, 4)
-  call print(v)
+  t <-  createMyClosure(3)
+  v <-  MyClosure(t, 4)
+   print(v)
   return 
 
 }
@@ -24,7 +24,7 @@ tuple createMyClosure (int64 p1){
 
 }
 
-int64  callMyClosure (tuple c, int64 argClosure){
+int64  MyClosure (tuple c, int64 argClosure){
 
   code fp
   fp <- c[0]
@@ -37,8 +37,8 @@ int64  callMyClosure (tuple c, int64 argClosure){
   :true
   int64 finalResult
   int64 finalResultEncoded
-  finalResult <- call fp(c, argClosure)
-  call print(finalResult)
+  finalResult <-  fp(c, argClosure)
+   print(finalResult)
   return finalResult
 
   :false

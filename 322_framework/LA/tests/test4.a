@@ -3,7 +3,7 @@ void main ( ){
   int64 arLen
   int64[] ar
   ar <- new Array(3)
-  call print(ar)
+   print(ar)
   return
 
 }

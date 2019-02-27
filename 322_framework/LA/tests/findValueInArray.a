@@ -30,27 +30,27 @@ void main ( ){
 	a[1][2][3] <- v17
 
     // Check values that exist in array
-	call printExistance(a, v1)
-	call printExistance(a, v3)
-	call printExistance(a, v5)
-	call printExistance(a, v7)
-	call printExistance(a, v13)
-	call printExistance(a, v15)
-	call printExistance(a, v17)
+	 printExistance(a, v1)
+	 printExistance(a, v3)
+	 printExistance(a, v5)
+	 printExistance(a, v7)
+	 printExistance(a, v13)
+	 printExistance(a, v15)
+	 printExistance(a, v17)
 
 	// Check values do not exist 
-	call printExistance(a, v11)
-	call printExistance(a, 9)
-	call printExistance(a, 19)
-	call printExistance(a, 21)
+	 printExistance(a, v11)
+	 printExistance(a, 9)
+	 printExistance(a, 19)
+	 printExistance(a, 21)
 
 	return
 }
 
 void printExistance (int64[][][] A, int64 v){
 	int64 found
-	found <- call isValueInArray(A, v)
-	call print(found)
+	found <-  isValueInArray(A, v)
+	 print(found)
 	return
 }
 

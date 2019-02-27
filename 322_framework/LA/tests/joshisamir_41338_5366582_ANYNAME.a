@@ -12,7 +12,7 @@ void main ( ){
   a[1][0][1] <- 6
   a[1][1][0] <- 7
   a[1][1][1] <- 8
-  call printMatrixElems(a)
+   printMatrixElems(a)
 
   return
 }
@@ -31,9 +31,9 @@ void printMatrixElems (int64[][][] m) {
   dim0 <- length m 0
   dim1 <- length m 1
   dim2 <- length m 2
-  call print(dim0)
-  call print(dim1)
-  call print(dim2)
+   print(dim0)
+   print(dim1)
+   print(dim2)
 
   i <- 0
   j <- 0
@@ -41,7 +41,7 @@ void printMatrixElems (int64[][][] m) {
 
   :loop
       val <- m[i][j][k]
-      call print (val)
+       print (val)
       br :increment
 
   :increment

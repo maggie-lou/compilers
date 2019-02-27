@@ -12,7 +12,7 @@ void main ( ){
   br check :true :false
 
   :true
-  call print(v3)
+   print(v3)
 
   :false
   return

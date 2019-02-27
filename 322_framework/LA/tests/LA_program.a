@@ -7,13 +7,13 @@ void main () {
 	v <- 10
 	m <- new Array(10, 10, 10)
 
-	r <- call search(m, v)
-	call print(r)
+	r <-  search(m, v)
+	 print(r)
 
 	m[0][0][0] <- v
 
-	r <- call search(m, v)
-	call print(r)
+	r <-  search(m, v)
+	 print(r)
 
 	return
 }
@@ -26,13 +26,13 @@ int64 search(int64[][][] m, int64 v) {
 	int64 encLen
 
 	length1 <- length m 0
-	call print(length1)
+	 print(length1)
 
 	length2 <- length m 1
-	call print(length2)
+	 print(length2)
 	
 	length3 <- length m 2
-	call print(length3)
+	 print(length3)
 	br :init
 
 	:init

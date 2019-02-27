@@ -2,11 +2,11 @@ void main ( ){
 
   int64[][] a
   a <- new Array(3, 3)
-  call print(a)
-  call initArray(a)
+   print(a)
+   initArray(a)
   int64 sum
-  sum <- call sumArray(a)
-  call print(sum)
+  sum <-  sumArray(a)
+   print(sum)
   return 
 
 }

@@ -2,9 +2,9 @@ void main ( ){
 
   tuple t
   int64 v
-  t <- call createTuple(3)
-  v <- call myF(t, 4)
-  call print(v)
+  t <-  createTuple(3)
+  v <-  myF(t, 4)
+   print(v)
   return 
 
 }
@@ -29,13 +29,13 @@ int64  myF (tuple c, int64 p1){
   int64 x2
   x1 <- c[2]
   x2 <- c[3]
-  call print(x1)
-  call print(x2)
-  call print(p1)
+   print(x1)
+   print(x2)
+   print(p1)
   int64 r1
   int64 r2
   r1 <- x1 + x2
-  call print(r1)
+   print(r1)
   r2 <- r1 + p1
   return r2
 

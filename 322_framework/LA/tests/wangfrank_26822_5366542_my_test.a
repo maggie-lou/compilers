@@ -14,27 +14,27 @@ void main ( ){
     l2 <- 9
     l3 <- 8
     m <- new Array(l1, l2, l3)
-    r <- call find(m, v)
-    call print(r)
-    call print_find_res(r)
+    r <-  find(m, v)
+     print(r)
+     print_find_res(r)
     
     
     int64 sum
     m[0][0][0] <- v
-    r <- call find(m, v)
+    r <-  find(m, v)
     m[0][0][0] <-5 
-    sum <- call compute_sum(m)
-    call print(sum)
-    call print(r)
-    call print_find_res(r)
+    sum <-  compute_sum(m)
+     print(sum)
+     print(r)
+     print_find_res(r)
 
     m[1][0][4] <- v
-    r <- call find(m, v)
+    r <-  find(m, v)
     m[1][0][4] <- 5
-    sum <- call compute_sum(m)
-    call print(sum)
-    call print(r)
-    call print_find_res(r)
+    sum <-  compute_sum(m)
+     print(sum)
+     print(r)
+     print_find_res(r)
 
     return
 
@@ -48,9 +48,9 @@ int64 compute_sum(int64[][][] m){
     l1 <- length m 0
     l2 <- length m 1
     l3 <- length m 2
-    call print(l1)
-    call print(l2)
-    call print(l3)
+     print(l1)
+     print(l2)
+     print(l3)
 
     int64 index
     int64 sum
@@ -124,7 +124,7 @@ void print_find_res (int64[] res) {
     :Body
     int64 pos
     pos <- res[index]
-    call print(pos)
+     print(pos)
     index <- index + 1
     br :Header
 

@@ -2,11 +2,11 @@ void main ( ){
 
   int64[][][] a
   a <- new Array(2,3,4)
-  call print(a)
-  call initArray(a)
+   print(a)
+   initArray(a)
   int64 e
   e <- a[1][2][3]
-  call print(e)
+   print(e)
   return 
 
 }

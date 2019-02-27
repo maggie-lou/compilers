@@ -2,8 +2,8 @@ void main ( ){
 
   int64[][][] a
   a <- new Array(2,3,4)
-  call print(a)
-  call initArray(a)
+   print(a)
+   initArray(a)
   return 
 
 }

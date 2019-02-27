@@ -5,39 +5,39 @@ void main ( ){
   v <- 21
   m <- new Array(4, 4)
 
-  call initMatrix(m, 0)
-  r <- call checkMatrix(m, v)
-  call print(r)
+   initMatrix(m, 0)
+  r <-  checkMatrix(m, v)
+   print(r)
 
-  call initMatrix(m, 0)
+   initMatrix(m, 0)
   m[0][0] <- v
-  r <- call checkMatrix(m, v)
-  call print(r)
+  r <-  checkMatrix(m, v)
+   print(r)
 
-  call initMatrix(m, 0)
+   initMatrix(m, 0)
   m[0][1] <- v
-  r <- call checkMatrix(m, v)
-  call print(r)
+  r <-  checkMatrix(m, v)
+   print(r)
 
-  call initMatrix(m, 0)
+   initMatrix(m, 0)
   m[1][0] <- v
-  r <- call checkMatrix(m, v)
-  call print(r)
+  r <-  checkMatrix(m, v)
+   print(r)
 
-  call initMatrix(m, 0)
+   initMatrix(m, 0)
   m[3][0] <- v
-  r <- call checkMatrix(m, v)
-  call print(r)
+  r <-  checkMatrix(m, v)
+   print(r)
 
-  call initMatrix(m, 0)
+   initMatrix(m, 0)
   m[3][1] <- v
-  r <- call checkMatrix(m, v)
-  call print(r)
+  r <-  checkMatrix(m, v)
+   print(r)
 
-  call initMatrix(m, 0)
+   initMatrix(m, 0)
   m[3][3] <- v
-  r <- call checkMatrix(m, v)
-  call print(r)
+  r <-  checkMatrix(m, v)
+   print(r)
   return
 }
 
@@ -86,8 +86,8 @@ int64 checkMatrix (int64[][] m, int64 v){
   int64 found
   found <- 0
   index <- 0
-  call print(m)
-  call print(v)
+   print(m)
+   print(v)
 
   :header
   int64 check

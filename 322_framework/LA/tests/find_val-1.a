@@ -7,13 +7,13 @@ void main() {
 	test_value <- 1234
 	matrix <- new Array(5, 5, 5)
 
-	result <- call find(matrix, test_value)
-	call print(result)
+	result <-  find(matrix, test_value)
+	 print(result)
 
 	matrix[2][1][0] <- test_value
 
-	result <- call find(matrix, test_value)
-	call print(result)
+	result <-  find(matrix, test_value)
+	 print(result)
 
 	return
 }

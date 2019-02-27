@@ -25,7 +25,7 @@ void main ( ) {
  newVar_ciao_1 <- newVar1index2 < newVar1max2
  br newVar_ciao_1 :body2 :endBody1 
  :body2
- call computeAndPrint (newVar0m1, newVar0m2, newVar0m3, newVar1index1, newVar1index2)
+  computeAndPrint (newVar0m1, newVar0m2, newVar0m3, newVar1index1, newVar1index2)
  newVar1index2 <- newVar1index2 + 1
  br :new_label1
  :endBody1
@@ -36,16 +36,16 @@ void main ( ) {
 }
 
 void computeAndPrint ( int64[][] m1, int64[][] m2, int64[][] m3, int64 v1, int64 v2) {
- call initMatrix (m1, v1)
- call initMatrix (m2, v2)
- call matrixMultiplication (m1, m2, m3)
+  initMatrix (m1, v1)
+  initMatrix (m2, v2)
+  matrixMultiplication (m1, m2, m3)
  int64 newVar0t
- newVar0t <- call totalSum (m1)
- call print (newVar0t)
- newVar0t <- call totalSum (m2)
- call print (newVar0t)
- newVar0t <- call totalSum (m3)
- call print (newVar0t)
+ newVar0t <-  totalSum (m1)
+  print (newVar0t)
+ newVar0t <-  totalSum (m2)
+  print (newVar0t)
+ newVar0t <-  totalSum (m3)
+  print (newVar0t)
  return 
 }
 

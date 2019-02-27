@@ -28,24 +28,24 @@ void main (){
   A[4][1][0] <- test6
 
   // test program
-  test <- call findArrayValue(A, test1)
-  call print(test) // print 1
-  test <- call findArrayValue(A, test2)
-  call print(test) // print 1
-  test <- call findArrayValue(A, 8)
-  call print(test) // print 0
-  test <- call findArrayValue(A, test3)
-  call print(test) // print 1
-  test <- call findArrayValue(A, test4)
-  call print(test) // print 1
-  test <- call findArrayValue(A, test5)
-  call print(test) // print 1
-  test <- call findArrayValue(A, 9)
-  call print(test) // print 0
-  test <- call findArrayValue(A, 12)
-  call print(test) // print 0
-  test <- call findArrayValue(A, test6)
-  call print(test) // print 1
+  test <-  findArrayValue(A, test1)
+   print(test) // print 1
+  test <-  findArrayValue(A, test2)
+   print(test) // print 1
+  test <-  findArrayValue(A, 8)
+   print(test) // print 0
+  test <-  findArrayValue(A, test3)
+   print(test) // print 1
+  test <-  findArrayValue(A, test4)
+   print(test) // print 1
+  test <-  findArrayValue(A, test5)
+   print(test) // print 1
+  test <-  findArrayValue(A, 9)
+   print(test) // print 0
+  test <-  findArrayValue(A, 12)
+   print(test) // print 0
+  test <-  findArrayValue(A, test6)
+   print(test) // print 1
   return
 }
 
