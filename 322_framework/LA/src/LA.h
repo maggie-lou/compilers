@@ -10,7 +10,6 @@
 using namespace std;
 
 namespace LA {
-  enum Variable_type {VOID, INT64, ARRAY, TUPLE, CODE, INVALID};
 
   struct Item {
     virtual ~Item() = default;
@@ -19,22 +18,37 @@ namespace LA {
     }
   };
 
-  struct Variable : Item {
-    // name
+  struct VariableType {
     string name;
-    IR::Variable_type type;
 
-    Variable(): name() {
+    VariableType(string type): name(type) {
     }
 
-    Variable(std::string n): name(n) {
+    VariableType() {
+      name = "";
     }
 
-    Variable(std::string n, IR::Variable_type t): name(n), type(t) {
+    string to_string() {
+      return name;
+    }
+  };
+
+  struct Variable : Item {
+    string name;
+    VariableType type;
+
+    Variable(string n): name(n) {
+    }
+
+    Variable(string n, VariableType t): name(n), type(t) {
     }
 
     virtual string to_string(){
       return name;
+    }
+
+    string get_type() {
+      return type.to_string();
     }
   };
 
@@ -63,7 +77,7 @@ namespace LA {
   };
 
   struct Instruction_definition : Instruction {
-    IR::Variable_type type;
+    VariableType type;
     Variable* var;
   };
 
@@ -106,16 +120,6 @@ namespace LA {
     // name (args?)
     vector<Item*> args;
     Variable* callee;
-    string arg_to_string(){
-      if (args.empty()){
-        return "";
-      }
-      string ans;
-      for (Item* arg : args){
-        ans = ans + ", " + arg->to_string();
-      }
-      return ans.substr(2);
-    }
   };
 
   struct Instruction_call_store : Instruction {
@@ -123,21 +127,11 @@ namespace LA {
     std::vector<Item*> args;
     Variable* callee;
     Variable* dest;
-    string arg_to_string(){
-      if (args.empty()){
-        return "";
-      }
-      string ans;
-      for (Item* arg : args){
-        ans = ans + ", " + arg->to_string();
-      }
-      return ans.substr(2);
-    }
   };
 
   struct Instruction_print : Instruction {
     Item* t;
-  }
+  };
 
   struct Instruction_array : Instruction {
     // name <- new Array(t...) || name <- new Tuple(t)
@@ -175,21 +169,10 @@ namespace LA {
 
   struct Function {
     string name;
-    IR::Variable_type type;
+    VariableType type;
     vector<Variable*> arguments;
     vector<Instruction*> instructions;
-    map<string, IR::Variable_type> var_definitions;
-
-    string arg_to_string(){
-      if (arguments.empty()){
-        return "";
-      }
-      string ans;
-      for (Variable* arg : arguments){
-        ans = ans + ", " + arg->name;
-      }
-      return ans.substr(2);
-    }
+    map<string, VariableType> var_definitions;
   };
 
   struct Program {
