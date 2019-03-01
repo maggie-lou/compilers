@@ -37,6 +37,9 @@ namespace LA {
     string name;
     VariableType type;
 
+    Variable(): name() {
+    }
+
     Variable(string n): name(n) {
     }
 
