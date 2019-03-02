@@ -437,7 +437,9 @@ namespace LA {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Number();
-      i->n = std::stoll(in.string());
+      int decoded_number = std::stoll(in.string());
+      int encoded_number = decoded_number * 2 + 1;
+      i->n = encoded_number;
       parsed_items.push_back(i);
     }
   };
