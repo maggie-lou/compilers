@@ -66,20 +66,34 @@ namespace LA {
   }
 
   void generate_array_checking_code(ofstream &output_file, string arr_name, vector<Item*> indices) {
-      int i = 0;
-      for (i=0; i < attempted_indices.size(); i++) {
-        output_file << ":continue" << to_string(i) << endl;
-        output_file << "%attempted_index <- " << to_IR_string(indices[i]) << endl;
-        generate_var_encoding_code(output_file, "%attempted_index");
-        output_file << "%dimension <- length " << to_IR_var(arr_name) << " " << to_string(i) << endl; // encode
-        output_file << "%array_check <- %attempted_index < %dimension" << endl;
-        output_file << "br %array_check :continue" << to_string(i+1) << " :array_error" << endl;
-      }
+    // Init temp variables
+    output_file << "\tint64 %array_check" << endl;
+    output_file << "\tint64 %attempted_index" << endl;
+    output_file << "\tint64 %array_check" << endl;
+    output_file << "\tint64 %dimension" << endl;
 
-      output_file << ":array_error" << endl;
-      output_file << "call array-error(" << to_IR_var(arr_name) << ", %attempted_index)" << endl;
+    // Check array allocation
+    output_file << "\t%array_check <- " << to_IR_var(arr_name) << " = 0" << endl;
+    output_file << "br %array_check :continue0 :array_error_alloc" << endl;
 
-      output_file << ":continue" << to_string(i) << endl; // If all indices are valid, continue on to rest of code
+    // Check valid index acceses
+    int i = 0;
+    for (i=0; i < indices.size(); i++) {
+      output_file << ":continue" << to_string(i) << endl;
+      output_file << "%attempted_index <- " << to_IR_string(indices[i]) << endl;
+      generate_var_encoding_code(output_file, "%attempted_index");
+      output_file << "%dimension <- length " << to_IR_var(arr_name) << " " << to_string(i) << endl; // encode
+      output_file << "%array_check <- %attempted_index < %dimension" << endl;
+      output_file << "br %array_check :continue" << to_string(i+1) << " :array_error_index" << endl;
+    }
+
+    output_file << ":array_error_index" << endl;
+    output_file << "call array-error(" << to_IR_var(arr_name) << ", %attempted_index)" << endl;
+
+    output_file << ":array_error_alloc" << endl;
+    output_file << "call array-error(0,0)" << endl;
+
+    output_file << ":continue" << to_string(i) << endl; // If all indices are valid, continue on to rest of code
   }
 
   void generate_code(Program p){
@@ -98,7 +112,12 @@ namespace LA {
       auto instructions = f->instructions;
       for (Instruction* i : instructions) {
         if (Instruction_definition* def = dynamic_cast<Instruction_definition*>(i)) {
-          outputFile << "\t" << def->type.to_string() << " " << to_IR_var(def->var->to_string()) << endl;
+          outputFile << "\t" << def->type.to_string() << " " << to_IR_string(def->var) << endl;
+
+          // Set unallocated arrays to 0
+          if (def->type.is_tuple_or_array()) {
+            outputFile << "\t"<< to_IR_string(def->var) << " <- 0" << endl;
+          }
         } else if (Instruction_assign* assign = dynamic_cast<Instruction_assign*>(i)){
           outputFile << "\t" << to_IR_string(assign->dest) << " <- " << to_IR_string(assign->source) << "\n";
 
@@ -106,11 +125,11 @@ namespace LA {
           outputFile << "\t" << to_IR_string(op->dest) << " <- " << to_IR_string(op->t1) << " " << op->op << " " << to_IR_string(op->t2) << "\n";
 
         } else if (Instruction_load* load = dynamic_cast<Instruction_load*>(i)) {
-          generate_array_checking_code(output_file, load->source->to_string(), load->indices);
+          generate_array_checking_code(outputFile, load->source->to_string(), load->indices);
           outputFile << "\t" << to_IR_string(load->dest) << " <- " << to_IR_string(load->source) << to_indices_string(load->indices) << endl;
 
         } else if (Instruction_store* store = dynamic_cast<Instruction_store*>(i)) {
-          generate_array_checking_code(output_file, store->dest->to_string(), store->indices);
+          generate_array_checking_code(outputFile, store->dest->to_string(), store->indices);
           outputFile << "\t" << to_IR_string(store->dest) << to_indices_string(store->indices) << " <- " << to_IR_string(store->source) << endl;
 
         } else if (Instruction_length* length_i = dynamic_cast<Instruction_length*>(i)) {

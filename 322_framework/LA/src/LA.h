@@ -31,6 +31,10 @@ namespace LA {
     string to_string() {
       return name;
     }
+
+    bool is_tuple_or_array() {
+      return name == "tuple" || name.find("int64[]") != string::npos;
+    }
   };
 
   struct Variable : Item {
