@@ -92,7 +92,7 @@ namespace LA {
   struct Number_rule:
     number {};
 
-  struct Var_rule:
+  struct Name_rule:
     name {};
 
   struct Function_name_rule:
@@ -112,7 +112,7 @@ namespace LA {
 
   struct T_rule:
     pegtl::sor<
-      Var_rule,
+      Name_rule,
       Number_rule
     > {};
 
@@ -137,40 +137,41 @@ namespace LA {
       pegtl::one<'>'>
     > {};
 
-  struct Vars_rule:
-    pegtl::seq<
-      pegtl::star<
-        Type_rule,
-        seps,
-        name,
-        seps
-      >,
-      pegtl::star<
-        seps,
-        pegtl::one<','>,
-        seps,
-        Type_rule,
-        seps,
-        name
-      >
-    > {};
-
   struct Args_t_rule:
     pegtl::sor<
       name,
-      number,
-      seps
+      number
     > {};
 
   struct Args_rule:
     pegtl::seq<
-      Args_t_rule,
-      seps,
       pegtl::star<
-        seps,
-        pegtl::one<','>,
-        seps,
-        Args_t_rule
+        Args_t_rule,
+        pegtl::star<
+          pegtl::one<','>,
+          seps,
+          Args_t_rule
+        >
+      >
+    > {};
+
+  struct Function_arg_rule:
+    pegtl::seq<
+      Type_rule,
+      seps,
+      Name_rule
+    > {};
+
+  struct Function_args_rule:
+    pegtl::seq<
+      pegtl::star<
+        Function_arg_rule,
+        pegtl::star<
+          seps,
+          pegtl::one<','>,
+          seps,
+          Function_arg_rule
+        >
       >
     > {};
 
@@ -184,12 +185,12 @@ namespace LA {
     pegtl::seq<
       Type_rule,
       seps,
-      Var_rule
+      Name_rule
     > {};
 
   struct Instruction_assign_rule:
     pegtl::seq<
-      Var_rule,
+      Name_rule,
       seps,
       pegtl::string<'<','-'>,
       seps,
@@ -198,7 +199,7 @@ namespace LA {
 
   struct Instruction_op_rule:
     pegtl::seq<
-      Var_rule,
+      Name_rule,
       seps,
       pegtl::string<'<','-'>,
       seps,
@@ -225,17 +226,17 @@ namespace LA {
 
   struct Instruction_load_rule:
     pegtl::seq<
-      Var_rule,
+      Name_rule,
       seps,
       pegtl::string<'<','-'>,
       seps,
-      Var_rule,
+      Name_rule,
       Array_accesses_rule
     > {};
 
   struct Instruction_store_rule:
     pegtl::seq<
-      Var_rule,
+      Name_rule,
       Array_accesses_rule,
       seps,
       pegtl::string<'<','-'>,
@@ -245,20 +246,20 @@ namespace LA {
 
   struct Instruction_length_rule:
     pegtl::seq<
-      Var_rule,
+      Name_rule,
       seps,
       pegtl::string<'<','-'>,
       seps,
       pegtl::string<'l','e','n','g','t','h'>,
       seps,
-      Var_rule,
+      Name_rule,
       seps,
       T_rule
     > {};
 
   struct Instruction_array_rule:
     pegtl::seq<
-      Var_rule,
+      Name_rule,
       seps,
       pegtl::string<'<','-'>,
       seps,
@@ -275,7 +276,7 @@ namespace LA {
 
   struct Instruction_tuple_rule:
     pegtl::seq<
-      Var_rule,
+      Name_rule,
       seps,
       pegtl::string<'<','-'>,
       seps,
@@ -326,7 +327,7 @@ namespace LA {
 
   struct Instruction_call_rule:
     pegtl::seq<
-      Var_rule,
+      Name_rule,
       seps,
       pegtl::one<'('>,
       seps,
@@ -337,11 +338,11 @@ namespace LA {
 
   struct Instruction_call_store_rule:
     pegtl::seq<
-      Var_rule,
+      Name_rule,
       seps,
       pegtl::string<'<','-'>,
       seps,
-      Var_rule,
+      Name_rule,
       seps,
       pegtl::one<'('>,
       seps,
@@ -398,7 +399,7 @@ namespace LA {
       seps,
       pegtl::one<'('>,
       seps,
-      Vars_rule,
+      Function_args_rule,
       seps,
       pegtl::one<')'>,
       seps,
@@ -441,7 +442,7 @@ namespace LA {
     }
   };
 
-  template<> struct action < Var_rule > {
+  template<> struct action < Name_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
       auto i = new Variable();
@@ -486,6 +487,19 @@ namespace LA {
       }
   };
 
+  template<> struct action < Function_arg_rule > {
+    template< typename Input >
+      static void apply( const Input & in, Program & p){
+        Function* f = p.functions.back();
+        VariableType var_type = parsed_variable_types.back();
+        std::string var_name = parsed_items.back()->to_string();
+
+        Variable* v = new Variable(var_name, var_type);
+        f->arguments.push_back(v);
+        f->var_definitions.insert( std::pair< std::string, VariableType>(var_name, var_type ));
+      }
+  };
+
   template<> struct action < Array_accesses_rule > {
     template< typename Input >
       static void apply( const Input & in, Program & p){
@@ -509,37 +523,6 @@ namespace LA {
         }
         parsed_args.push_back(array_accesses);
 
-      }
-  };
-
-  template<> struct action < Vars_rule > {
-    template< typename Input >
-      static void apply( const Input & in, Program & p){
-        std::string vars_str = in.string();
-        if (vars_str.length() > 0){
-          Function* f = p.functions.back();
-
-          // Tokenize vars to parse
-          std::istringstream iss(vars_str);
-          std::string var;
-          while (getline(iss, var, ',')) {
-            while (var[0] == ' '){
-              var.erase(0, 1);
-            }
-            int space = var.find(" ");
-            std::string type = var.substr(0, space);
-            std::string var_name = var.substr(space+1);
-            var_name.erase(std::remove_if(var_name.begin(), var_name.end(),
-                           [](char c){
-                             return std::isspace(static_cast<unsigned char>(c));
-                           }), var_name.end());
-            VariableType var_type(type);
-
-            Variable* v = new Variable(var_name, var_type);
-            f->arguments.push_back(v);
-	          f->var_definitions.insert( std::pair< std::string, VariableType>(var_name, var_type ));
-          };
-        }
       }
   };
 
