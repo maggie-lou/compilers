@@ -61,8 +61,12 @@ namespace LA {
   }
 
   void generate_var_encoding_code(ofstream &output_file, string var_name) {
-    cout << "\t" << var_name << " <- " << var_name << "<< 1"<< endl;
-    cout << "\t" << var_name << " <- " << var_name << "+ 1"<< endl;
+    output_file << "\t" << var_name << " <- " << var_name << "<< 1"<< endl;
+    output_file << "\t" << var_name << " <- " << var_name << "+ 1"<< endl;
+  }
+
+  void generate_var_decoding_code(ofstream &output_file, string var_name) {
+    output_file << "\t" << var_name << " <- " << var_name << ">> 1"<< endl;
   }
 
   void generate_array_checking_code(ofstream &output_file, string arr_name, vector<Item*> indices) {
@@ -74,26 +78,57 @@ namespace LA {
 
     // Check array allocation
     output_file << "\t%array_check <- " << to_IR_var(arr_name) << " = 0" << endl;
-    output_file << "br %array_check :continue0 :array_error_alloc" << endl;
+    output_file << "\tbr %array_check :continue0 :array_error_alloc" << endl;
 
     // Check valid index acceses
     int i = 0;
     for (i=0; i < indices.size(); i++) {
-      output_file << ":continue" << to_string(i) << endl;
-      output_file << "%attempted_index <- " << to_IR_string(indices[i]) << endl;
+      output_file << "\t:continue" << to_string(i) << endl;
+      output_file << "\t%attempted_index <- " << to_IR_string(indices[i]) << endl;
       generate_var_encoding_code(output_file, "%attempted_index");
-      output_file << "%dimension <- length " << to_IR_var(arr_name) << " " << to_string(i) << endl; // encode
-      output_file << "%array_check <- %attempted_index < %dimension" << endl;
-      output_file << "br %array_check :continue" << to_string(i+1) << " :array_error_index" << endl;
+      output_file << "\t%dimension <- length " << to_IR_var(arr_name) << " " << to_string(i) << endl; // encode
+      output_file << "\t%array_check <- %attempted_index < %dimension" << endl;
+      output_file << "\tbr %array_check :continue" << to_string(i+1) << " :array_error_index" << endl;
     }
 
-    output_file << ":array_error_index" << endl;
-    output_file << "call array-error(" << to_IR_var(arr_name) << ", %attempted_index)" << endl;
+    output_file << "\t:array_error_index" << endl;
+    output_file << "\tcall array-error(" << to_IR_var(arr_name) << ", %attempted_index)" << endl;
 
-    output_file << ":array_error_alloc" << endl;
-    output_file << "call array-error(0,0)" << endl;
+    output_file << "\t:array_error_alloc" << endl;
+    output_file << "\tcall array-error(0,0)" << endl;
 
-    output_file << ":continue" << to_string(i) << endl; // If all indices are valid, continue on to rest of code
+    output_file << "\t:continue" << to_string(i) << endl; // If all indices are valid, continue on to rest of code
+  }
+
+  vector<Item*> to_decode(Instruction* i) {
+    vector<Item*> to_decode;
+    if (Instruction_op* op = dynamic_cast<Instruction_op*>(i)) {
+      to_decode.push_back(op->t1);
+      to_decode.push_back(op->t2);
+    } else if (Instruction_load* load = dynamic_cast<Instruction_load*>(i)) {
+      for (Item* index : load->indices) {
+        to_decode.push_back(index);
+      }
+    } else if (Instruction_store* store = dynamic_cast<Instruction_store*>(i)) {
+      for (Item* index : store->indices) {
+        to_decode.push_back(index);
+      }
+    } else if (Instruction_length* length_i = dynamic_cast<Instruction_length*>(i)) {
+      to_decode.push_back(length_i->dimension);
+    } else if (Instruction_jump* jump = dynamic_cast<Instruction_jump*>(i)) {
+      to_decode.push_back(jump->check);
+    }
+
+    return to_decode;
+  }
+
+  vector<Item*> to_encode(Instruction* i) {
+    vector<Item*> to_encode;
+    if (Instruction_op* op = dynamic_cast<Instruction_op*>(i)) {
+      to_encode.push_back(op->dest);
+    }
+
+    return to_encode;
   }
 
   void generate_code(Program p){
@@ -111,6 +146,11 @@ namespace LA {
 
       auto instructions = f->instructions;
       for (Instruction* i : instructions) {
+        vector<Item*> vars_to_decode = to_decode(i);
+        for (Item* var : vars_to_decode) {
+          generate_var_decoding_code(outputFile, to_IR_string(var));
+        }
+
         if (Instruction_definition* def = dynamic_cast<Instruction_definition*>(i)) {
           outputFile << "\t" << def->type.to_string() << " " << to_IR_string(def->var) << endl;
 
@@ -164,6 +204,10 @@ namespace LA {
 
         } else if (Instruction_ret* ret = dynamic_cast<Instruction_ret*>(i)) {
           outputFile << "\treturn " << to_IR_string(ret->t) << "\n";
+        }
+        vector<Item*> vars_to_encode = to_encode(i);
+        for (Item* var : vars_to_encode) {
+          generate_var_encoding_code(outputFile, to_IR_string(var));
         }
       }
       outputFile << "}\n\n";
