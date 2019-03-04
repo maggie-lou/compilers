@@ -430,6 +430,9 @@ namespace LA {
       auto i = new Label();
       i->name = in.string();
       parsed_items.push_back(i);
+      if (p.longest_label.length() < in.string().length()){
+        p.longest_label = in.string();
+      }
     }
   };
 

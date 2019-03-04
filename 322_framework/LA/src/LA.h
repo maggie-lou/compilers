@@ -186,5 +186,7 @@ namespace LA {
     vector<Function*> functions;
     string longest_var = "";
     int64_t var_count = 0;
+    string longest_label = "";
+    int64_t label_count = 0;
   };
 }

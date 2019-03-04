@@ -46,6 +46,12 @@ namespace LA {
     return name;
   }
 
+  string generate_unique_label_name(Program &p) {
+    string name = p.longest_label + "_" + to_string(p.label_count);
+    p.label_count++;
+    return name;
+  }
+
   bool is_tuple(string var_name, Function* f) {
     return f->var_definitions[var_name].to_string() == "tuple";
   }
@@ -145,7 +151,18 @@ namespace LA {
       outputFile << f->name << f->type.to_string() << "(" << get_function_args_string(f) << "){" << endl;
 
       auto instructions = f->instructions;
+      bool startBB = true;
       for (Instruction* i : instructions) {
+        Instruction_label* is_label = dynamic_cast<Instruction_label*>(i);
+        if (startBB){
+          if (!is_label){
+            cout << "\t" << generate_unique_label_name(p) << endl;
+          }
+          startBB = false;
+        } else if (is_label){
+          cout << "\tbr " << is_label->label << endl;
+        }
+
         vector<Item*> vars_to_decode = to_decode(i);
         for (Item* var : vars_to_decode) {
           generate_var_decoding_code(outputFile, to_IR_string(var));
@@ -192,18 +209,22 @@ namespace LA {
 
         } else if (Instruction_goto* goto_i = dynamic_cast<Instruction_goto*>(i)) {
           outputFile << "\tbr " << goto_i->label->name << "\n";
+          startBB = true;
 
         } else if (Instruction_label* label_i = dynamic_cast<Instruction_label*>(i)) {
           outputFile << "\t" << label_i->label->name << "\n";
 
         } else if (Instruction_jump* jump = dynamic_cast<Instruction_jump*>(i)) {
           outputFile << "\tbr " << to_IR_string(jump->check) << " " << jump->label1->name << " " << jump->label2->name << "\n";
+          startBB = true;
 
         } else if (Instruction_ret_void* ret_void = dynamic_cast<Instruction_ret_void*>(i)) {
           outputFile << "\treturn\n";
+          startBB = true;
 
         } else if (Instruction_ret* ret = dynamic_cast<Instruction_ret*>(i)) {
           outputFile << "\treturn " << to_IR_string(ret->t) << "\n";
+          startBB = true;
         }
         vector<Item*> vars_to_encode = to_encode(i);
         for (Item* var : vars_to_encode) {
