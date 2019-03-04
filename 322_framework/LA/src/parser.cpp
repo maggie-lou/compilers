@@ -366,19 +366,19 @@ namespace LA {
     pegtl::sor<
       pegtl::seq< pegtl::at<Instruction_load_rule>, Instruction_load_rule >,
       pegtl::seq< pegtl::at<Instruction_store_rule>, Instruction_store_rule >,
+      pegtl::seq< pegtl::at<Instruction_print_rule>, Instruction_print_rule >,
+      pegtl::seq< pegtl::at<Instruction_array_rule>, Instruction_array_rule >,
+      pegtl::seq< pegtl::at<Instruction_tuple_rule>, Instruction_tuple_rule >,
       pegtl::seq< pegtl::at<Instruction_call_store_rule>, Instruction_call_store_rule >,
       pegtl::seq< pegtl::at<Instruction_call_rule>, Instruction_call_rule >,
       pegtl::seq< pegtl::at<Instruction_definition_rule>, Instruction_definition_rule >,
       pegtl::seq< pegtl::at<Instruction_op_rule>, Instruction_op_rule >,
-      pegtl::seq< pegtl::at<Instruction_assign_rule>, Instruction_assign_rule >,
       pegtl::seq< pegtl::at<Instruction_length_rule>, Instruction_length_rule >,
-      pegtl::seq< pegtl::at<Instruction_array_rule>, Instruction_array_rule >,
-      pegtl::seq< pegtl::at<Instruction_tuple_rule>, Instruction_tuple_rule >,
+      pegtl::seq< pegtl::at<Instruction_assign_rule>, Instruction_assign_rule >,
       pegtl::seq< pegtl::at<Instruction_jump_rule>, Instruction_jump_rule >,
       pegtl::seq< pegtl::at<Instruction_goto_rule>, Instruction_goto_rule >,
       pegtl::seq< pegtl::at<Instruction_ret_rule>, Instruction_ret_rule >,
       pegtl::seq< pegtl::at<Instruction_ret_void_rule>, Instruction_ret_void_rule >,
-      pegtl::seq< pegtl::at<Instruction_print_rule>, Instruction_print_rule >,
       pegtl::seq< pegtl::at<Instruction_label_rule>, Instruction_label_rule >
     > { };
 
@@ -469,7 +469,8 @@ namespace LA {
   template<> struct action < Type_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
-      VariableType type(in.string());
+      VariableType type;
+      type.name = in.string();
       parsed_variable_types.push_back(type);
     }
   };
@@ -489,6 +490,9 @@ namespace LA {
       static void apply( const Input & in, Program & p){
         Function* f = p.functions.back();
         f->name = in.string();
+        if (p.longest_label.length() < in.string().length()){
+          p.longest_label = ":" + in.string();
+        }
       }
   };
 
@@ -519,7 +523,10 @@ namespace LA {
         for (std::string a : accesses_strs){
           a = a.substr(1);
           if (LA::is_int(a)){
-            Number* n = new Number(std::stoll(a));
+            int64_t num = std::stoll(a);
+            num <<= 1;
+            num += 1;
+            Number* n = new Number(num);
             array_accesses.push_back(n);
           } else {
             Variable* v = new Variable(a);
@@ -550,7 +557,10 @@ namespace LA {
         args_str.push_back(arg_str);
         for (std::string a : args_str){
           if (LA::is_int(a)){
-            Number* n = new Number(std::stoll(a));
+            int64_t num = std::stoll(a);
+            num <<= 1;
+            num += 1;
+            Number* n = new Number(num);
             args.push_back(n);
           } else {
             Variable* v = new Variable(a);
@@ -569,11 +579,11 @@ namespace LA {
   static void apply( const Input & in, Program & p){
       Function* f = p.functions.back();
       auto i = new Instruction_definition();
-
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.back())) {
         i->var = v;
       }
       i->type = parsed_variable_types.back();
+
       f->var_definitions.insert( std::pair< std::string, VariableType>(parsed_items.back()->to_string(), parsed_variable_types.back() ));
 
       f->instructions.push_back(i);
