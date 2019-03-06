@@ -21,47 +21,60 @@ namespace IR{
 
   string get_offset(Program &p, string arr_name, ofstream &outputFile, vector<Item*> indices, bool is_tuple){
     if (is_tuple) {
-	string offset_addr_var = generate_unique_var_name(p);
-	string offset = indices[0]->to_string();
+      string offset_addr_var = generate_unique_var_name(p);
+      string offset = indices[0]->to_string();
 
-	// Generate size of offset
-	outputFile << "\t" << offset_addr_var << " <- " << offset << endl;
-	outputFile << "\t" << offset_addr_var << " <- " << offset_addr_var << " * 8" << endl;
-	// Offset by element used to store size of array
-	outputFile << "\t" << offset_addr_var << " <- " << offset_addr_var << " + 8" << endl;
-	
-	// Add offset to array address
-	outputFile << "\t" << offset_addr_var << " <- " << arr_name << " + " << offset_addr_var << endl;
-	return offset_addr_var;
+      // Generate size of offset
+      outputFile << "\t" << offset_addr_var << " <- " << offset << endl;
+      outputFile << "\t" << offset_addr_var << " <- " << offset_addr_var << " * 8" << endl;
+      // Offset by element used to store size of array
+      outputFile << "\t" << offset_addr_var << " <- " << offset_addr_var << " + 8" << endl;
+
+      // Add offset to array address
+      outputFile << "\t" << offset_addr_var << " <- " << arr_name << " + " << offset_addr_var << endl;
+      return offset_addr_var;
     } else {
-	    int64_t size = indices.size();
-	    string addr = generate_unique_var_name(p);
-	    string product = generate_unique_var_name(p);
+      int64_t num_indices = indices.size();
+      string addr = generate_unique_var_name(p);
+	    string product_dimensions = generate_unique_var_name(p);
 
 	    outputFile << "\t" << addr << " <- 0\n";
-	    outputFile << "\t" << product << " <- 1\n";
+	    outputFile << "\t" << product_dimensions << " <- 1\n";
+
+      // Define variables
+      string base_offset = generate_unique_var_name(p);
+      string sum_products = generate_unique_var_name(p);
+      string product_index_remaining_dims = generate_unique_var_name(p);
+      string past_dim_addr = generate_unique_var_name(p);
+      string past_dim_var = generate_unique_var_name(p);
+      string final_addr = generate_unique_var_name(p);
+
+      outputFile << "\t" << sum_products << " <- " << 0;
 
 	    // get the size of each dimension
-	    for (int64_t i = 0; i < size-1; i++){
-		    string temp_addr = generate_unique_var_name(p);
-		    string temp_var = generate_unique_var_name(p);
-		    string temp_sum = generate_unique_var_name(p);
-		    outputFile << "\t" << temp_addr << " <- " << arr_name << " + " << to_string(24+i*8) << "\n";
-		    outputFile << "\t" << temp_var << " <- load " << temp_addr << "\n";
-		    outputFile << "\t" << temp_var << " <- " << temp_var << " >> 1\n";
-		    outputFile << "\t" << product << " <- " << product << " * " << temp_var << "\n";
-		    outputFile << "\t" << temp_sum << " <- " << product << " * " << indices[size-i-2]->to_string() << "\n";
-		    outputFile << "\t" << addr << " <- " << addr << " + " << temp_sum << "\n";
-	    }
-	    outputFile << "\t" << addr << " <- " << addr << " + " << indices[size-1]->to_string() << "\n";
-	    outputFile << "\t" << addr << " <- " << addr << " * 8\n";
-	    outputFile << "\t" << addr << " <- " << addr << " + 16\n";
-	    string temp = generate_unique_var_name(p);
-	    outputFile << "\t" << temp << " <- " << size << " * 8\n";
-	    outputFile << "\t" << addr << " <- " << addr << " + " << temp << "\n";
-	    outputFile << "\t" << addr << " <- " << addr << " + " << arr_name << "\n";
+	    for (int64_t i = 0; i < indices.size(); i++){
 
-	    return addr;
+        // Load current index
+        outputFile << "\t" << product_index_remaining_dims << " <- " << indices[i]->to_string() << "\n";
+
+        // Multiply by all past dimensions
+        for (int past_dim = i+1; past_dim < indices.size(); past_dim++) {
+          outputFile << "\t" << past_dim_addr << " <- " << arr_name << " + " << to_string(16 + past_dim * 8) << "\n";
+          outputFile << "\t" << past_dim_var << " <- load " << past_dim_addr << "\n";
+          outputFile << "\t" << product_index_remaining_dims << " <- " << product_index_remaining_dims << " * " << past_dim_var << "\n";
+        }
+
+        outputFile << "\t" << sum_products << " <- " << sum_products << " + " << product_index_remaining_dims << endl;
+      }
+
+      // Multiply by 8 for memory elements
+      outputFile << "\t" << sum_products << " <- " << sum_products << " * 8 \n";
+
+      // Add base offset
+      outputFile << "\t" << base_offset << " <- " << to_string(16 + indices.size() * 8) << "\n";
+      outputFile << "\t" << final_addr << " <- " << sum_products + base_offset << "\n";
+
+	    return final_addr;
     }
   }
 

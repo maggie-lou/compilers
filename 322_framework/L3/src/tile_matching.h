@@ -190,7 +190,7 @@ namespace L3 {
     virtual bool match(Node* root, std::vector<Node*> &unmatched, std::stack<std::string> &L2_instructions, std::string longest_label_name, int64_t &label_count){
       if (root->operand_type == Instruction_type::LABELI){
         Item* root_val = root->value;
-        if ((root_val->type == Item_type::LABEL)){
+        if (root_val->type == Item_type::LABEL){
           L2_instructions.push("\t"+root_val->to_string()+"\n");
           return true;
         }
