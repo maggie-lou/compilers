@@ -150,7 +150,7 @@ namespace IR{
 
           // Add memory for each dimension size
           if (!new_array->is_tuple) {
-            outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " + " << to_string(num_dimensions+1) << "\n";
+            outputFile << "\t" << linearized_len_var << " <- " << linearized_len_var <<  " + " << to_string((num_dimensions+1) * 8) << "\n";
           }
 
           // Encode
