@@ -25,4 +25,12 @@ namespace LB{
   bool contains(vector<string> v, string s) {
     return find(v.begin(), v.end(), s) != v.end();
   }
+
+
+
+  string generate_unique_label_name(Program &p) {
+    string name = p.longest_label + "_" + to_string(p.label_count);
+    p.label_count++;
+    return name;
+  }
 }

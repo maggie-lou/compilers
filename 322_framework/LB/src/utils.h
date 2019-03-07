@@ -10,4 +10,6 @@ namespace LB{
 
   bool is_int(std::string s);
   bool contains(vector<string> v, string s);
+
+  string generate_unique_label_name(Program &p);
 }
