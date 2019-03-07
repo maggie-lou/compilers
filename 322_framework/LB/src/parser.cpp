@@ -170,11 +170,14 @@ namespace LB {
       >
     > {};
 
+  struct Function_arg_name_rule:
+    name {};
+
   struct Function_arg_rule:
     pegtl::seq<
       Type_rule,
       seps,
-      Name_rule
+      Function_arg_name_rule
     > {};
 
   struct Function_args_rule:
@@ -507,6 +510,18 @@ namespace LB {
     }
   };
 
+  template<> struct action < Function_arg_name_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      auto i = new Variable();
+      i->name = in.string();
+      parsed_items.push_back(i);
+      if (p.longest_var.length() < in.string().length()){
+        p.longest_var = in.string();
+      }
+    }
+  };
+
   template<> struct action < Op_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
@@ -635,6 +650,7 @@ namespace LB {
         names_str.push_back(name_str);
         for (std::string a : names_str){
           Variable* v = new Variable(a);
+          // cout << "in names rule, scope size: " << scopes.size() << endl;
           v->scope = scopes.top();
           names.push_back(v);
         }
@@ -648,6 +664,7 @@ namespace LB {
   template<> struct action < Instruction_definition_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in definition\n";
       Function* f = p.functions.back();
       auto i = new Instruction_definition();
       i->vars = parsed_def_vars.back();
@@ -659,6 +676,7 @@ namespace LB {
   template<> struct action < Instruction_assign_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in assign\n";
       auto i = new Instruction_assign();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))){
         i->dest = v;
@@ -673,6 +691,7 @@ namespace LB {
   template<> struct action < Instruction_op_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in op\n";
       auto i = new Instruction_op();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-3))){
         i->dest = v;
@@ -689,6 +708,7 @@ namespace LB {
   template<> struct action < Instruction_if_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in if\n";
       auto i = new Instruction_if();
       if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
         i->label2 = l;
@@ -708,6 +728,7 @@ namespace LB {
   template<> struct action < Instruction_while_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in while\n";
       auto i = new Instruction_while();
       if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
         i->label2 = l;
@@ -727,6 +748,7 @@ namespace LB {
   template<> struct action < Instruction_continue_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in continue\n";
       auto i = new Instruction_continue();
       Function* f = p.functions.back();
       f->instructions.push_back(i);
@@ -736,6 +758,7 @@ namespace LB {
   template<> struct action < Instruction_break_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in break\n";
       auto i = new Instruction_break();
       Function* f = p.functions.back();
       f->instructions.push_back(i);
@@ -745,6 +768,7 @@ namespace LB {
   template<> struct action < Instruction_load_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in load\n";
       auto i = new Instruction_load();
       auto a = parsed_args.back();
 
@@ -764,6 +788,7 @@ namespace LB {
   template<> struct action < Instruction_store_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in store\n";
       auto i = new Instruction_store();
       auto a = parsed_args.back();
 
@@ -799,6 +824,7 @@ namespace LB {
   template<> struct action < Instruction_array_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in array\n";
       auto i = new Instruction_array();
 
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.back())) {
@@ -815,6 +841,7 @@ namespace LB {
   template<> struct action < Instruction_tuple_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in tuple\n";
       auto i = new Instruction_array();
 
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))) {
@@ -833,6 +860,7 @@ namespace LB {
   template<> struct action < Instruction_label_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in label\n";
       auto i = new Instruction_label();
       if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
         i->label = l;
@@ -846,6 +874,7 @@ namespace LB {
   template<> struct action < Instruction_ret_void_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in ret void\n";
       auto i = new Instruction_ret_void();
       Function* f = p.functions.back();
       f->instructions.push_back(i);
@@ -855,6 +884,7 @@ namespace LB {
   template<> struct action < Instruction_ret_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in ret\n";
       auto i = new Instruction_ret();
       i->t = parsed_items.back();
       Function* f = p.functions.back();
@@ -865,6 +895,7 @@ namespace LB {
   template<> struct action < Instruction_call_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in call\n";
       auto i = new Instruction_call();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.back())){
         i->callee = v;
@@ -878,6 +909,7 @@ namespace LB {
   template<> struct action < Instruction_call_store_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in call store\n";
       auto i = new Instruction_call_store();
       if (Variable* v = dynamic_cast<Variable*>(parsed_items.at(parsed_items.size()-2))){
         i->dest = v;
@@ -895,6 +927,7 @@ namespace LB {
   template<> struct action < Instruction_print_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in print\n";
       auto i = new Instruction_print();
       i->t = parsed_items.back();
       Function* f = p.functions.back();
@@ -905,6 +938,7 @@ namespace LB {
   template<> struct action < Scope_start_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in scope start\n";
       auto s = new Scope();
       if (!scopes.empty()){
         Scope* parent = scopes.top();
@@ -918,7 +952,10 @@ namespace LB {
   template<> struct action < Scope_end_rule > {
     template< typename Input >
   static void apply( const Input & in, Program & p){
+    cout << "in scope end\n";
+    cout << "scope size before pop: " << scopes.size() << endl;
       scopes.pop();
+    cout << "scope size after pop: " << scopes.size() << endl;
     }
   };
 
