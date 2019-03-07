@@ -76,7 +76,7 @@ namespace LB {
     }
 
     virtual string to_string(){
-      return ::to_string(n);
+      return std::to_string(n);
     }
   };
 
@@ -90,7 +90,7 @@ namespace LB {
   struct Instruction {
     virtual ~Instruction() = default;
     virtual void name_binding(string &longest_var, int64_t &var_count){
-
+      cout << "in name binding for instruction\n";
     }
     string generate_unique_var_name(string &longest_var, int64_t &var_count) {
       string name = longest_var + "_" + to_string(var_count);
@@ -115,12 +115,19 @@ namespace LB {
     VariableType type;
     vector<Variable*> vars;
     virtual void name_binding(string &longest_var, int64_t &var_count){
+      cout << "in name binding for instruction definition\n";
       for (Variable* v: vars){
+        cout << "in instruction definition, before translating var name: " << v->name << endl;
         Scope* scope = v->scope;
         string new_var_name = generate_unique_var_name(longest_var, var_count);
         scope->var_map.insert( std::pair< std::string, std::string>(v->name, new_var_name ));
         v->name = new_var_name;
+        cout << "in instruction definition, after translating var name: " << v->name << endl;
       }
+      for (Variable* v: vars){
+        cout << "in instruction definition, outside the loop: " << v->name << endl;
+      }
+
     }
   };
 

@@ -13,7 +13,8 @@
 #include <iostream>
 
 #include <parser.h>
-// #include <code_generation.h>
+#include <code_generator.h>
+#include <name_binding.h>
 
 using namespace std;
 
@@ -23,6 +24,7 @@ int main(
   ){
 
   auto p = LB::parse_file(argv[optind]);
-
+  LB::binding_name(p);
+  LB::generate_code(p);
   return 0;
 }

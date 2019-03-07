@@ -4,7 +4,7 @@
 #include <map>
 #include <unordered_map>
 
-#include <code_generation.h>
+#include <code_generator.h>
 #include <utils.h>
 
 using namespace std;
@@ -22,7 +22,7 @@ namespace LB {
   string to_args_string(vector<Item*> args) {
     string s = "(";
     for (Item* i : args) {
-      s = s + to_IR_string(i) + ",";
+      s = s + i->to_string() + ",";
     }
     if (!args.empty()){
       s = s.substr(0, s.length() - 1);
@@ -32,16 +32,10 @@ namespace LB {
     return s;
   }
 
-
-  bool is_tuple(string var_name, Function* f) {
-    return f->var_definitions[var_name].to_string() == "tuple";
-  }
-
-
   string get_function_args_string(Function* f) {
     string arg_string = "";
     for (Variable* arg : f->arguments) {
-      arg_string = arg_string + arg->type.to_string() + " " + to_IR_var(arg->name) + ", ";
+      arg_string = arg_string + arg->type.to_string() + " " + arg->name + ", ";
     }
     arg_string = arg_string.substr(0, arg_string.length()-2); // remove trailing comma
     return arg_string;
@@ -72,6 +66,7 @@ namespace LB {
           }
 
         } else if (Instruction_assign* assign = dynamic_cast<Instruction_assign*>(i)){
+          outputFile << "\t" << assign->dest->to_string() << " <- " << assign->source->to_string() << "\n";
 
         } else if (Instruction_op* op = dynamic_cast<Instruction_op*>(i)) {
 
