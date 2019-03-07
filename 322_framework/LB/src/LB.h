@@ -286,6 +286,13 @@ namespace LB {
     }
   };
 
+  struct Instruction_goto : Instruction {
+    // br label
+    Label* label;
+    virtual void name_binding(string &longest_var, int64_t &var_count){
+    }
+  };
+
   struct Instruction_print : Instruction {
     Item* t;
     virtual void name_binding(string &longest_var, int64_t &var_count){

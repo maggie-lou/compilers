@@ -94,6 +94,8 @@ namespace LB {
 
         } else if (Instruction_label* label_i = dynamic_cast<Instruction_label*>(i)) {
 
+        } else if (Instruction_goto* goto_i = dynamic_cast<Instruction_goto*>(i)) {
+
         } else if (Instruction_ret_void* ret_void = dynamic_cast<Instruction_ret_void*>(i)) {
 
         } else if (Instruction_ret* ret = dynamic_cast<Instruction_ret*>(i)) {

@@ -392,6 +392,13 @@ namespace LB {
       pegtl::one<')'>
     > {};
 
+  struct Instruction_goto_rule:
+    pegtl::seq<
+      pegtl::string<'b','r'>,
+      seps,
+      Label_rule
+    > {};
+
   struct Instruction_print_rule:
     pegtl::seq<
       pegtl::string<'p','r','i','n','t'>,
@@ -441,6 +448,7 @@ namespace LB {
       pegtl::seq< pegtl::at<Instruction_op_rule>, Instruction_op_rule >,
       pegtl::seq< pegtl::at<Instruction_length_rule>, Instruction_length_rule >,
       pegtl::seq< pegtl::at<Instruction_assign_rule>, Instruction_assign_rule >,
+      pegtl::seq< pegtl::at<Instruction_goto_rule>, Instruction_goto_rule >,
       pegtl::seq< pegtl::at<Instruction_ret_rule>, Instruction_ret_rule >,
       pegtl::seq< pegtl::at<Instruction_ret_void_rule>, Instruction_ret_void_rule >,
       pegtl::seq< pegtl::at<Instruction_label_rule>, Instruction_label_rule >,
@@ -862,6 +870,19 @@ namespace LB {
   static void apply( const Input & in, Program & p){
     cout << "in label\n";
       auto i = new Instruction_label();
+      if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
+        i->label = l;
+      }
+
+      Function* f = p.functions.back();
+      f->instructions.push_back(i);
+    }
+  };
+
+  template<> struct action < Instruction_goto_rule > {
+    template< typename Input >
+  static void apply( const Input & in, Program & p){
+      auto i = new Instruction_goto();
       if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
         i->label = l;
       }
