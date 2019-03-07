@@ -36,7 +36,10 @@ namespace LA {
     for (Item* i : args) {
       s = s + to_IR_string(i) + ",";
     }
-    s = s.substr(0, s.length() - 1);
+    if (!args.empty()){
+      s = s.substr(0, s.length() - 1);
+    }
+
     s = s + ")";
     return s;
   }
