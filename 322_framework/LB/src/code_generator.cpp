@@ -6,6 +6,7 @@
 
 #include <code_generator.h>
 #include <utils.h>
+#include <control_structure_translator.h>
 
 using namespace std;
 
@@ -56,7 +57,11 @@ namespace LB {
 
       // outputFile << "define " << f->type.to_string() << " :" << f->name << "(" << get_function_args_string(f) << "){" << endl;
 
-      auto instructions = f->instructions;
+
+      map<Instruction*, string > while_to_cond_label_map;
+      auto instructions = LB::add_cond_labels_while(f->instructions, while_to_cond_label_map, p.longest_var, p.var_count);
+
+      map<Instruction*, Instruction_while*> instruction_to_loop_map = LB::map_instructions_to_loop(instructions, f->start_label_to_while_map, f->end_label_to_while_map, while_to_cond_label_map);
 
       for (Instruction* i : instructions) {
 
@@ -73,10 +78,17 @@ namespace LB {
         } else if (Instruction_if* if_i = dynamic_cast<Instruction_if*>(i)) {
 
         } else if (Instruction_while* while_i = dynamic_cast<Instruction_while*>(i)) {
+          vector<string> LA_code = LB::generate_branch_code(i, while_i->t1->to_string(), while_i->t2->to_string(), while_i->op, while_i->label1->to_string(), while_i->label2->to_string(), p.longest_var, p.var_count);
 
         } else if (Instruction_continue* continue_i = dynamic_cast<Instruction_continue*>(i)) {
+          Instruction_while* corresponding_while = instruction_to_loop_map[i];
+          string top_while_label = while_to_cond_label_map[corresponding_while];
+          outputFile << "\tbr "<< top_while_label << "\n";
 
         } else if (Instruction_break* break_i = dynamic_cast<Instruction_break*>(i)) {
+          Instruction_while* corresponding_while = instruction_to_loop_map[i];
+          string while_exit_label = corresponding_while->label2->to_string();
+          outputFile << "\tbr "<< while_exit_label << "\n";
 
         } else if (Instruction_load* load = dynamic_cast<Instruction_load*>(i)) {
 

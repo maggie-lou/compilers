@@ -737,18 +737,21 @@ namespace LB {
     template< typename Input >
   static void apply( const Input & in, Program & p){
     cout << "in while\n";
+      Function* f = p.functions.back();
       auto i = new Instruction_while();
+
       if (Label* l = dynamic_cast<Label*>(parsed_items.back())){
         i->label2 = l;
+        f->end_label_to_while_map.insert( pair< std::string, Instruction* >( l->to_string(), i ));
       }
       if (Label* l = dynamic_cast<Label*>(parsed_items.at(parsed_items.size() - 2))){
         i->label1 = l;
+        f->start_label_to_while_map.insert( pair< std::string, Instruction_while* >( l->to_string(), i ));
       }
       i->t1 = parsed_items.at(parsed_items.size() - 4);
       i->t2 = parsed_items.at(parsed_items.size() - 3);
       i->op = parsed_operations.back();
 
-      Function* f = p.functions.back();
       f->instructions.push_back(i);
     }
   };

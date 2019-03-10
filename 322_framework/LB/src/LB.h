@@ -347,6 +347,8 @@ namespace LB {
     VariableType type;
     vector<Variable*> arguments;
     vector<Instruction*> instructions;
+    map<string, Instruction_while*> start_label_to_while_map;
+    map<string, Instruction*> end_label_to_while_map;
   };
 
   struct Program {
