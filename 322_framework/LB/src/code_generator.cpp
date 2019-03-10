@@ -74,11 +74,19 @@ namespace LB {
           outputFile << "\t" << assign->dest->to_string() << " <- " << assign->source->to_string() << "\n";
 
         } else if (Instruction_op* op = dynamic_cast<Instruction_op*>(i)) {
+          outputFile << "\t" << op->dest->to_string() << " <- " << op->t1->to_string() << " " << op << " " << op->t2->to_string() << "\n";
 
         } else if (Instruction_if* if_i = dynamic_cast<Instruction_if*>(i)) {
+          vector<string> LA_code = LB::generate_branch_code(i, if_i->t1->to_string(), if_i->t2->to_string(), if_i->op, if_i->label1->to_string(), if_i->label2->to_string(), p.longest_var, p.var_count);
+          for (string line: LA_code) {
+            outputFile << line;
+          }
 
         } else if (Instruction_while* while_i = dynamic_cast<Instruction_while*>(i)) {
           vector<string> LA_code = LB::generate_branch_code(i, while_i->t1->to_string(), while_i->t2->to_string(), while_i->op, while_i->label1->to_string(), while_i->label2->to_string(), p.longest_var, p.var_count);
+          for (string line: LA_code) {
+            outputFile << line;
+          }
 
         } else if (Instruction_continue* continue_i = dynamic_cast<Instruction_continue*>(i)) {
           Instruction_while* corresponding_while = instruction_to_loop_map[i];
@@ -91,26 +99,39 @@ namespace LB {
           outputFile << "\tbr "<< while_exit_label << "\n";
 
         } else if (Instruction_load* load = dynamic_cast<Instruction_load*>(i)) {
+          outputFile << "\t" << load->dest->to_string() << " <- " << load->source->to_string() << to_args_string(load->indices) << "\n";
 
         } else if (Instruction_store* store = dynamic_cast<Instruction_store*>(i)) {
+          outputFile << "\t" << store->dest->to_string() << to_args_string(store->indices) << " <- " << store->source->to_string();
 
         } else if (Instruction_length* length_i = dynamic_cast<Instruction_length*>(i)) {
+          outputFile << "\t" << length_i->dest->to_string() << " <- length " << length_i->source->to_string() << " " << length_i->dimension->to_string() << "\n";
 
         } else if (Instruction_call* call = dynamic_cast<Instruction_call*>(i)) {
+          outputFile << "\t" << call->callee->to_string() << to_args_string(call->args) << "\n";
 
         } else if (Instruction_call_store* call_store = dynamic_cast<Instruction_call_store*>(i)) {
+          outputFile << "\t" << call_store->dest->to_string() << " <- " << call_store->callee->to_string() << to_args_string(call_store->args) << "\n";
+
 
         } else if (Instruction_print* print = dynamic_cast<Instruction_print*>(i)) {
+          outputFile << "\tprint(" << print->t->to_string() << ")\n";
 
         } else if (Instruction_array* new_array = dynamic_cast<Instruction_array*>(i)) {
+          string type = new_array->is_tuple ? "Tuple" : "Array";
+          outputFile << "\t" << new_array->dest->to_string() << " <- new " << type << to_args_string(new_array->dimensions) << "\n";
 
         } else if (Instruction_label* label_i = dynamic_cast<Instruction_label*>(i)) {
+          outputFile << "\t" << label_i->label->to_string() << "\n";
 
         } else if (Instruction_goto* goto_i = dynamic_cast<Instruction_goto*>(i)) {
+          outputFile << "\tbr " << goto_i->label->to_string() << "\n";
 
         } else if (Instruction_ret_void* ret_void = dynamic_cast<Instruction_ret_void*>(i)) {
+          outputFile << "\treturn\n";
 
         } else if (Instruction_ret* ret = dynamic_cast<Instruction_ret*>(i)) {
+          outputFile << "\treturn " << ret->t->to_string() << "\n";
 
         }
       }
