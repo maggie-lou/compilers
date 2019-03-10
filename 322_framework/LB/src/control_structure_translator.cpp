@@ -83,17 +83,6 @@ namespace LB {
 
         // End current loop for end label
         if (end_label_to_while_map.find(label_i->label->to_string()) != end_label_to_while_map.end()) {
-          // Add jump to while condition
-          Instruction* current_while = end_label_to_while_map[label_i->label->to_string()];
-          string top_while_label = while_to_cond_label_map[current_while];
-
-          Instruction_goto* jump_i = new Instruction_goto();
-          Label* l = new Label();
-          l->name = top_while_label;
-          jump_i->label = l;
-          instructions.insert(instructions.begin() + index, jump_i);
-          index++;
-
           loop_stack.pop();
         }
       }

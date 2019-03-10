@@ -7,6 +7,7 @@
 #include <code_generator.h>
 #include <utils.h>
 #include <control_structure_translator.h>
+#include <name_binding.h>
 
 using namespace std;
 
@@ -52,6 +53,8 @@ namespace LB {
     /*
      * Generate target code
      */
+
+    LB::binding_name(p);
 
     for (auto f : p.functions){
 
