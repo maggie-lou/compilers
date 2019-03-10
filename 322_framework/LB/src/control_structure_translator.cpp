@@ -27,7 +27,7 @@ namespace LB {
     return LA_code;
   }
 
-  vector<Instruction*> add_cond_labels_while(vector<Instruction*> instructions, map<Instruction*, string> while_to_cond_label_map, string &longest_var, int64_t &var_count) {
+  vector<Instruction*> add_cond_labels_while(vector<Instruction*> instructions, map<Instruction*, string> &while_to_cond_label_map, string &longest_var, int64_t &var_count) {
     for (int index = 0; index < instructions.size(); index++) {
       Instruction* i = instructions[index];
 

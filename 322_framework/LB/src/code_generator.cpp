@@ -58,7 +58,7 @@ namespace LB {
 
     for (auto f : p.functions){
 
-      // outputFile << "define " << f->type.to_string() << " :" << f->name << "(" << get_function_args_string(f) << "){" << endl;
+      outputFile << "define " << f->type.to_string() << " :" << f->name << "(" << get_function_args_string(f) << "){" << endl;
 
 
       map<Instruction*, string > while_to_cond_label_map;
@@ -77,7 +77,7 @@ namespace LB {
           outputFile << "\t" << assign->dest->to_string() << " <- " << assign->source->to_string() << "\n";
 
         } else if (Instruction_op* op = dynamic_cast<Instruction_op*>(i)) {
-          outputFile << "\t" << op->dest->to_string() << " <- " << op->t1->to_string() << " " << op << " " << op->t2->to_string() << "\n";
+          outputFile << "\t" << op->dest->to_string() << " <- " << op->t1->to_string() << " " << op->op << " " << op->t2->to_string() << "\n";
 
         } else if (Instruction_if* if_i = dynamic_cast<Instruction_if*>(i)) {
           vector<string> LA_code = LB::generate_branch_code(i, if_i->t1->to_string(), if_i->t2->to_string(), if_i->op, if_i->label1->to_string(), if_i->label2->to_string(), p.longest_var, p.var_count);
