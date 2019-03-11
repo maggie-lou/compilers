@@ -13,10 +13,10 @@ using namespace std;
 
 namespace LB {
 
-  string to_indices_string(vector<string> indices) {
+  string to_indices_string(vector<Item*> indices) {
     string s = "";
-    for (string i : indices) {
-      s = s + "[" + i + "]";
+    for (Item* i : indices) {
+      s = s + "[" + i->to_string() + "]";
     }
     return s;
   }
@@ -58,8 +58,7 @@ namespace LB {
 
     for (auto f : p.functions){
 
-      outputFile << "define " << f->type.to_string() << " :" << f->name << "(" << get_function_args_string(f) << "){" << endl;
-
+      outputFile << f->type.to_string() << " " << f->name << "(" << get_function_args_string(f) << "){" << endl;
 
       map<Instruction*, string > while_to_cond_label_map;
       auto instructions = LB::add_cond_labels_while(f->instructions, while_to_cond_label_map, p.longest_var, p.var_count);
@@ -102,10 +101,10 @@ namespace LB {
           outputFile << "\tbr "<< while_exit_label << "\n";
 
         } else if (Instruction_load* load = dynamic_cast<Instruction_load*>(i)) {
-          outputFile << "\t" << load->dest->to_string() << " <- " << load->source->to_string() << to_args_string(load->indices) << "\n";
+          outputFile << "\t" << load->dest->to_string() << " <- " << load->source->to_string() << to_indices_string(load->indices) << "\n";
 
         } else if (Instruction_store* store = dynamic_cast<Instruction_store*>(i)) {
-          outputFile << "\t" << store->dest->to_string() << to_args_string(store->indices) << " <- " << store->source->to_string();
+          outputFile << "\t" << store->dest->to_string() << to_indices_string(store->indices) << " <- " << store->source->to_string() << "\n";
 
         } else if (Instruction_length* length_i = dynamic_cast<Instruction_length*>(i)) {
           outputFile << "\t" << length_i->dest->to_string() << " <- length " << length_i->source->to_string() << " " << length_i->dimension->to_string() << "\n";
