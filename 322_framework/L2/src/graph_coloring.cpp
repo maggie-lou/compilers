@@ -86,20 +86,22 @@ namespace L2{
     }
   }
 
-  void assign_color(string name, map<string, Node> &new_g, vector<string> &to_spill) {
+  bool assign_color(string name, map<string, Node> &new_g, vector<string> &to_spill) {
     vector<string> conflicts = get_color_conflicts(name, new_g);
     for (string color: registers) {
       if (find(begin(conflicts), end(conflicts), color) == end(conflicts)) {
         new_g[name].color = color;
-        return;
+        return false;
       }
     }
     to_spill.push_back(name);
+    return true;
   }
 
   bool assign_colors(map<string, Node> &g, vector<string> &to_spill) {
     stack<Node> stack = generate_stack(g);
     map<string, Node> new_g = color_registers();
+    bool spilled = false;
     while (!stack.empty()) {
       Node n = stack.top();
       stack.pop();
@@ -107,7 +109,12 @@ namespace L2{
       Node new_n;
       new_n.name = n.name;
       add_node(new_g, new_n, g[new_n.name].edges);
-      assign_color(new_n.name, new_g, to_spill);
+      if (!spilled){
+        spilled = assign_color(new_n.name, new_g, to_spill);
+      } else {
+        to_spill.push_back(new_n.name);
+      }
+
     }
     g = new_g;
     return !to_spill.empty();

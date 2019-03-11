@@ -19,6 +19,8 @@ using namespace std;
 
 namespace L3{
 
+  void generate_code_naive(Program p);
+
   void generate_code(Function* f, vector<stack<string>> all_l2_instructions, unordered_map<string, string> label_map, ofstream &outputFile);
 
 }
