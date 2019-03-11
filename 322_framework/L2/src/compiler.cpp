@@ -108,9 +108,22 @@ int main(
      auto p = L2::parse_function(argv[optind]);
      L2::generate_and_print_graph(p);
 
+  } else {
+    auto p = L2::parse_file(argv[optind]);
+    /*
+     * Generate the target code.
+     */
+    if (enable_code_generator){
+      for (int i=0; i<p.functions.size(); i++) {
+        auto f = p.functions[i];
+        L2::allocate_registers(f);
+        p.functions[i] = f;
+      }
+      L2::generate_code(p);
+    }
   }
 
-  auto p = L2::parse_file(argv[optind]);
+
 
 
   /*
@@ -134,17 +147,7 @@ int main(
     return 0;
   }
 
-  /*
-   * Generate the target code.
-   */
-  if (enable_code_generator){
-    for (int i=0; i<p.functions.size(); i++) {
-      auto f = p.functions[i];
-      L2::allocate_registers(f);
-      p.functions[i] = f;
-    }
-    L2::generate_code(p);
-  }
+
 
   return 0;
 }
